@@ -1,0 +1,29 @@
+# Standalone Cargo manifest for the BlueOS allocator, added to enable host-side
+# Miri testing via `cargo miri test`. This mirrors the GN target
+# `//kernel/allocator:allocator_crate` but builds for the host target so Miri can
+# interpret it (GN builds riscv64-vivo-blueos rlibs, which Miri cannot consume).
+# This does NOT affect the GN build.
+[package]
+name = "allocator_crate"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+name = "allocator_crate"
+path = "src/lib.rs"
+# no_std crate; doctests are not applicable.
+doctest = false
+
+# Standalone crate root: prevents cargo from climbing the tree looking for a
+# parent workspace.
+[workspace]
+
+# Path dependencies point at the same vendored sources the GN build consumes
+# (external/vendor/...), guaranteeing the Miri-tested code is byte-identical to
+# what ships, and work in air-gapped environments without crates.io access.
+[dependencies]
+const-default = { path = "../../external/vendor/const-default-1.0.0", default-features = false }
+log = { path = "../../external/vendor/log-0.4.28", default-features = false }
+blueos_infra = { path = "../infra" }

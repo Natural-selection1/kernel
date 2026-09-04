@@ -30,3 +30,6 @@ pub struct MemoryInfo {
     pub used: usize,
     pub max_used: usize,
 }
+
+#[cfg(test)]
+mod miri_tests;

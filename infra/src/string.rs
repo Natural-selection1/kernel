@@ -178,6 +178,14 @@ pub unsafe extern "C" fn strncpy(s1: *mut c_char, s2: *const c_char, n: c_size_t
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/strlen.html>.
+// Miri intercepts `strlen` for `CStr::from_ptr` validation. When running under
+// `cargo miri test`, leaving this symbol exported causes Miri to abort with a
+// "symbol definition that clashes with a built-in shim" error. Gating it on
+// `not(miri)` keeps it intact for the kernel build and for native `cargo test`
+// (where it satisfies `core`'s `extern "C"` references), while letting Miri
+// provide its own validated implementation. `cfg(miri)` is set by Cargo
+// whenever `cargo miri` is the invoked driver.
+#[cfg(not(miri))]
 #[linkage = "weak"]
 #[no_mangle]
 pub unsafe extern "C" fn strlen(s: *const c_char) -> c_size_t {
@@ -185,6 +193,7 @@ pub unsafe extern "C" fn strlen(s: *const c_char) -> c_size_t {
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/strlen.html>.
+#[cfg(not(miri))]
 #[linkage = "weak"]
 #[no_mangle]
 pub unsafe extern "C" fn strnlen(s: *const c_char, size: c_size_t) -> c_size_t {

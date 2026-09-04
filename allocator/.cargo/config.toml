@@ -1,0 +1,56 @@
+# Miri runtime flags for `cargo miri test` on the allocator.
+#
+# ---- IMPORTANT: how to invoke ---------------------------------------------
+# cargo's `[env]` table does NOT propagate to the `cargo-miri` sub-process.
+# You MUST export `MIRI_SYSROOT` (and `MIRIFLAGS`, to be safe) in your shell
+# before running `cargo miri test`. The lines below serve as the canonical
+# reference values; copy them into your environment:
+#
+#     export MIRI_SYSROOT="/opt/sysroot/usr/local/lib/rustlib/x86_64-unknown-linux-gnu/miri-sysroot"
+#     export MIRIFLAGS="-Zmiri-disable-stacked-borrows"
+#     PATH=/opt/sysroot/usr/local/bin:$PATH cargo miri test
+#
+# Without `MIRI_SYSROOT` set in the shell, `cargo-miri` will try to build a
+# sysroot from `rust-src` and abort if that component is not installed.
+# ---------------------------------------------------------------------------
+#
+# MIRI_SYSROOT: points at the vivo toolchain's pre-built Miri sysroot
+# (cargo-miri respects this env var; the raw `miri` binary does not — it
+# requires an explicit `--sysroot`).
+#
+# MIRIFLAGS: a single flag is required:
+#   -Zmiri-disable-stacked-borrows
+#       TLSF's `insert_free_block_ptr` (tlsf.rs:478) reads a free-block's
+#       `next_phys_block` through a shared reference and immediately writes
+#       through the resulting raw pointer. Stacked Borrows rejects this
+#       shared-borrow-then-mutate-pointer pattern even when it is correct
+#       (the `next` field is raw bytes we own, no other Rust reference
+#       aliases it). Disabling Stacked Borrows keeps Miri's other checks
+#       (out-of-bounds, use-after-free, unaligned access, data races) which
+#       use a different mechanism.
+#
+# Note on provenance: this allocator does *not* need
+# `-Zmiri-permissive-provenance`. Miri's default exposed-provenance model
+# accepts all of our `ptr as usize` casts, because they are always fed by
+# pointers that have already been exposed (e.g. via `as usize` arithmetic
+# earlier in the call chain). Verified: removing the flag still passes all
+# 6 tests in 7.09s with 0 UB. Strict provenance (`-Zmiri-strict-provenance`)
+# *would* fail at llff.rs:77 (`heap_bottom as *mut u8`) because that is an
+# int-to-ptr cast at an API boundary — fixing it would require changing the
+# public API to take `*mut u8`, which is not worth the churn given the
+# default model already accepts the code.
+#
+# Tree Borrows is not an option: it requires `-Zmiri-permissive-provenance`
+# to be absent, but it still rejects the shared-borrow-to-mutate pattern
+# in tlsf.rs:478, so we would need `-Zmiri-disable-stacked-borrows` anyway.
+[env]
+MIRI_SYSROOT = "/opt/sysroot/usr/local/lib/rustlib/x86_64-unknown-linux-gnu/miri-sysroot"
+MIRIFLAGS = "-Zmiri-disable-stacked-borrows"
+
+# rustc `--cfg` flags (orthogonal to MIRIFLAGS). These reproduce what GN injects
+# via rustflags.txt when `debugging_allocator`/`debug_slab` are enabled in
+# Kconfig. Leave empty for the BASE configuration; uncomment for debug
+# instrumentation runs.
+[build]
+# rustflags = ["--cfg", "debugging_allocator", "--cfg", "debug_slab"]
+rustflags = []

@@ -1,0 +1,32 @@
+# Standalone Cargo manifest for blueos_infra, added to enable host-side Miri
+# testing of the allocator (see kernel/allocator/Cargo.toml). This mirrors the
+# GN target `//kernel/infra:blueos_infra` but builds for the host target so Miri
+# can interpret it. It does NOT affect the GN build.
+[package]
+name = "blueos_infra"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+name = "blueos_infra"
+path = "src/lib.rs"
+# no_std crate; doctests are not applicable.
+doctest = false
+
+# Standalone crate root: prevents cargo from climbing the tree looking for a
+# parent workspace.
+[workspace]
+
+[dependencies]
+# The blueos_infra library proper uses only core + alloc. The GN BUILD.gn lists
+# cfg-if/memchr/spin, but a source-level audit shows those are referenced ONLY
+# from #[cfg(test)] mod tests and doc comments, so they are dev-dependencies.
+
+[dev-dependencies]
+# Only needed when running blueos_infra's own unit tests via `cargo test`.
+# Not built for `cargo miri test` on the allocator.
+cfg-if = { path = "../../external/vendor/cfg-if-1.0.4" }
+memchr = { path = "../../external/vendor/memchr-2.7.6", default-features = false }
+spin = { path = "../../external/vendor/spin-0.9.8", default-features = false, features = ["mutex", "spin_mutex", "rwlock", "once", "lazy"] }

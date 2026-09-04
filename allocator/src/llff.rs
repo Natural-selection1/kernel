@@ -322,4 +322,10 @@ impl Heap {
     pub fn get_max_free_block_size(&self) -> usize {
         self.holes.max_hole().map(|(_, sz)| sz).unwrap_or(0)
     }
+
+    /// Returns information about the first hole in the list, for test purposes.
+    #[cfg(test)]
+    pub fn holes_first_hole_for_test(&self) -> Option<(*const u8, usize)> {
+        self.holes.first_hole()
+    }
 }
