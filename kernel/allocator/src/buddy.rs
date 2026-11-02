@@ -28,7 +28,7 @@ pub const PAGE_SHIFT: usize = 12;
 /// Size of one page in bytes.
 pub const PAGE_SIZE: usize = 1 << PAGE_SHIFT;
 /// Largest allocation order supported by the allocator.
-pub const MAX_ORDER: usize = 11;
+pub const MAX_ORDER: usize = blueos_kconfig::CONFIG_BUDDY_MAX_ORDER as usize;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum PageState {
@@ -78,7 +78,7 @@ impl Page {
 //   +--> manageable_start (first PFN managed by the buddy allocator)
 //        |
 //        |  Usable region is split into the largest possible buddy-aligned
-//        |  blocks (up to MAX_ORDER=11, 8 MB). The head page of each block
+//        |  blocks (up to the configured MAX_ORDER). The head page of each block
 //        |  has state=Free and its actual order; all other pages have
 //        |  state=Unavailable and order=0. The first block's order may be
 //        |  < MAX_ORDER if manageable_start is not MAX_ORDER-aligned.
@@ -86,7 +86,7 @@ impl Page {
 //        |  +---------------+  +---------------+       +---------------+  +---------------+
 //        |  | pfn=N         |  | pfn=N+1       |  ...  | pfn=M         |  | pfn=M+1       |  ...
 //        |  | Free          |  | Unavailable   |       | Free          |  | Unavailable   |
-//        |  | order=11      |  | order=0       |       | order=11      |  | order=0       |
+//        |  | order=MAX     |  | order=0       |       | order=MAX     |  | order=0       |
 //        |  +---------------+  +---------------+       +---------------+  +---------------+
 //        |       ^ chunk 0 head                         ^ chunk 1 head
 //        |
@@ -97,9 +97,9 @@ impl Page {
 //        |  | Free          |         | Unavailable   |
 //        |  | order=K       |         | order=0       |
 //        |  +---------------+         +---------------+
-//        |       ^ last chunk head (order=K < 11 if size < 8 MB)
+//        |       ^ last chunk head (order=K < MAX_ORDER)
 //        |
-//        +--> each MAX_ORDER chunk spans 2048 pages; only the head page
+//        +--> each MAX_ORDER chunk spans 2^MAX_ORDER pages; only the head page
 //             has state=Free and a block order. An allocated block's head has
 //             state=Allocated and retains its allocation order.
 //
