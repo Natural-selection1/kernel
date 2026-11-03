@@ -25,5 +25,6 @@ blueos_board("none") {
     "//kernel/infra:check_infra",
     "//kernel/infra:check_infra_by_clippy",
     "//kernel/kernel/tests/allocation:check_stack_allocation",
+    "//kernel/loader/tests/allocation:check_loader_allocation",
   ]
 }
