@@ -1010,14 +1010,14 @@ mod tests {
         // This maximizes the chance of hitting the exact slab bucket used by Os2Thread.
         for size in (32..256).step_by(8) {
             for _ in 0..32 {
-                let mut spray = Storage::from_layout(
+                let spray = Storage::from_layout(
                     Layout::from_size_align(size, core::mem::align_of::<usize>()).unwrap(),
                 );
                 // Fill with 0XFF.
                 // If the kernel tries to use this as a pointer (Arc<Thread>), it will crash.
-                for val in spray.as_mut_slice().iter_mut() {
-                    *val = !0;
-                }
+                // SAFETY: The fresh owned allocation is writable for its full
+                // size. Initialize bytes without first forming a byte slice.
+                unsafe { spray.base().write_bytes(0xff, spray.size()) };
                 spray_vecs.push(spray);
             }
         }

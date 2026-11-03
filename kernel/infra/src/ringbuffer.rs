@@ -29,16 +29,24 @@ use core::{
 
 /// A ring buffer backed by a boxed slice
 #[derive(Debug)]
+#[must_use = "dropping the ring buffer releases its owned storage"]
 pub struct BoxedRingBuffer {
     inner: RingBuffer,
     _box: Storage,
 }
 
 impl BoxedRingBuffer {
-    /// Create a new ring buffer with the given size
+    /// Create a new ring buffer with initialized backing bytes of the given size.
     pub fn new(size: usize) -> Self {
         let layout = Layout::from_size_align(size, 1).unwrap();
         let buf = Storage::from_layout(layout);
+        // Writer APIs expose &mut [u8], whose bytes may be read before writing.
+        // Initialize the owned buffer before publishing either endpoint.
+        if buf.size() != 0 {
+            // SAFETY: This fresh allocation owns `size` writable bytes and has
+            // not yet been shared with the ring buffer's reader or writer.
+            unsafe { buf.base().write_bytes(0, buf.size()) };
+        }
         Self {
             inner: unsafe { RingBuffer::new_with_buffer(buf.base(), buf.size()) },
             _box: buf, // hold the buffer to prevent it from being freed

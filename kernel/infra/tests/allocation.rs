@@ -306,3 +306,104 @@ fn infallible_storage_terminates_on_oom() {
         String::from_utf8_lossy(&output.stderr).contains("memory allocation of 37 bytes failed")
     );
 }
+
+#[test]
+fn empty_storage_views_do_not_use_null_pointers_or_allocate() {
+    let owned_empty = Storage::try_from_layout(Layout::from_size_align(0, 4096).unwrap()).unwrap();
+    // SAFETY: Zero-length external storage requires no allocation.
+    let external_empty = unsafe { Storage::from_raw(core::ptr::null_mut(), 0) };
+    for mut storage in [Storage::new(), owned_empty, external_empty] {
+        let (lengths, counts) = observe(true, || {
+            // SAFETY: Empty views have no backing-memory requirements.
+            let lengths = unsafe { (storage.as_slice().len(), storage.as_mut_slice().len()) };
+            drop(storage);
+            lengths
+        });
+        assert_eq!(lengths, (0, 0));
+        assert_eq!(counts, Counts::default());
+    }
+}
+
+#[test]
+fn initialized_storage_can_be_viewed_and_mutated() {
+    let mut storage = Storage::from_layout(Layout::from_size_align(32, 16).unwrap());
+    // SAFETY: The fresh allocation owns 32 writable bytes.
+    unsafe { storage.base().write_bytes(0x5a, storage.size()) };
+    // SAFETY: All bytes are initialized; no other pointer accesses this storage.
+    unsafe {
+        assert_eq!(storage.as_slice(), &[0x5a; 32]);
+        storage.as_mut_slice()[3] = 0x7b;
+        assert_eq!(storage.as_slice()[3], 0x7b);
+    }
+}
+
+#[test]
+fn initialized_external_storage_views_do_not_take_ownership() {
+    let mut bytes = [0x11u8; 8];
+    // SAFETY: bytes is live and exclusively accessed through storage until drop.
+    let mut storage = unsafe { Storage::from_raw(bytes.as_mut_ptr(), bytes.len()) };
+    unsafe {
+        assert_eq!(storage.as_slice(), &[0x11; 8]);
+        storage.as_mut_slice().fill(0x22);
+    }
+    let (_, counts) = observe(false, || drop(storage));
+    assert_eq!(counts, Counts::default());
+    assert_eq!(bytes, [0x22; 8]);
+}
+
+#[test]
+fn owned_ring_buffer_exposes_initialized_bytes_and_wraps() {
+    use blueos_infra::ringbuffer::BoxedRingBuffer;
+    let mut buffer = BoxedRingBuffer::new(4);
+    {
+        // SAFETY: These are the only reader and writer for this buffer.
+        let mut writer = unsafe { buffer.writer() };
+        let mut reader = unsafe { buffer.reader() };
+        assert_eq!(writer.push_slice(), &[0; 4]);
+        assert!(writer.push_one(1));
+        assert!(writer.push_one(2));
+        assert!(writer.push_one(3));
+        assert_eq!(reader.pop_one(), Some(1));
+        assert_eq!(reader.pop_one(), Some(2));
+        for value in [4, 5, 6] {
+            assert!(writer.push_one(value));
+        }
+        assert!(!writer.push_one(7));
+        for value in [3, 4, 5, 6] {
+            assert_eq!(reader.pop_one(), Some(value));
+        }
+        assert_eq!(reader.pop_one(), None);
+        assert!(writer.push_one(8));
+    }
+    buffer.reset();
+    assert!(buffer.is_empty());
+    assert_eq!(buffer.capacity(), 4);
+    // SAFETY: Previous endpoints have been dropped; these are the sole endpoints.
+    let mut writer = unsafe { buffer.writer() };
+    let mut reader = unsafe { buffer.reader() };
+    assert!(writer.push_one(9));
+    assert_eq!(reader.pop_one(), Some(9));
+}
+
+#[test]
+fn zero_capacity_owned_ring_buffer_has_valid_empty_views() {
+    use blueos_infra::ringbuffer::BoxedRingBuffer;
+    let (mut buffer, counts) = observe(true, || BoxedRingBuffer::new(0));
+    assert_eq!(counts, Counts::default());
+    assert_eq!(buffer.capacity(), 0);
+    assert!(buffer.is_empty());
+    {
+        // SAFETY: These are the only endpoints and the owner remains live.
+        let mut writer = unsafe { buffer.writer() };
+        let mut reader = unsafe { buffer.reader() };
+        assert!(writer.push_slice().is_empty());
+        assert!(writer.push_slices().iter().all(|s| s.is_empty()));
+        assert!(reader.pop_slice().is_empty());
+        assert!(reader.pop_slices().iter().all(|s| s.is_empty()));
+        assert!(!writer.push_one(1));
+        assert_eq!(reader.pop_one(), None);
+    }
+    buffer.reset();
+    let (_, counts) = observe(true, || drop(buffer));
+    assert_eq!(counts, Counts::default());
+}
