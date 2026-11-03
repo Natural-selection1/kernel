@@ -1,0 +1,72 @@
+# Copyright (c) 2025 vivo Mobile Communication Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/templates/build_template.gni")
+import("//build/toolchain/blueos.gni")
+
+# Only this standalone harness enables the mapper's allocation-contract tests.
+config("allocation_contract_tests") {
+  rustflags = [ "--cfg=allocation_contract_tests" ]
+}
+
+# board="none" provides the standalone host/Miri allocation checks.
+group("check_loader_allocation") {
+  testonly = true
+  deps = [ ":run_loader_allocation_test(//build/toolchain:host)" ]
+}
+
+group("check_loader_allocation_by_miri") {
+  testonly = true
+  deps = [
+    ":loader_allocation_miri_test",
+    ":loader_allocation_tree_borrows_test",
+  ]
+}
+
+if (current_toolchain == "//build/toolchain:host") {
+  build_rust("loader_allocation_test") {
+    testonly = true
+    crate_type = "bin"
+    sources = [ "//kernel/loader/src/allocation_tests.rs" ]
+    deps = [
+      "//kernel/infra:blueos_infra",
+      "//kernel/test_support/allocation:allocation_test_support",
+    ]
+    rustflags = [ "--test" ]
+    configs += [ ":allocation_contract_tests" ]
+  }
+  run_host("run_loader_allocation_test") {
+    testonly = true
+    runner = ":loader_allocation_test"
+  }
+}
+
+miri_test("loader_allocation_miri_test") {
+  configs = [ ":allocation_contract_tests" ]
+  crate = "//kernel/loader/src/allocation_tests.rs"
+  deps = [
+    "//kernel/infra:blueos_infra",
+    "//kernel/test_support/allocation:allocation_test_support",
+  ]
+}
+
+miri_test("loader_allocation_tree_borrows_test") {
+  configs = [ ":allocation_contract_tests" ]
+  crate = "//kernel/loader/src/allocation_tests.rs"
+  deps = [
+    "//kernel/infra:blueos_infra",
+    "//kernel/test_support/allocation:allocation_test_support",
+  ]
+  extra_miri_flags = [ "-Zmiri-tree-borrows" ]
+}

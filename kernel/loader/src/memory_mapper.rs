@@ -73,6 +73,7 @@ enum MappingMode {
 }
 
 #[derive(Debug)]
+#[must_use = "dropping a memory mapper releases its owned storage"]
 pub struct MemoryMapper {
     virtual_entry: usize,
     virtual_start: usize,
@@ -140,6 +141,10 @@ impl MemoryMapper {
         Ok(self.virtual_end - self.virtual_start)
     }
 
+    /// Replaces the backing memory only after allocation succeeds.
+    ///
+    /// Failure preserves the previous allocation, but does not undo virtual
+    /// address range updates made by the caller before this call.
     #[inline]
     pub fn allocate_memory(&mut self) -> Result<usize> {
         // FIXME: We are not using paging yet, so alignment(usually
@@ -153,7 +158,8 @@ impl MemoryMapper {
         let Ok(layout) = Layout::from_size_align(self.total_size()?, ALIGN) else {
             return Err("Illegal memory layout");
         };
-        self.mem = Storage::from_layout(layout);
+        let mem = Storage::try_from_layout(layout).map_err(|_| "Memory allocation failed")?;
+        self.mem = mem;
         Ok(self.mem.size())
     }
 
@@ -270,3 +276,7 @@ impl MemoryMapper {
         Ok(size)
     }
 }
+
+// The standalone host/Miri target enables these private-state tests explicitly.
+#[cfg(all(test, allocation_contract_tests))]
+mod allocation_tests;
