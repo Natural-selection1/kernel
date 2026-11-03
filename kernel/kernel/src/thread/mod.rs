@@ -23,7 +23,7 @@ use crate::{
     debug,
     process::Process,
     scheduler,
-    support::{Region, RegionalObjectBuilder, Storage},
+    support::{Region, RegionalObjectBuilder},
     sync::{
         mutex::{MutexList, MutexListIterator},
         ISpinLock, Mutex, SpinLock, SpinLockGuard, SpinLockReadGuard, SpinLockWriteGuard,
@@ -37,7 +37,6 @@ use crate::{
 };
 use alloc::{boxed::Box, sync::Weak};
 use core::{
-    alloc::Layout,
     cell::Cell,
     ptr::NonNull,
     sync::atomic::{AtomicI32, AtomicUsize, Ordering},
@@ -45,6 +44,8 @@ use core::{
 
 mod builder;
 pub use builder::*;
+mod stack;
+pub use stack::Stack;
 
 pub type ThreadNode = Arc<Thread>;
 
@@ -71,58 +72,6 @@ pub enum ThreadKind {
     Normal,
     #[cfg(soft_timer)]
     SoftTimer,
-}
-
-#[derive(Debug)]
-pub struct Stack(Storage);
-
-impl Stack {
-    #[inline]
-    pub fn top(&self) -> *mut u8 {
-        unsafe { self.0.base().add(self.size()) }
-    }
-
-    #[inline]
-    pub fn base(&self) -> *mut u8 {
-        self.0.base()
-    }
-
-    #[inline]
-    pub fn from_size(size: usize) -> Option<Self> {
-        let layout = Layout::from_size_align(size, core::mem::align_of::<Context>()).ok()?;
-        let storage = Storage::from_layout(layout);
-        // Storage::from_layout does not check for allocation failure (it returns
-        // a Storage holding a null base). Detect that here so callers can fail
-        // gracefully via Option instead of silently creating a thread with a
-        // null stack, which would crash/hang the scheduler with no diagnostics.
-        if storage.base().is_null() {
-            return None;
-        }
-        Some(Self(storage))
-    }
-
-    pub const fn new() -> Self {
-        Self(Storage::new())
-    }
-
-    #[inline]
-    pub fn from_raw(base: *mut u8, size: usize) -> Option<Self> {
-        const ALIGN: usize = core::mem::align_of::<Context>();
-        if size < ALIGN {
-            return None;
-        }
-        if base.is_null() {
-            return None;
-        }
-        if !(base as usize).is_multiple_of(ALIGN) {
-            return None;
-        }
-        Some(Self(unsafe { Storage::from_raw(base, size) }))
-    }
-
-    pub fn size(&self) -> usize {
-        self.0.size()
-    }
 }
 
 impl_simple_intrusive_adapter!(OffsetOfSchedNode, Thread, sched_node);
