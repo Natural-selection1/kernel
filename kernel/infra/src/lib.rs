@@ -16,6 +16,7 @@
 #![cfg_attr(test, feature(test))]
 #![allow(internal_features)]
 #![allow(clippy::drop_non_drop)]
+#![feature(allocator_api)]
 #![feature(box_as_ptr)]
 #![feature(box_into_inner)]
 #![feature(box_vec_non_null)]

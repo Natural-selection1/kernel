@@ -13,52 +13,102 @@
 // limitations under the License.
 
 extern crate alloc;
-use core::alloc::Layout;
+use alloc::alloc::{handle_alloc_error, AllocError, Global};
+use core::{
+    alloc::{Allocator, Layout},
+    ptr::NonNull,
+};
+
+/// Raw storage whose bytes may be uninitialized.
+///
+/// Owned storage is released exactly once on drop. External storage is never
+/// released here; its validity, lifetime and synchronization remain the caller's
+/// responsibility. Zero-sized owned storage has a non-null aligned pointer,
+/// unlike the empty state returned by `new` and `default`.
+///
+/// The legacy slice accessors still require initialized, valid bytes. Their
+/// safety boundary is tightened separately from this ownership migration.
+#[derive(Debug)]
+#[must_use = "dropping storage releases its owned allocation"]
+pub struct Storage {
+    kind: StorageKind,
+}
 
 #[derive(Debug)]
-pub enum Storage {
-    Alloc(*mut u8, Layout),
-    Raw(*mut u8, usize),
+enum StorageKind {
+    Empty,
+    Owned { base: NonNull<u8>, layout: Layout },
+    External { base: *mut u8, size: usize },
 }
 
 impl Default for Storage {
     fn default() -> Self {
-        Self::Raw(core::ptr::null_mut(), 0)
+        Self::new()
     }
 }
 
 impl Storage {
+    /// Allocates uninitialized storage using the program's global allocator.
+    ///
+    /// Returns [`AllocError`] on allocation failure, without creating an owning
+    /// `Storage`. Success provides a non-null pointer aligned to `layout.align()`.
+    /// Zero-sized layouts use an aligned dangling pointer and do not allocate or
+    /// deallocate any heap memory.
+    ///
+    /// The bytes are not initialized. Initialize them through the raw pointer
+    /// before exposing them as initialized values or byte slices.
     #[inline]
-    pub fn from_layout(layout: Layout) -> Self {
-        let base = unsafe { alloc::alloc::alloc(layout) };
-        Storage::Alloc(base, layout)
+    pub fn try_from_layout(layout: Layout) -> Result<Self, AllocError> {
+        let base = Global.allocate(layout)?.cast::<u8>();
+        Ok(Self {
+            kind: StorageKind::Owned { base, layout },
+        })
     }
 
-    // This API is designed to be used by memory allocated by FFI, so
-    // invoker of this API is responsible to guarantee the safety.
+    /// Allocates uninitialized storage, invoking the allocation error handler
+    /// if allocation fails. Use [`Self::try_from_layout`] to recover from failure.
+    #[inline]
+    pub fn from_layout(layout: Layout) -> Self {
+        Self::try_from_layout(layout).unwrap_or_else(|_| handle_alloc_error(layout))
+    }
+
+    /// Records externally managed storage without taking responsibility for freeing it.
+    ///
+    /// # Safety
+    /// For a nonempty range, `base` must point to `size` accessible bytes within
+    /// one allocation, with `size <= isize::MAX`. The caller must keep that memory
+    /// alive for all uses and ensure initialization and synchronization suitable
+    /// for each access. This type does not encode the external memory's lifetime.
+    /// A zero-length range preserves `base` as supplied, including a null pointer.
     #[inline]
     pub unsafe fn from_raw(base: *mut u8, size: usize) -> Self {
-        Storage::Raw(base, size)
+        Self {
+            kind: StorageKind::External { base, size },
+        }
     }
 
     #[inline]
     pub const fn new() -> Self {
-        Storage::Raw(core::ptr::null_mut(), 0)
+        Self {
+            kind: StorageKind::Empty,
+        }
     }
 
     #[inline]
     pub fn base(&self) -> *mut u8 {
-        match self {
-            Storage::Alloc(base, _) => *base,
-            Storage::Raw(base, _) => *base,
+        match &self.kind {
+            StorageKind::Empty => core::ptr::null_mut(),
+            StorageKind::Owned { base, .. } => base.as_ptr(),
+            StorageKind::External { base, .. } => *base,
         }
     }
 
     #[inline]
     pub fn size(&self) -> usize {
-        match self {
-            Storage::Alloc(_, layout) => layout.size(),
-            Storage::Raw(_, size) => *size,
+        match &self.kind {
+            StorageKind::Empty => 0,
+            StorageKind::Owned { layout, .. } => layout.size(),
+            StorageKind::External { size, .. } => *size,
         }
     }
 
@@ -76,12 +126,16 @@ impl Storage {
 impl Drop for Storage {
     #[inline]
     fn drop(&mut self) {
-        if let Storage::Alloc(base, layout) = self {
-            unsafe { alloc::alloc::dealloc(*base, *layout) }
+        if let StorageKind::Owned { base, layout } = &self.kind {
+            // SAFETY: Only Global::allocate constructs Owned, and neither its
+            // pointer nor layout can be replaced by callers. Global handles
+            // zero-sized dangling pointers without calling the underlying heap.
+            unsafe { Global.deallocate(*base, *layout) };
         }
     }
 }
 
-// FIXME: Workaround for pointer based storage.
+// Retained for compatibility. External-memory lifetime and cross-thread access
+// contracts, including safe wrappers around from_raw, need a separate audit.
 unsafe impl Send for Storage {}
 unsafe impl Sync for Storage {}
