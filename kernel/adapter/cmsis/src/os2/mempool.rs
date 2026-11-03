@@ -182,7 +182,10 @@ mod tests {
         .unwrap();
         let cb = Storage::from_layout(cb_layout);
         let data_layout = Layout::from_size_align(block_count * block_size, 8).unwrap();
-        let data = Storage::from_layout(cb_layout);
+        let data = Storage::from_layout(data_layout);
+        // SAFETY: Initialize the owned data range before the CMSIS entry point
+        // forms a mutable byte slice over this external buffer.
+        unsafe { data.base().write_bytes(0, data.size()) };
         attr.cb_mem = cb.base() as *mut c_void;
         attr.cb_size = cb_layout.size() as u32;
         attr.mp_mem = data.base() as *mut c_void;

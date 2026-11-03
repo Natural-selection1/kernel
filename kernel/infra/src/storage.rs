@@ -26,8 +26,9 @@ use core::{
 /// responsibility. Zero-sized owned storage has a non-null aligned pointer,
 /// unlike the empty state returned by `new` and `default`.
 ///
-/// The legacy slice accessors still require initialized, valid bytes. Their
-/// safety boundary is tightened separately from this ownership migration.
+/// Allocation does not initialize the bytes. Slice access is unsafe because
+/// callers must establish initialization, validity and the reference's access
+/// permissions, including for externally managed memory.
 #[derive(Debug)]
 #[must_use = "dropping storage releases its owned allocation"]
 pub struct Storage {
@@ -112,13 +113,35 @@ impl Storage {
         }
     }
 
+    /// Views initialized bytes without taking ownership of external memory.
+    ///
+    /// # Safety
+    /// For a nonempty view, the range must be valid for reads within one live
+    /// allocation, contain only initialized bytes and have size <= isize::MAX.
+    /// No writes may occur through other pointers for the returned reference's
+    /// lifetime. External memory must remain alive for that entire lifetime.
+    /// An empty view has no backing-memory requirements.
     #[inline]
-    pub fn as_slice(&self) -> &[u8] {
+    pub unsafe fn as_slice(&self) -> &[u8] {
+        if self.size() == 0 {
+            return &[];
+        }
         unsafe { core::slice::from_raw_parts(self.base(), self.size()) }
     }
 
+    /// Mutably views initialized bytes; use raw writes to initialize storage first.
+    ///
+    /// # Safety
+    /// For a nonempty view, the range must be valid for reads and writes within
+    /// one live allocation, contain only initialized bytes and have size <=
+    /// isize::MAX. The returned reference must have exclusive access to the
+    /// bytes for its lifetime, and external memory must remain alive throughout.
+    /// An empty view has no backing-memory requirements.
     #[inline]
-    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+    pub unsafe fn as_mut_slice(&mut self) -> &mut [u8] {
+        if self.size() == 0 {
+            return &mut [];
+        }
         unsafe { core::slice::from_raw_parts_mut(self.base(), self.size()) }
     }
 }
