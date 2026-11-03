@@ -61,10 +61,11 @@ impl MemoryPoolInner {
         let mut storage_ctor: Box<dyn Fn(usize, &mut Block)> = if let Some(raw) = at {
             let base = raw.as_mut_ptr();
             Box::new(move |i, block: &mut Block| {
-                block.set_storage(Storage::Raw(
-                    unsafe { base.add(i * block_size) },
-                    block_size,
-                ));
+                // The existing pool API retains this external storage; its
+                // lifetime contract is unchanged by the Storage migration.
+                block.set_storage(unsafe {
+                    Storage::from_raw(base.add(i * block_size), block_size)
+                });
             })
         } else {
             Box::new(|i, block: &mut Block| {

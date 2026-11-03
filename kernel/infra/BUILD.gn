@@ -17,7 +17,24 @@ import("//build/toolchain/blueos.gni")
 
 group("check_infra") {
   testonly = true
-  deps = [ ":run_infra_unittest" ]
+  deps = [
+    ":check_infra_allocation",
+    ":run_infra_unittest",
+  ]
+}
+
+# Isolated allocation tests do not run the unrelated intrusive-container tests.
+group("check_infra_allocation") {
+  testonly = true
+  deps = [ ":run_infra_allocation_test(//build/toolchain:host)" ]
+}
+
+group("check_infra_allocation_by_miri") {
+  testonly = true
+  deps = [
+    ":infra_allocation_miri_test",
+    ":infra_allocation_tree_borrows_test",
+  ]
 }
 
 group("check_infra_by_miri") {
@@ -74,4 +91,39 @@ run_clippy("infra_unittest_clippy") {
 run_host("run_infra_unittest") {
   testonly = true
   runner = ":infra_unittest"
+}
+
+if (current_toolchain == "//build/toolchain:host") {
+  build_rust("infra_allocation_test") {
+    testonly = true
+    crate_type = "bin"
+    sources = [ "tests/allocation.rs" ]
+    deps = [
+      ":blueos_infra",
+      "//kernel/test_support/allocation:allocation_test_support",
+    ]
+    rustflags = [ "--test" ]
+  }
+
+  run_host("run_infra_allocation_test") {
+    testonly = true
+    runner = ":infra_allocation_test"
+  }
+}
+
+miri_test("infra_allocation_miri_test") {
+  crate = "tests/allocation.rs"
+  deps = [
+    ":blueos_infra",
+    "//kernel/test_support/allocation:allocation_test_support",
+  ]
+}
+
+miri_test("infra_allocation_tree_borrows_test") {
+  crate = "tests/allocation.rs"
+  deps = [
+    ":blueos_infra",
+    "//kernel/test_support/allocation:allocation_test_support",
+  ]
+  extra_miri_flags = [ "-Zmiri-tree-borrows" ]
 }
