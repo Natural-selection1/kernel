@@ -230,6 +230,20 @@ mod tests {
     use core::alloc::Layout;
 
     #[test]
+    fn test_alloc_stack_layout() {
+        assert!(Stack::from_size(0).is_none());
+        assert!(Stack::from_size(usize::MAX).is_none());
+        let stack = Stack::from_size(1600).unwrap();
+        assert_eq!(stack.size(), 1600);
+        assert!(!stack.base().is_null());
+        assert_eq!(
+            stack.base() as usize % core::mem::align_of::<crate::arch::Context>(),
+            0
+        );
+        assert_eq!(stack.top() as usize - stack.base() as usize, 1600);
+    }
+
+    #[test]
     fn test_use_alloc_stack() {
         const SIZE: usize = 1600;
         let stack = Stack::from_size(SIZE).unwrap();
