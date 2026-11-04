@@ -45,6 +45,7 @@ group("check_kernel_probe") {
 }
 
 _shared_deps = [
+  "//external/pin-init:pin_init",
   "//external/rust:bitflags",
   "//external/rust:const-default",
   "//external/rust:embedded-hal",
