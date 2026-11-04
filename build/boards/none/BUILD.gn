@@ -22,6 +22,7 @@ blueos_board("none") {
   default = []
   check_all = [
     "//build/tests",
+    "//external/pin-init:check_pin_init",
     "//kernel/infra:check_infra",
     "//kernel/infra:check_infra_by_clippy",
     "//kernel/kernel/tests/allocation:check_stack_allocation",

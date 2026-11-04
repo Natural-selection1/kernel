@@ -1,0 +1,49 @@
+Name: pin-init
+Source: https://github.com/torvalds/linux/tree/14c897740388216acd59477a382de327d5e27ba4/rust/pin-init
+Reference commit: 14c897740388216acd59477a382de327d5e27ba4
+Reference subtree: rust/pin-init
+Standalone upstream: https://github.com/Rust-for-Linux/pin-init
+License: Apache-2.0 OR MIT (original SPDX headers retained)
+License texts: standalone upstream LICENSE-APACHE and LICENSE-MIT, retrieved 2026-11-04.
+UPSTREAM.sha256 records the original imported files before local modifications.
+This is a GN-managed source snapshot, not a crates.io version; gnrt must not regenerate it.
+
+Build configuration
+- Runtime and proc-macro sources retain edition 2021; BlueOS contract tests
+  use the repository default edition.
+- Runtime: alloc enabled; std, unsafe-pinned, kernel and USE_RUSTC_FEATURES disabled.
+- pin_init_internal is a host proc macro. Its syn/quote/proc-macro2 dependencies
+  use //external/rust:* declarations and GNRT-generated host recipes. Never refer
+  directly to generated vendor paths. Run gnrt sync --all before gn gen.
+- This fixed Linux subtree contains no Cargo manifests, so it remains an explicit
+  GN source snapshot, like other manually maintained external projects. GNRT
+  manages its Cargo dependencies, not the snapshot or its local safety patches.
+  Migrating it to a different Cargo/git package requires separate version review.
+- Host tests and Miri use the same runtime features as the kernel.
+- Examples and upstream documentation are retained for provenance; only the explicitly
+  declared contract tests are built here. Upstream documentation may refer to Cargo.
+
+Local source changes
+1. Removed Wrapper<T> for MaybeUninit<T>. That wrapper does not drop T before
+   invalidating its storage, so it cannot safely accept an arbitrary PinInit<T>.
+   A pinned Rust object may register its address and deregister in Drop. Dropping
+   Box<MaybeUninit<T>> then leaves a stale registration; the original combination
+   reproduced a use-after-free under both Miri models. tests/ui/maybe_uninit.rs
+   rejects the combination; contract tests preserve the positive Box/UnsafeCell cases.
+2. Clarified cast_pin_init's unsafe preconditions to include pinning/destruction,
+   rather than layout/value validity alone. UnsafeCell's Wrapper impl is retained:
+   it drops its inner T normally.
+3. Marked StackInit, DropGuard and ArrayInitGuard must_use per repository guard policy.
+4. Removed trailing whitespace from the imported README and extra final blank
+   lines from the license text files; license terms are unchanged.
+No initializer/proc-macro algorithm was rewritten. These targeted checks are not
+an audit of every upstream API. In particular, the upstream standard Arc adapter
+is not BlueOS's planned implicitly pinned Arc.
+
+Checks (board=none)
+  ninja -C <out> check_pin_init
+  ninja -C <miri-out> check_pin_init_by_miri
+Use the repository Rust toolchain for host checks. Miri requires a matching
+miri_sysroot (or MIRI_SYSROOT); nightly-2026-05-24 is also supported for Miri.
+The shared Rust compile-test runner checks expected error codes and a positive
+fixture using the dependencies of a real GN probe target.
