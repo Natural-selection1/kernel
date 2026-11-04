@@ -32,3 +32,11 @@ pub fn check() -> Result<(), AllocError> {
     let _initialized = storage.write_init(7u32).unwrap();
     Ok(())
 }
+
+pub fn opaque_positive() {
+    use blueos_infra::opaque::Opaque;
+    fn needs_send<T: Send>() {}
+    needs_send::<Opaque<u32>>();
+    let shell = Opaque::<u32>::uninit();
+    let _pointer = shell.get();
+}
