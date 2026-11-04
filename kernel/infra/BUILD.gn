@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import("//build/templates/build_template.gni")
+import("//build/templates/rust_compile_tests.gni")
 import("//build/toolchain/blueos.gni")
 
 group("check_infra") {
   testonly = true
   deps = [
     ":check_infra_allocation",
+    ":check_infra_init",
     ":run_infra_unittest",
   ]
 }
@@ -51,6 +53,7 @@ group("check_infra_by_clippy") {
 }
 
 shared_deps = [
+  "//external/pin-init:pin_init",
   "//external/rust:cfg-if",
   "//external/rust:memchr",
   "//external/rust:spin",
@@ -125,5 +128,53 @@ miri_test("infra_allocation_tree_borrows_test") {
     ":blueos_infra",
     "//kernel/test_support/allocation:allocation_test_support",
   ]
+  extra_miri_flags = [ "-Zmiri-tree-borrows" ]
+}
+
+# Initialization contracts link the production libraries, with a host allocator.
+group("check_infra_init") {
+  testonly = true
+  deps = [
+    ":infra_init_compile_tests(//build/toolchain:host)",
+    ":run_infra_init_test(//build/toolchain:host)",
+  ]
+}
+group("check_infra_init_by_miri") {
+  testonly = true
+  deps = [
+    ":infra_init_miri_test",
+    ":infra_init_tree_borrows_test",
+  ]
+}
+_init_test_deps = [
+  ":blueos_infra",
+  "//external/pin-init:pin_init",
+  "//kernel/test_support/allocation:allocation_test_support",
+]
+if (current_toolchain == "//build/toolchain:host") {
+  build_rust("infra_init_test") {
+    testonly = true
+    crate_type = "bin"
+    sources = [ "tests/init.rs" ]
+    deps = _init_test_deps
+    rustflags = [ "--test" ]
+  }
+  run_host("run_infra_init_test") {
+    testonly = true
+    runner = ":infra_init_test"
+  }
+  rust_compile_tests("infra_init_compile_tests") {
+    deps = _init_test_deps
+    pass = "tests/init_ui/pass.rs"
+    fail = [ "tests/init_ui/move_pinned.rs" ]
+  }
+}
+miri_test("infra_init_miri_test") {
+  crate = "tests/init.rs"
+  deps = _init_test_deps
+}
+miri_test("infra_init_tree_borrows_test") {
+  crate = "tests/init.rs"
+  deps = _init_test_deps
   extra_miri_flags = [ "-Zmiri-tree-borrows" ]
 }

@@ -125,6 +125,7 @@ macro_rules! trace {
 
 #[cfg(test)]
 mod tests {
+    mod init;
     extern crate alloc;
     use super::*;
     use crate as blueos;
