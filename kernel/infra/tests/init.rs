@@ -342,3 +342,5 @@ fn panic_releases_existing_uninitialized_storage() {
     assert!(result.is_err());
     assert_eq!(drops.get(), 1);
 }
+
+mod opaque;

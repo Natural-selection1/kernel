@@ -1,0 +1,47 @@
+Initialization contract checks
+==============================
+
+The tests link blueos_infra and pin_init as real GN dependencies. TestAllocator
+is registered explicitly by each standalone binary and comes from
+//kernel/test_support/allocation. No production module is loaded through a
+cross-directory #[path] or include!.
+
+Targets (board="none"):
+  ninja -C <out> check_pin_init check_infra_init
+  ninja -C <out> check_pin_init_by_miri check_infra_init_by_miri
+
+Use separate output directories for nightly-2024-11-22 and nightly-2026-05-24.
+Place the selected toolchain's bin directory directly on PATH before gn gen
+and ninja (Cargo build-script probes use a sanitized environment). For Miri,
+use nightly-2026-05-24 and set MIRI_SYSROOT before gn gen. Each *_by_miri target
+runs both the default model and Tree Borrows, with alloc enabled and std off
+in the pin-init runtime library.
+
+check_pin_init verifies macros, stack initialization and the Drop guarantee for
+ordinary Box and UnsafeCell. Its compile probes reject MaybeUninit wrapping,
+moving a pinned !Unpin value and a PinInit-only initializer on an unpinned field.
+
+check_infra_init covers all four local Box methods, injected allocation failure,
+initializer errors, high alignment, zero-sized types, partial field and array
+rollback, moving owners, existing uninitialized Boxes, and unwind cleanup.
+Opaque tests cover raw access, direct layout, suppressed payload destruction,
+and an outer pinned owner's explicit initialization/destruction invariant.
+The compile probes reject Opaque's Sync, Unpin and Wrapper implementations and
+moving the value returned by the local pin_init method. Each compile suite has
+a positive fixture; negative fixtures must produce exactly the specified error
+codes with the actual compiled libraries, not a missing dependency diagnostic.
+
+Allocation observations deliberately contain no failing assertions or logging.
+black_box prevents the optimizer from removing allocations in observed paths.
+Panic tests do not assert counts for allocations made by the panic machinery;
+Drop counters and Miri's leak checking verify cleanup instead.
+
+Kernel smoke test: kernel/kernel:run_unittest on qemu_riscv64 and
+qemu_mps2_an385 includes pin_init_kernel_allocator_smoke, using KernelAllocator
+and the kernel's existing From<AllocError> conversion. Host tests cannot replace
+these architecture integration checks.
+
+These checks do not establish safety of all infra containers, external-memory
+wrappers, concurrent code or all upstream pin-init APIs. Opaque deliberately has
+no automatic payload Drop and no generic Wrapper adapter. TinyArc, intrusive
+lists, locks and the future UniqueArc/Arc implementation are outside this work.

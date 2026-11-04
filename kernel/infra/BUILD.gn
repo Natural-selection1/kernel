@@ -166,7 +166,12 @@ if (current_toolchain == "//build/toolchain:host") {
   rust_compile_tests("infra_init_compile_tests") {
     deps = _init_test_deps
     pass = "tests/init_ui/pass.rs"
-    fail = [ "tests/init_ui/move_pinned.rs" ]
+    fail = [
+      "tests/init_ui/move_pinned.rs",
+      "tests/init_ui/opaque_wrapper.rs",
+      "tests/init_ui/opaque_sync.rs",
+      "tests/init_ui/opaque_unpin.rs",
+    ]
   }
 }
 miri_test("infra_init_miri_test") {
