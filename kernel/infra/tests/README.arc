@@ -50,3 +50,20 @@ Use the same GNRT sync/compiler environment as other isolated infra tests.
 Changing toolchains requires synchronization before generating/building targets.
 The older TinyArc, external storage APIs and intrusive containers retain their
 previous safety limitations; passing these targets does not audit them.
+
+Initialization
+--------------
+Import blueos_infra::init::{InPlaceInit, InPlaceWrite}, not pin_init's trait
+of the same name. GN callers of pin-init macros need a direct dependency on
+//external/pin-init:pin_init. Both owners implement four fallible constructors;
+UniqueArc returns Pin<UniqueArc<T>> for pin initialization, Arc returns itself.
+Arc delegates every initialization path to UniqueArc before sharing ownership.
+
+UniqueArc::<T>::try_new_uninit() creates a control block in place using the
+existing Box initializer and pin_init::uninit. InPlaceWrite consumes that owner.
+The initializer cleans completed fields on error/unwind, then the owner frees
+storage without dropping a complete T. Success changes the owner type to T.
+The private cast relies on repr(C) field offsets and MaybeUninit<T>'s identical
+size/alignment, not on an enclosing Rust layout or niche optimization. The
+count is already valid throughout; only the payload is uninitialized. A pinned
+initializer's successful value is immediately pinned without movable exposure.

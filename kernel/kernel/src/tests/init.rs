@@ -48,3 +48,39 @@ fn pin_init_kernel_allocator_smoke() {
     let ordinary = Box::init(7u32).unwrap();
     assert_eq!(*ordinary, 7);
 }
+
+#[test]
+fn arc_kernel_allocator_smoke() {
+    use blueos_infra::{
+        arc::{Arc, UniqueArc},
+        init::InPlaceWrite,
+    };
+    let drops = &Cell::new(0);
+    let value = UniqueArc::try_pin_init(pin_init!(Value {
+        number: 42, drops, _pin: PhantomPinned,
+    }? crate::error::Error))
+    .unwrap();
+    let original = &*value as *const Value<'_>;
+    let shared: Arc<_> = value.into();
+    let clone = shared.clone();
+    drop(shared);
+    assert_eq!(Arc::as_ptr(&clone), original);
+    assert_eq!(clone.as_pin_ref().number, 42);
+    assert_eq!(drops.get(), 0);
+    drop(clone);
+    assert_eq!(drops.get(), 1);
+    let direct = Arc::pin_init(pin_init!(Value {
+        number: 7,
+        drops,
+        _pin: PhantomPinned,
+    }))
+    .unwrap();
+    assert_eq!(direct.number, 7);
+    drop(direct);
+    assert_eq!(drops.get(), 2);
+    let storage = UniqueArc::<u32>::try_new_uninit().unwrap();
+    let mut unique = storage.write_init(9u32).unwrap();
+    *unique = 10;
+    let shared: Arc<_> = unique.into();
+    assert_eq!(*shared, 10);
+}
