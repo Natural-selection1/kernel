@@ -21,6 +21,7 @@ group("check_infra") {
   deps = [
     ":check_infra_allocation",
     ":check_infra_arc",
+    ":check_infra_arc_migrations",
     ":check_infra_init",
     ":run_infra_unittest",
   ]
@@ -266,5 +267,56 @@ miri_test("infra_arc_private_tree_borrows_test") {
   crate = "src/lib.rs"
   deps = shared_deps
   test_filter = "arc::refcount_tests::"
+  extra_miri_flags = [ "-Zmiri-tree-borrows" ]
+}
+
+# Migrate owners without widening the audit to intrusive-list algorithms.
+group("check_infra_arc_migrations") {
+  testonly = true
+  deps = [
+    ":run_infra_arc_migration_list_test(//build/toolchain:host)",
+    ":run_infra_arc_migration_ring_test(//build/toolchain:host)",
+  ]
+}
+group("check_infra_arc_migrations_by_miri") {
+  testonly = true
+  deps = [
+    ":infra_arc_migration_ring_miri_test",
+    ":infra_arc_migration_ring_tree_borrows_test",
+  ]
+}
+if (current_toolchain == "//build/toolchain:host") {
+  action("run_infra_arc_migration_ring_test") {
+    testonly = true
+    deps = [ ":infra_unittest" ]
+    script = "//build/scripts/run_cmd.py"
+    args = [
+      "-b",
+      rebase_path("$root_out_dir/bin/infra_unittest") +
+          " ringbuffer::tests::test_concurrent",
+    ]
+    outputs = [ "$target_gen_dir/$target_name/dummy" ]
+  }
+  action("run_infra_arc_migration_list_test") {
+    testonly = true
+    deps = [ ":infra_unittest" ]
+    script = "//build/scripts/run_cmd.py"
+    args = [
+      "-b",
+      rebase_path("$root_out_dir/bin/infra_unittest") +
+          " list::typed_atomic_ilist::tests::",
+    ]
+    outputs = [ "$target_gen_dir/$target_name/dummy" ]
+  }
+}
+miri_test("infra_arc_migration_ring_miri_test") {
+  crate = "src/lib.rs"
+  deps = shared_deps
+  test_filter = "ringbuffer::tests::test_concurrent"
+}
+miri_test("infra_arc_migration_ring_tree_borrows_test") {
+  crate = "src/lib.rs"
+  deps = shared_deps
+  test_filter = "ringbuffer::tests::test_concurrent"
   extra_miri_flags = [ "-Zmiri-tree-borrows" ]
 }

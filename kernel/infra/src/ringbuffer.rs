@@ -584,7 +584,7 @@ impl Reader<'_> {
 mod tests {
     use super::*;
     #[cfg(test)]
-    use crate::tinyarc::TinyArc as Arc;
+    use crate::arc::Arc as SharedArc;
     #[cfg(test)]
     use std::thread;
     #[cfg(test)]
@@ -906,15 +906,15 @@ mod tests {
 
     #[test]
     fn test_concurrent_push_pop() {
-        let rb = Arc::new(RingBuffer::new());
+        let rb = SharedArc::try_new(RingBuffer::new()).expect("allocate shared test ring buffer");
         let mut buffer = Box::new([0u8; 16]);
 
         unsafe {
             rb.init(buffer.as_mut_ptr(), 16);
         }
 
-        let rb_producer = Arc::clone(&rb);
-        let rb_consumer = Arc::clone(&rb);
+        let rb_producer = SharedArc::clone(&rb);
+        let rb_consumer = SharedArc::clone(&rb);
 
         let producer = thread::spawn(move || {
             for i in 0..100 {
@@ -1157,9 +1157,10 @@ mod tests {
 
     #[test]
     fn test_concurrent_boxed_ringbuffer() {
-        let rb = Arc::new(BoxedRingBuffer::new(16));
-        let rb_producer = Arc::clone(&rb);
-        let rb_consumer = Arc::clone(&rb);
+        let rb = SharedArc::try_new(BoxedRingBuffer::new(16))
+            .expect("allocate shared owned test ring buffer");
+        let rb_producer = SharedArc::clone(&rb);
+        let rb_consumer = SharedArc::clone(&rb);
 
         let producer = thread::spawn(move || {
             for i in 0..100 {
