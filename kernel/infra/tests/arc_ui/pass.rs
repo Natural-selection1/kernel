@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use blueos_infra::arc::{Arc, UniqueArc};
+#![feature(allocator_api)]
+use blueos_infra::{
+    arc::{Arc, UniqueArc},
+    init::{InPlaceInit, InPlaceWrite},
+};
 use std::{cell::Cell, marker::PhantomPinned, pin::Pin};
 fn send<T: Send>() {}
 fn sync<T: Sync>() {}
@@ -32,4 +36,13 @@ pub fn check() {
     let _: Pin<&u32> = shared.as_pin_ref();
     let pinned: Pin<UniqueArc<PhantomPinned>> = UniqueArc::try_new(PhantomPinned).unwrap().into();
     let _: Arc<PhantomPinned> = pinned.into();
+}
+
+pub fn initialization() {
+    let shared: Arc<PhantomPinned> = Arc::pin_init(PhantomPinned).unwrap();
+    let _: Pin<&PhantomPinned> = shared.as_pin_ref();
+    let pinned: Pin<UniqueArc<PhantomPinned>> = UniqueArc::pin_init(PhantomPinned).unwrap();
+    let _: Arc<PhantomPinned> = pinned.into();
+    let storage = UniqueArc::<u32>::try_new_uninit().unwrap();
+    let _: UniqueArc<u32> = storage.write_init(42u32).unwrap();
 }

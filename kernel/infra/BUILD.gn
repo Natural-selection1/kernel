@@ -218,6 +218,7 @@ group("check_infra_arc_by_miri") {
 }
 _arc_test_deps = [
   ":blueos_infra",
+  "//external/pin-init:pin_init",
   "//kernel/test_support/allocation:allocation_test_support",
 ]
 if (current_toolchain == "//build/toolchain:host") {
@@ -238,7 +239,8 @@ if (current_toolchain == "//build/toolchain:host") {
     script = "//build/scripts/run_cmd.py"
     args = [
       "-b",
-      rebase_path("$root_out_dir/bin/infra_unittest") + " arc::refcount_tests::",
+      rebase_path("$root_out_dir/bin/infra_unittest") +
+          " arc::refcount_tests::",
     ]
     outputs = [ "$target_gen_dir/$target_name/dummy" ]
   }
@@ -249,6 +251,7 @@ if (current_toolchain == "//build/toolchain:host") {
       "tests/arc_ui/unique_clone.rs",
       "tests/arc_ui/arc_mut.rs",
       "tests/arc_ui/move_pinned.rs",
+      "tests/arc_ui/move_initialized.rs",
       "tests/arc_ui/arc_send.rs",
       "tests/arc_ui/arc_sync.rs",
       "tests/arc_ui/arc_sync_non_send.rs",

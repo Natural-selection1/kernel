@@ -27,10 +27,11 @@
 //! Saturation therefore leaks the allocation instead of freeing live data.
 
 extern crate alloc;
+use crate::init::{InPlaceInit, InPlaceWrite, Init, PinInit};
 use alloc::{alloc::AllocError, boxed::Box};
 use core::{
     marker::PhantomData,
-    mem::ManuallyDrop,
+    mem::{ManuallyDrop, MaybeUninit},
     ops::{Deref, DerefMut},
     pin::Pin,
     ptr::NonNull,
@@ -248,6 +249,106 @@ impl<T> Drop for UniqueArc<T> {
     fn drop(&mut self) {
         // SAFETY: Drop consumes the sole live reference.
         unsafe { release(self.ptr) };
+    }
+}
+
+impl<T> UniqueArc<T> {
+    /// Allocate the control block without initializing T. Dropping this owner
+    /// releases storage without running T's destructor. Use InPlaceWrite to
+    /// initialize it and transfer ownership to the initialized type.
+    pub fn try_new_uninit() -> Result<UniqueArc<MaybeUninit<T>>, AllocError> {
+        let inner = Box::try_init(pin_init::init!(ArcInner {
+            count: Refcount::new(),
+            data <- pin_init::uninit::<T, AllocError>(),
+        }? AllocError))?;
+        Ok(UniqueArc {
+            // SAFETY: The Box owns a valid count and a valid MaybeUninit<T>.
+            ptr: unsafe { NonNull::new_unchecked(Box::into_raw(inner)) },
+            _owns: PhantomData,
+        })
+    }
+}
+
+impl<T> UniqueArc<MaybeUninit<T>> {
+    fn slot(&mut self) -> *mut T {
+        // SAFETY: The sole owner provides writable storage; project via raw
+        // pointer so no reference to the not-yet-initialized T is created.
+        unsafe { (&raw mut (*self.ptr.as_ptr()).data).cast::<T>() }
+    }
+
+    // SAFETY requirement: the payload is a fully initialized T. If initialized
+    // by PinInit, the caller must immediately pin/share the returned owner.
+    unsafe fn assume_init(self) -> UniqueArc<T> {
+        let this = ManuallyDrop::new(self);
+        // ArcInner is repr(C); MaybeUninit<T> has T's size and alignment.
+        // Therefore both control blocks have identical offsets, total size and
+        // alignment (no outer niche optimization is assumed). The count stays
+        // at one and this transfer neither moves T nor relinquishes ownership.
+        UniqueArc {
+            ptr: this.ptr.cast(),
+            _owns: PhantomData,
+        }
+    }
+}
+
+impl<T> InPlaceWrite<T> for UniqueArc<MaybeUninit<T>> {
+    type Initialized = UniqueArc<T>;
+
+    fn write_init<E>(mut self, init: impl Init<T, E>) -> Result<UniqueArc<T>, E> {
+        // SAFETY: slot is valid, exclusive storage. Init permits subsequent
+        // moves. On error/unwind its completed fields are cleaned by init;
+        // self drops only MaybeUninit<T> and releases the backing allocation.
+        unsafe { pin_init::raw_try_init(self.slot(), init)? };
+        // SAFETY: The initializer succeeded, so T is completely initialized.
+        Ok(unsafe { self.assume_init() })
+    }
+
+    fn write_pin_init<E>(mut self, init: impl PinInit<T, E>) -> Result<Pin<UniqueArc<T>>, E> {
+        // SAFETY: Same rollback as write_init; success is immediately pinned
+        // below, preserving this address through T's destructor.
+        unsafe { pin_init::raw_try_init(self.slot(), init)? };
+        // SAFETY: T is initialized and converted to pinned ownership without
+        // exposing an opportunity to move/replace the payload.
+        Ok(unsafe { self.assume_init() }.into())
+    }
+}
+
+impl<T> InPlaceInit<T> for UniqueArc<T> {
+    type PinnedSelf = Pin<Self>;
+
+    fn init(init: impl Init<T>) -> Result<Self, AllocError> {
+        let storage = Self::try_new_uninit()?;
+        Ok(storage
+            .write_init(init)
+            .unwrap_or_else(|never| match never {}))
+    }
+    fn pin_init(init: impl PinInit<T>) -> Result<Self::PinnedSelf, AllocError> {
+        let storage = Self::try_new_uninit()?;
+        Ok(storage
+            .write_pin_init(init)
+            .unwrap_or_else(|never| match never {}))
+    }
+    fn try_init<E: From<AllocError>>(init: impl Init<T, E>) -> Result<Self, E> {
+        Self::try_new_uninit()?.write_init(init)
+    }
+    fn try_pin_init<E: From<AllocError>>(init: impl PinInit<T, E>) -> Result<Self::PinnedSelf, E> {
+        Self::try_new_uninit()?.write_pin_init(init)
+    }
+}
+impl<T> InPlaceInit<T> for Arc<T> {
+    type PinnedSelf = Self;
+
+    fn init(init: impl Init<T>) -> Result<Self, AllocError> {
+        UniqueArc::init(init).map(Self::from)
+    }
+    fn pin_init(init: impl PinInit<T>) -> Result<Self, AllocError> {
+        UniqueArc::pin_init(init).map(Self::from)
+    }
+    fn try_init<E: From<AllocError>>(init: impl Init<T, E>) -> Result<Self, E> {
+        UniqueArc::try_init(init).map(Self::from)
+    }
+    fn try_pin_init<E: From<AllocError>>(init: impl PinInit<T, E>) -> Result<Self, E> {
+        UniqueArc::try_pin_init(init).map(Self::from)
     }
 }
 

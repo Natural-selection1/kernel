@@ -190,3 +190,5 @@ fn concurrent_clones_drop_payload_once() {
     });
     assert_eq!(drops.load(Ordering::Relaxed), 1);
 }
+
+mod arc_init;

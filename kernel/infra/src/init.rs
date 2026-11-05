@@ -35,6 +35,22 @@
 //! ownership to `Box<T>` (or `Pin<Box<T>>`), and failure releases the storage.
 //! Initializers must clean up completed fields on error or unwind; the macros
 //! provide that rollback. The uninitialized complete `T` is never dropped.
+//!
+//! [`crate::arc::UniqueArc`] also implements this trait and `InPlaceWrite` for
+//! its uninitialized form. Its pinned result is `Pin<UniqueArc<T>>`.
+//! [`crate::arc::Arc`] delegates initialization to that exclusive owner and
+//! returns `Arc<T>` directly: shared ownership intrinsically pins its value.
+//!
+//! ```
+//! # #![feature(allocator_api)]
+//! # extern crate alloc;
+//! use blueos_infra::{arc::{Arc, UniqueArc}, init::{InPlaceInit, InPlaceWrite}};
+//! let storage = UniqueArc::<u32>::try_new_uninit()?;
+//! let unique = storage.write_init(42u32).unwrap();
+//! let shared: Arc<u32> = unique.into();
+//! let directly_shared = Arc::pin_init(7u32)?;
+//! # Ok::<(), alloc::alloc::AllocError>(())
+//! ```
 
 extern crate alloc;
 use alloc::{alloc::AllocError, boxed::Box};
@@ -44,7 +60,8 @@ pub use pin_init::{InPlaceWrite, Init, PinInit};
 /// An owner that can allocate and initialize its value in place.
 ///
 /// `PinnedSelf` allows future owners with an intrinsic pinning guarantee to
-/// return themselves. This module currently implements only standard `Box<T>`.
+/// return themselves. Implementations cover standard `Box<T>`,
+/// [`crate::arc::UniqueArc<T>`] and [`crate::arc::Arc<T>`].
 pub trait InPlaceInit<T>: Sized {
     /// The owner returned after fixed-address initialization.
     type PinnedSelf;
