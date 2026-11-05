@@ -245,6 +245,7 @@ unsafe impl Sync for MemoryPool {}
 mod tests {
     use super::*;
     use blueos::thread;
+    use blueos_infra::arc::Arc as SharedArc;
     use blueos_test_macro::test;
     use core::sync::atomic::{AtomicUsize, Ordering};
 
@@ -270,7 +271,8 @@ mod tests {
         let n = 4;
         let mut mp = Arc::new(MemoryPool::new());
         Arc::get_mut(&mut mp).unwrap().init(n, 1024, None);
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         for i in 0..n {
             let mp = mp.clone();
             let counter = counter.clone();
@@ -297,7 +299,8 @@ mod tests {
         let n = 192;
         let mut mp = Arc::new(MemoryPool::new());
         Arc::get_mut(&mut mp).unwrap().init(n, 64, None);
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         for i in 0..n {
             let mp = mp.clone();
             let counter = counter.clone();
@@ -338,7 +341,8 @@ mod tests {
         let n = 192;
         let mut mp = Arc::new(MemoryPool::new());
         Arc::get_mut(&mut mp).unwrap().init(n, 64, None);
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         for i in 0..n {
             let mp = mp.clone();
             let counter = counter.clone();

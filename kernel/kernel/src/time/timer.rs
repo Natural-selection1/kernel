@@ -293,12 +293,13 @@ fn update_clock_interrupt() -> Tick {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{sync::SpinLock, types::Arc, with_iou};
+    use crate::{sync::SpinLock, types::Arc as LegacyArc, with_iou};
     use alloc::vec::Vec;
+    use blueos_infra::arc::Arc as SharedArc;
     use blueos_test_macro::test;
     use core::sync::atomic::{AtomicUsize, Ordering};
 
-    fn create_test_callback(counter: &Arc<AtomicUsize>) -> TimerCallback {
+    fn create_test_callback(counter: &SharedArc<AtomicUsize>) -> TimerCallback {
         let closure = {
             let counter = counter.clone();
             move || {
@@ -310,7 +311,8 @@ mod tests {
 
     #[test]
     fn test_oneshot_hwtm() {
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         let deadline = Tick::after(Tick(10));
         with_iou!(|iou| {
             let mut timer = Timer::new();
@@ -326,7 +328,8 @@ mod tests {
     #[cfg(soft_timer)]
     #[test]
     fn test_oneshot_swtm() {
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         let callback = create_test_callback(&counter);
         let deadline = Tick::after(Tick(10));
         with_iou!(|iou| {
@@ -346,7 +349,8 @@ mod tests {
 
     #[test]
     fn test_periodic_hwtm() {
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         let callback = create_test_callback(&counter);
         let deadline = Tick::after(Tick(5));
         let r = Repeat {
@@ -369,7 +373,8 @@ mod tests {
     #[cfg(soft_timer)]
     #[test]
     fn test_periodic_swtm() {
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         let callback = create_test_callback(&counter);
         let base_deadline = Tick::after(Tick(5));
         let r = Repeat {
@@ -391,9 +396,12 @@ mod tests {
 
     #[test]
     fn test_multiple_timers_same_timeout() {
-        let counter1 = Arc::new(AtomicUsize::new(0));
-        let counter2 = Arc::new(AtomicUsize::new(0));
-        let counter3 = Arc::new(AtomicUsize::new(0));
+        let counter1 =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter1 test counter");
+        let counter2 =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter2 test counter");
+        let counter3 =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter3 test counter");
 
         let callback1 = create_test_callback(&counter1);
         let callback2 = create_test_callback(&counter2);
@@ -433,7 +441,8 @@ mod tests {
     #[test]
     fn test_timer_edge_cases() {
         // Test with zero interval.
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         let callback = create_test_callback(&counter);
         assert!(arch::local_irq_enabled());
         with_iou!(|iou| {
@@ -448,8 +457,8 @@ mod tests {
     }
 
     fn create_callback_for_ordering(
-        order: &Arc<SpinLock<Vec<Arc<Timer>>>>,
-        tm: &Arc<Timer>,
+        order: &SharedArc<SpinLock<Vec<LegacyArc<Timer>>>>,
+        tm: &LegacyArc<Timer>,
     ) -> TimerCallback {
         let closure = {
             let order = order.clone();
@@ -464,36 +473,37 @@ mod tests {
     #[test]
     fn test_timer_ordering() {
         // Test that timers are properly ordered by timeout.
-        let order = Arc::new(SpinLock::new(Vec::new()));
+        let order = SharedArc::try_new(SpinLock::new(Vec::new()))
+            .expect("allocate timer ordering collection");
 
-        let mut timer1 = Arc::new(Timer::new());
+        let mut timer1 = LegacyArc::new(Timer::new());
         {
             let cb = create_callback_for_ordering(&order, &timer1);
-            let mut w = unsafe { Arc::get_mut_unchecked(&mut timer1) };
+            let mut w = unsafe { LegacyArc::get_mut_unchecked(&mut timer1) };
             w.mode = TimerMode::Deadline(Tick::after(Tick(30)));
             w.callback = cb;
         }
 
-        let mut timer2 = Arc::new(Timer::new());
+        let mut timer2 = LegacyArc::new(Timer::new());
         {
             let cb = create_callback_for_ordering(&order, &timer2);
-            let mut w = unsafe { Arc::get_mut_unchecked(&mut timer2) };
+            let mut w = unsafe { LegacyArc::get_mut_unchecked(&mut timer2) };
             w.mode = TimerMode::Deadline(Tick::after(Tick(10)));
             w.callback = cb;
         }
 
-        let mut timer3 = Arc::new(Timer::new());
+        let mut timer3 = LegacyArc::new(Timer::new());
         {
             let cb = create_callback_for_ordering(&order, &timer3);
-            let mut w = unsafe { Arc::get_mut_unchecked(&mut timer3) };
+            let mut w = unsafe { LegacyArc::get_mut_unchecked(&mut timer3) };
             w.mode = TimerMode::Deadline(Tick::after(Tick(20)));
             w.callback = cb;
         }
 
         with_iou!(|iou1, iou2, iou3| {
-            iou1 = add_hard_timer(unsafe { Arc::get_mut_unchecked(&mut timer1) }).unwrap();
-            iou2 = add_hard_timer(unsafe { Arc::get_mut_unchecked(&mut timer2) }).unwrap();
-            iou3 = add_hard_timer(unsafe { Arc::get_mut_unchecked(&mut timer3) }).unwrap();
+            iou1 = add_hard_timer(unsafe { LegacyArc::get_mut_unchecked(&mut timer1) }).unwrap();
+            iou2 = add_hard_timer(unsafe { LegacyArc::get_mut_unchecked(&mut timer2) }).unwrap();
+            iou3 = add_hard_timer(unsafe { LegacyArc::get_mut_unchecked(&mut timer3) }).unwrap();
             scheduler::suspend_me_for::<()>(Tick(30), None);
             iou1 = remove_hard_timer(iou1).unwrap();
             iou2 = remove_hard_timer(iou2).unwrap();
@@ -501,14 +511,15 @@ mod tests {
         });
         let mut r = order.irqsave_lock();
         assert_eq!(r.len(), 3);
-        assert!(Arc::is(&r[0], &timer2));
-        assert!(Arc::is(&r[1], &timer3));
-        assert!(Arc::is(&r[2], &timer1));
+        assert!(LegacyArc::is(&r[0], &timer2));
+        assert!(LegacyArc::is(&r[1], &timer3));
+        assert!(LegacyArc::is(&r[2], &timer1));
     }
 
     #[test]
     fn test_timer_oneshot_behavior() {
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         let callback = create_test_callback(&counter);
         let deadline = Tick::after(Tick(8));
         with_iou!(|iou| {
@@ -528,7 +539,8 @@ mod tests {
 
     #[test]
     fn test_timer_periodic_reactivation() {
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         let callback = create_test_callback(&counter);
         let mut deadline = Tick::after(Tick(13));
         with_iou!(|iou| {
@@ -569,8 +581,10 @@ mod tests {
     #[test]
     fn test_timer_soft_vs_hard() {
         // Test differences between soft and hard timers
-        let counter1 = Arc::new(AtomicUsize::new(0));
-        let counter2 = Arc::new(AtomicUsize::new(0));
+        let counter1 =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter1 test counter");
+        let counter2 =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter2 test counter");
         with_iou!(|hwiou, swiou| {
             let mut deadline = Tick::after(Tick(8));
             let mut hwtm = Timer::new();

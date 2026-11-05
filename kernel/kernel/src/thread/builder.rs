@@ -226,6 +226,7 @@ pub(crate) fn build_static_thread(
 mod tests {
     use super::*;
     use crate::sync::ConstBarrier;
+    use blueos_infra::arc::Arc as SharedArc;
     use blueos_test_macro::test;
     use core::alloc::Layout;
 
@@ -247,7 +248,8 @@ mod tests {
     fn test_use_alloc_stack() {
         const SIZE: usize = 1600;
         let stack = Stack::from_size(SIZE).unwrap();
-        let sync_me = Arc::new(ConstBarrier::<{ 2 }>::new());
+        let sync_me = SharedArc::try_new(ConstBarrier::<{ 2 }>::new())
+            .expect("allocate sync_me test barrier");
         let sync_other = sync_me.clone();
         let _other = Builder::new(Entry::Closure(Box::new(move || {
             let current = scheduler::current_thread();

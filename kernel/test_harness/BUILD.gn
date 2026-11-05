@@ -19,7 +19,12 @@ build_rust("blueos_test_macro") {
   crate_type = "proc-macro"
   sources = [ "src/lib.rs" ]
   edition = "2024"
-  public_deps = [ "//external/rust:semihosting(${default_toolchain})" ]
+
+  # These paths occur in the expansion, so consumers need target-side crates.
+  public_deps = [
+    "//external/rust:semihosting(${default_toolchain})",
+    "//kernel/infra:blueos_infra(${default_toolchain})",
+  ]
   deps = [
     "//external/rust:proc-macro2",
     "//external/rust:quote",

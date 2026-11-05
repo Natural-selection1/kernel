@@ -110,6 +110,7 @@ macro_rules! trace {
 
 #[cfg(test)]
 mod tests {
+    use blueos_infra::arc::Arc as SharedArc;
     mod init;
     extern crate alloc;
     use super::*;
@@ -713,8 +714,8 @@ mod tests {
     // Should not hang.
     #[test]
     fn test_simple_signal() {
-        let a = Arc::new(ConstBarrier::<{ 2 }>::new());
-        let b = Arc::new(AtomicUsize::new(0));
+        let a = SharedArc::try_new(ConstBarrier::<{ 2 }>::new()).expect("allocate a test barrier");
+        let b = SharedArc::try_new(AtomicUsize::new(0)).expect("allocate b test counter");
         let closure = {
             let a = a.clone();
             let b = b.clone();

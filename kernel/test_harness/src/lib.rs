@@ -156,7 +156,7 @@ fn generate_test_case(attr: TokenStream, item: TokenStream) -> TokenStream {
                 {
                     #[must_use]
                     struct __BlueOSTestDoneGuard {
-                        done: blueos::types::Arc<core::sync::atomic::AtomicUsize>,
+                        done: ::blueos_infra::arc::Arc<core::sync::atomic::AtomicUsize>,
                     }
 
                     impl Drop for __BlueOSTestDoneGuard {
@@ -167,9 +167,11 @@ fn generate_test_case(attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
 
                     let __blueos_done =
-                        blueos::types::Arc::new(core::sync::atomic::AtomicUsize::new(0));
+                        ::blueos_infra::arc::Arc::try_new(core::sync::atomic::AtomicUsize::new(0))
+                            .expect("allocate test completion counter");
                     let __blueos_start =
-                        blueos::types::Arc::new(blueos::sync::ConstBarrier::<#barrier_count>::new());
+                        ::blueos_infra::arc::Arc::try_new(blueos::sync::ConstBarrier::<#barrier_count>::new())
+                            .expect("allocate test start barrier");
                     for __blueos_thread_idx in 0..#thread_count {
                         let __blueos_done = __blueos_done.clone();
                         let __blueos_start = __blueos_start.clone();
