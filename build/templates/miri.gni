@@ -40,6 +40,14 @@ template("miri_test") {
                                "rustenv",
                              ])
 
+      # Optional libtest substring filter; does not alter compilation or checks.
+      if (defined(invoker.test_filter)) {
+        if (!defined(rustenv)) {
+          rustenv = []
+        }
+        rustenv += [ "BLUEOS_MIRI_TEST_FILTER=" + invoker.test_filter ]
+      }
+
       crate_type = "bin"
       testonly = true
       sources = [ invoker.crate ]

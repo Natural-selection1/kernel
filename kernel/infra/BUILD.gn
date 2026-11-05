@@ -20,6 +20,7 @@ group("check_infra") {
   testonly = true
   deps = [
     ":check_infra_allocation",
+    ":check_infra_arc",
     ":check_infra_init",
     ":run_infra_unittest",
   ]
@@ -193,5 +194,86 @@ miri_test("infra_init_miri_test") {
 miri_test("infra_init_tree_borrows_test") {
   crate = "tests/init.rs"
   deps = _init_test_deps
+  extra_miri_flags = [ "-Zmiri-tree-borrows" ]
+}
+
+# Public Arc contracts link the production library. Private count tests use
+# the ordinary library test entry point, filtered to arc::refcount_tests:: only.
+group("check_infra_arc") {
+  testonly = true
+  deps = [
+    ":infra_arc_compile_tests(//build/toolchain:host)",
+    ":run_infra_arc_private_test(//build/toolchain:host)",
+    ":run_infra_arc_test(//build/toolchain:host)",
+  ]
+}
+group("check_infra_arc_by_miri") {
+  testonly = true
+  deps = [
+    ":infra_arc_miri_test",
+    ":infra_arc_private_miri_test",
+    ":infra_arc_private_tree_borrows_test",
+    ":infra_arc_tree_borrows_test",
+  ]
+}
+_arc_test_deps = [
+  ":blueos_infra",
+  "//kernel/test_support/allocation:allocation_test_support",
+]
+if (current_toolchain == "//build/toolchain:host") {
+  build_rust("infra_arc_test") {
+    testonly = true
+    crate_type = "bin"
+    sources = [ "tests/arc.rs" ]
+    deps = _arc_test_deps
+    rustflags = [ "--test" ]
+  }
+  run_host("run_infra_arc_test") {
+    testonly = true
+    runner = ":infra_arc_test"
+  }
+  action("run_infra_arc_private_test") {
+    testonly = true
+    deps = [ ":infra_unittest" ]
+    script = "//build/scripts/run_cmd.py"
+    args = [
+      "-b",
+      rebase_path("$root_out_dir/bin/infra_unittest") + " arc::refcount_tests::",
+    ]
+    outputs = [ "$target_gen_dir/$target_name/dummy" ]
+  }
+  rust_compile_tests("infra_arc_compile_tests") {
+    deps = _arc_test_deps
+    pass = "tests/arc_ui/pass.rs"
+    fail = [
+      "tests/arc_ui/unique_clone.rs",
+      "tests/arc_ui/arc_mut.rs",
+      "tests/arc_ui/move_pinned.rs",
+      "tests/arc_ui/arc_send.rs",
+      "tests/arc_ui/arc_sync.rs",
+      "tests/arc_ui/arc_sync_non_send.rs",
+      "tests/arc_ui/unique_sync.rs",
+      "tests/arc_ui/unique_send.rs",
+    ]
+  }
+}
+miri_test("infra_arc_miri_test") {
+  crate = "tests/arc.rs"
+  deps = _arc_test_deps
+}
+miri_test("infra_arc_tree_borrows_test") {
+  crate = "tests/arc.rs"
+  deps = _arc_test_deps
+  extra_miri_flags = [ "-Zmiri-tree-borrows" ]
+}
+miri_test("infra_arc_private_miri_test") {
+  crate = "src/lib.rs"
+  deps = shared_deps
+  test_filter = "arc::refcount_tests::"
+}
+miri_test("infra_arc_private_tree_borrows_test") {
+  crate = "src/lib.rs"
+  deps = shared_deps
+  test_filter = "arc::refcount_tests::"
   extra_miri_flags = [ "-Zmiri-tree-borrows" ]
 }

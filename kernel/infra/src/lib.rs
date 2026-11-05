@@ -29,6 +29,7 @@
 #![feature(ptr_as_uninit)]
 #![feature(slice_ptr_get)]
 
+pub mod arc;
 pub mod init;
 pub mod intrusive;
 pub mod lifetime;
