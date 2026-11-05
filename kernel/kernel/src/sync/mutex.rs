@@ -435,6 +435,7 @@ mod tests {
         thread, time,
     };
     use alloc::{boxed::Box, vec, vec::Vec};
+    use blueos_infra::arc::Arc as SharedArc;
     use blueos_test_macro::{only_test, test};
     use core::sync::atomic::{AtomicUsize, Ordering};
 
@@ -540,7 +541,8 @@ mod tests {
         let mutex = Mutex::create();
 
         let mutex_consumer = mutex.clone();
-        let pend_flag = Arc::new(AtomicUsize::new(0));
+        let pend_flag =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate pend_flag test counter");
         let pend_flag_clone = pend_flag.clone();
 
         let consumer = thread::spawn(move || {
@@ -568,7 +570,8 @@ mod tests {
         let mutex = Mutex::create();
 
         let mutex_consumer = mutex.clone();
-        let pend_flag = Arc::new(AtomicU32::new(0));
+        let pend_flag =
+            SharedArc::try_new(AtomicU32::new(0)).expect("allocate pend_flag test counter");
         let pend_flag_clone = pend_flag.clone();
 
         let consumer = thread::spawn(move || {
@@ -604,7 +607,8 @@ mod tests {
     #[test]
     fn test_mutex_multi_thread_timeout() {
         let mutex = Mutex::create();
-        let pend_flag = Arc::new(AtomicUsize::new(0));
+        let pend_flag =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate pend_flag test counter");
         let closure = {
             let pend_flag = pend_flag.clone();
             let mutex = mutex.clone();
@@ -641,9 +645,11 @@ mod tests {
 
     #[test]
     fn test_mutex_multi_thread_priority1() {
-        let sync0 = Arc::new(ConstBarrier::<{ 2 }>::new());
+        let sync0 =
+            SharedArc::try_new(ConstBarrier::<{ 2 }>::new()).expect("allocate sync0 test barrier");
         let consumer_sync0 = sync0.clone();
-        let sync1 = Arc::new(ConstBarrier::<{ 2 }>::new());
+        let sync1 =
+            SharedArc::try_new(ConstBarrier::<{ 2 }>::new()).expect("allocate sync1 test barrier");
         let consumer_sync1 = sync1.clone();
         let mutex = Mutex::create();
         let mutex_consumer = mutex.clone();
@@ -690,7 +696,7 @@ mod tests {
     #[test]
     fn test_blocking_mutex_chain_basic() {
         // A clock to sync states between threads.
-        let clock = Arc::new(AtomicUsize::new(0));
+        let clock = SharedArc::try_new(AtomicUsize::new(0)).expect("allocate clock test counter");
         let mut mu = vec![Mutex::create(), Mutex::create(), Mutex::create()];
         let t0 = {
             let clock = clock.clone();
@@ -779,7 +785,8 @@ mod tests {
         const N: usize = 256;
         #[cfg(target_pointer_width = "64")]
         const M: usize = N / 8;
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         let mut mu = Arc::new(alloc::vec::Vec::new());
         for i in 0..M {
             unsafe { Arc::get_mut_unchecked(&mut mu) }.push(Mutex::create());
@@ -870,7 +877,8 @@ mod tests {
         const N: usize = 32;
         #[cfg(target_pointer_width = "64")]
         const M: usize = N / 4;
-        let counter = Arc::new(AtomicUsize::new(0));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
         let mg0 = create_mutex_group(M);
         let mg1 = create_mutex_group(M);
         let mg2 = create_mutex_group(M);

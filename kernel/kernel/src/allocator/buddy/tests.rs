@@ -27,6 +27,7 @@ use allocator_crate::buddy::{
     order_of_size, BuddyAllocator, BuddyInitError, BuddyMemoryInfo, PageFrame, MAX_ORDER,
     PAGE_SHIFT, PAGE_SIZE,
 };
+use blueos_infra::arc::Arc as SharedArc;
 use blueos_test_macro::test;
 use core::{
     alloc::Layout,
@@ -551,7 +552,7 @@ fn wrapper_reads_and_writes_real_backing_pages() {
 /// Verifies that independent local buddy arenas operate correctly in concurrent threads.
 #[test]
 fn independent_local_arenas_can_run_concurrently() {
-    let done = Arc::new(AtomicUsize::new(0));
+    let done = SharedArc::try_new(AtomicUsize::new(0)).expect("allocate done test counter");
     for worker in 0..2 {
         let done = done.clone();
         crate::thread::spawn(move || {
@@ -583,7 +584,7 @@ fn independent_local_arenas_can_run_concurrently() {
 fn shared_local_heap_serializes_concurrent_operations() {
     let arena = Arc::new(BuddyTestArena::new(32));
     let before = arena.heap.memory_info();
-    let done = Arc::new(AtomicUsize::new(0));
+    let done = SharedArc::try_new(AtomicUsize::new(0)).expect("allocate done test counter");
 
     for worker in 0..2 {
         let arena = arena.clone();

@@ -228,6 +228,7 @@ mod tests {
         sync::{wait_until, wake},
         types::Arc,
     };
+    use blueos_infra::arc::Arc as SharedArc;
     use blueos_test_macro::test;
     use core::sync::atomic::{AtomicUsize, Ordering};
 
@@ -404,7 +405,8 @@ mod tests {
 
         let semaphore = Arc::new(Semaphore::new());
         semaphore.init(0);
-        let acquired = Arc::new(AtomicUsize::new(0));
+        let acquired =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate acquired test counter");
         let worker_semaphore = semaphore.clone();
         let worker_acquired = acquired.clone();
         let worker = thread::spawn(move || {
@@ -526,8 +528,10 @@ mod tests {
         let semaphore = Arc::new(Semaphore::new());
         assert!(semaphore.init(2));
 
-        let successful_acquires = Arc::new(AtomicUsize::new(0));
-        let finished_workers = Arc::new(AtomicUsize::new(0));
+        let successful_acquires = SharedArc::try_new(AtomicUsize::new(0))
+            .expect("allocate successful_acquires test counter");
+        let finished_workers = SharedArc::try_new(AtomicUsize::new(0))
+            .expect("allocate finished_workers test counter");
 
         for _ in 0..4 {
             let semaphore = semaphore.clone();

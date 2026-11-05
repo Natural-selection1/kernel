@@ -53,8 +53,9 @@ impl<const N: usize> ConstBarrier<N> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{static_arc, types::Arc};
+    use crate::static_arc;
     use alloc::vec::Vec;
+    use blueos_infra::arc::Arc as SharedArc;
     use blueos_test_macro::test;
     const UNITTEST_THREAD_NUM: usize = blueos_kconfig::CONFIG_UNITTEST_THREAD_NUM as usize;
 
@@ -89,9 +90,11 @@ mod tests {
     fn join_thread() {
         let n = UNITTEST_THREAD_NUM;
         let mut vt = Vec::new();
-        let counter = Arc::new(AtomicUsize::new(n));
+        let counter =
+            SharedArc::try_new(AtomicUsize::new(n)).expect("allocate counter test counter");
         for i in 0..n {
-            let b = Arc::new(ConstBarrier::<{ 2 }>::new());
+            let b =
+                SharedArc::try_new(ConstBarrier::<{ 2 }>::new()).expect("allocate b test barrier");
             vt.push(b.clone());
             let counter = counter.clone();
             let mi = crate::allocator::memory_info();
