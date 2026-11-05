@@ -255,7 +255,10 @@ impl<T, A: Adapter<T>> Iterator for AtomicListReverseIterator<T, A> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{impl_simple_intrusive_adapter, tinyarc::TinyArc as Arc, tinyrwlock::RwLock};
+    use crate::{
+        arc::Arc as SharedArc, impl_simple_intrusive_adapter, tinyarc::TinyArc as Arc,
+        tinyrwlock::RwLock,
+    };
     use core::mem::offset_of;
     use std::thread;
 
@@ -353,8 +356,10 @@ mod tests {
         type Ty = AtomicListHead<Foo, OffsetOfLh>;
         let head = Arc::new(RwLock::new(Ty::new()));
         let t = Arc::new(Foo::default());
-        let inserted = Arc::new(AtomicUsize::new(0));
-        let detached = Arc::new(AtomicUsize::new(0));
+        let inserted =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate inserted test counter");
+        let detached =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate detached test counter");
         let n = 1024;
         let mut vt = Vec::new();
         for i in 0..n {
@@ -392,9 +397,11 @@ mod tests {
         let alice = Arc::new(RwLock::new(Ty::new()));
         let bob = Arc::new(RwLock::new(Ty::new()));
         let t = Arc::new(Foo::default());
-        let num_alice = Arc::new(AtomicUsize::new(0));
-        let num_bob = Arc::new(AtomicUsize::new(0));
-        let now_in = Arc::new(AtomicUsize::new(0));
+        let num_alice =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate num_alice test counter");
+        let num_bob =
+            SharedArc::try_new(AtomicUsize::new(0)).expect("allocate num_bob test counter");
+        let now_in = SharedArc::try_new(AtomicUsize::new(0)).expect("allocate now_in test counter");
         let n = 1 << 10;
         let mut vt = Vec::new();
         for i in 0..n {
