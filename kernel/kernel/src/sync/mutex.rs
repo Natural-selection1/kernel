@@ -433,9 +433,10 @@ mod tests {
         scheduler,
         sync::{atomic_wait, atomic_wake, wait_until, wake, ConstBarrier},
         thread, time,
+        types::Arc as LegacyArc,
     };
     use alloc::{boxed::Box, vec, vec::Vec};
-    use blueos_infra::arc::Arc as SharedArc;
+    use blueos_infra::arc::{Arc as SharedArc, UniqueArc};
     use blueos_test_macro::{only_test, test};
     use core::sync::atomic::{AtomicUsize, Ordering};
 
@@ -787,10 +788,12 @@ mod tests {
         const M: usize = N / 8;
         let counter =
             SharedArc::try_new(AtomicUsize::new(0)).expect("allocate counter test counter");
-        let mut mu = Arc::new(alloc::vec::Vec::new());
+        let mut mu =
+            UniqueArc::try_new(MutexGroup::new()).expect("allocate exclusive mutex test group");
         for i in 0..M {
-            unsafe { Arc::get_mut_unchecked(&mut mu) }.push(Mutex::create());
+            mu.push(Mutex::create());
         }
+        let mu: SharedArc<MutexGroup> = mu.into();
         for i in 0..N {
             let prio = i % ((MAX_THREAD_PRIORITY + 1) as usize);
             let mu = mu.clone();
@@ -813,26 +816,27 @@ mod tests {
         wait_until(N, &counter);
     }
 
-    type MutexGroup = Vec<Arc<Mutex>>;
+    type MutexGroup = Vec<LegacyArc<Mutex>>;
 
     #[inline]
-    fn create_mutex_group(n: usize) -> Arc<MutexGroup> {
-        let mut mg = Arc::new(Vec::new());
+    fn create_mutex_group(n: usize) -> SharedArc<MutexGroup> {
+        let mut mg =
+            UniqueArc::try_new(MutexGroup::new()).expect("allocate exclusive mutex test group");
         for i in 0..n {
-            unsafe { Arc::get_mut_unchecked(&mut mg) }.push(Mutex::create());
+            mg.push(Mutex::create());
         }
-        mg
+        mg.into()
     }
 
     #[inline]
-    fn pend_mutex_group(mg: &Arc<MutexGroup>) {
+    fn pend_mutex_group(mg: &SharedArc<MutexGroup>) {
         for m in mg.iter() {
             m.pend_for(Tick::MAX);
         }
     }
 
     #[inline]
-    fn post_mutex_group(mg: &Arc<MutexGroup>) {
+    fn post_mutex_group(mg: &SharedArc<MutexGroup>) {
         for m in mg.iter().rev() {
             m.post()
         }
@@ -840,9 +844,9 @@ mod tests {
 
     #[inline]
     fn pend_then_post_forked_mutex_groups(
-        fst: &Arc<MutexGroup>,
-        sec: &Arc<MutexGroup>,
-        third: &Arc<MutexGroup>,
+        fst: &SharedArc<MutexGroup>,
+        sec: &SharedArc<MutexGroup>,
+        third: &SharedArc<MutexGroup>,
     ) {
         pend_mutex_group(fst);
         pend_mutex_group(sec);
