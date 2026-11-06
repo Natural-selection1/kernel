@@ -1,0 +1,2 @@
+Every original kernel/infra/src Rust implementation equals main 7e124fa98 byte-for-byte, except the cfg(test,miri) test-module declaration.
+No external dependency input changed.

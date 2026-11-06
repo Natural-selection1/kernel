@@ -1,0 +1,2 @@
+tinyarc_plain_ownership exit 0 stamp True
+storage_empty_shared_slice exit 1 stamp False

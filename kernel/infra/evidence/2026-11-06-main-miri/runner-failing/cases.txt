@@ -1,0 +1,27 @@
+===== 1/1: miri_contract_tests::storage_empty_shared_slice (undefined-behavior) =====
+$ miri --sysroot /home/hegui/.cache/miri --crate-name infra_miri_audit_stacked --crate-type bin --emit=dep-info=/home/hegui/vivoblueos/infra-main-miri-audit/out/miri-audit-review/runner-integration/storage_empty_shared_slice.d,link --test --edition=2021 -Copt-level=1 -Cforce-frame-pointers=yes -Cdebug-assertions -Cdebuginfo=full --color=always -D warnings -A unused -A dead_code -A static_mut_refs -Copt-level=0 -Cdebuginfo=0 -o /home/hegui/vivoblueos/infra-main-miri-audit/out/miri-audit-review/runner-integration/storage_empty_shared_slice ../../kernel/infra/src/lib.rs --extern cfg_if=miri/obj/external/vendor/cfg-if-1.0.4/cfg_if_variant_target/libcfg_if.rlib --extern memchr=miri/obj/external/vendor/memchr-2.7.6/memchr_variant_target/libmemchr.rlib --extern spin=miri/obj/external/vendor/spin-0.9.8/spin_variant_target/libspin.rlib -Ldependency=miri/obj/external/vendor/cfg-if-1.0.4/cfg_if_variant_target -Ldependency=miri/obj/external/vendor/memchr-2.7.6/memchr_variant_target -Ldependency=miri/obj/external/vendor/spin-0.9.8/spin_variant_target -Ldependency=miri/obj/external/vendor/lock_api-0.4.14/lock_api_variant_target -Ldependency=miri/obj/external/vendor/scopeguard-1.2.0/scopeguard_variant_target -- miri_contract_tests::storage_empty_shared_slice --exact --nocapture --test-threads=1
+
+running 1 test
+test miri_contract_tests::storage_empty_shared_slice ... error: Undefined Behavior: constructing invalid value of type &[u8]: encountered a null reference
+  --> ../../kernel/infra/src/storage.rs:67:18
+   |
+67 |         unsafe { core::slice::from_raw_parts(self.base(), self.size()) }
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Undefined Behavior occurred here
+   |
+   = help: this indicates a bug in the program: it performed an invalid operation, and caused Undefined Behavior
+   = help: see https://doc.rust-lang.org/nightly/reference/behavior-considered-undefined.html for further information
+   = note: this is on thread `miri_contract_t`
+   = note: stack backtrace:
+           0: storage::Storage::as_slice
+               at ../../kernel/infra/src/storage.rs:67:18: 67:71
+           1: miri_contract_tests::storage_empty_shared_slice
+               at ../../kernel/infra/src/miri_contract_tests.rs:13:13: 13:38
+           2: miri_contract_tests::storage_empty_shared_slice::{closure#0}
+               at ../../kernel/infra/src/miri_contract_tests.rs:12:32: 12:32
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 1 previous error
+
+
+===== END OF ARCHIVED CASES =====
