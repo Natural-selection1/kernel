@@ -28,32 +28,34 @@ pub struct mq_attr {
     pub pad: [c_long; 4],
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn mq_close(mq: c_int) -> c_int {
     Sys::close(mq).map(|_| 0).syscall_failed()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mq_open(
     name: *const c_char,
     oflag: c_int,
     mode: mode_t,
     attr: *const mq_attr,
 ) -> c_int {
-    let canonical = unsafe {
-        if name.read() == b'/' as c_char {
-            name.add(1)
-        } else {
-            name
-        }
-    };
+    unsafe {
+        let canonical = unsafe {
+            if name.read() == b'/' as c_char {
+                name.add(1)
+            } else {
+                name
+            }
+        };
 
-    Sys::mq_open(canonical, oflag, mode, attr)
-        .map(|fd| fd as c_int)
-        .syscall_failed()
+        Sys::mq_open(canonical, oflag, mode, attr)
+            .map(|fd| fd as c_int)
+            .syscall_failed()
+    }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mq_unlink(name: *const c_char) -> c_int {
     let canonical = unsafe {
         if name.read() == b'/' as c_char {
@@ -67,36 +69,42 @@ pub unsafe extern "C" fn mq_unlink(name: *const c_char) -> c_int {
         .syscall_failed()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mq_getattr(mqdes: c_int, attr: *mut mq_attr) -> c_int {
-    if attr.is_null() {
-        return -1;
+    unsafe {
+        if attr.is_null() {
+            return -1;
+        }
+        Sys::mq_getsetattr(mqdes, ptr::null_mut(), attr)
+            .map(|_| 0)
+            .syscall_failed()
     }
-    Sys::mq_getsetattr(mqdes, ptr::null_mut(), attr)
-        .map(|_| 0)
-        .syscall_failed()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mq_setattr(mqdes: c_int, new: *const mq_attr, old: *mut mq_attr) -> c_int {
-    Sys::mq_getsetattr(mqdes, new as *mut mq_attr, old)
-        .map(|_| 0)
-        .syscall_failed()
+    unsafe {
+        Sys::mq_getsetattr(mqdes, new as *mut mq_attr, old)
+            .map(|_| 0)
+            .syscall_failed()
+    }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mq_send(
     mqdes: c_int,
     msg_ptr: *const c_char,
     msg_len: size_t,
     msg_prio: c_uint,
 ) -> c_int {
-    Sys::mq_timedsend(mqdes, msg_ptr, msg_len, msg_prio, ptr::null())
-        .map(|_| 0)
-        .syscall_failed()
+    unsafe {
+        Sys::mq_timedsend(mqdes, msg_ptr, msg_len, msg_prio, ptr::null())
+            .map(|_| 0)
+            .syscall_failed()
+    }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mq_timedsend(
     mqdes: c_int,
     msg_ptr: *const c_char,
@@ -104,24 +112,28 @@ pub unsafe extern "C" fn mq_timedsend(
     msg_prio: c_uint,
     timeout: *const timespec,
 ) -> c_int {
-    Sys::mq_timedsend(mqdes, msg_ptr, msg_len, msg_prio, timeout)
-        .map(|_| 0)
-        .syscall_failed()
+    unsafe {
+        Sys::mq_timedsend(mqdes, msg_ptr, msg_len, msg_prio, timeout)
+            .map(|_| 0)
+            .syscall_failed()
+    }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mq_receive(
     mqdes: c_int,
     msg_ptr: *mut c_char,
     msg_len: size_t,
     msg_prio: *mut c_uint,
 ) -> c_int {
-    Sys::mq_timedsend(mqdes, msg_ptr, msg_len, *msg_prio, ptr::null())
-        .map(|_| 0)
-        .syscall_failed()
+    unsafe {
+        Sys::mq_timedsend(mqdes, msg_ptr, msg_len, *msg_prio, ptr::null())
+            .map(|_| 0)
+            .syscall_failed()
+    }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mq_timedreceive(
     mqdes: c_int,
     msg_ptr: *mut c_char,
@@ -129,7 +141,9 @@ pub unsafe extern "C" fn mq_timedreceive(
     msg_prio: *mut c_uint,
     timeout: *const timespec,
 ) -> c_int {
-    Sys::mq_timedreceive(mqdes, msg_ptr, msg_len, msg_prio, timeout)
-        .map(|_| 0)
-        .syscall_failed()
+    unsafe {
+        Sys::mq_timedreceive(mqdes, msg_ptr, msg_len, msg_prio, timeout)
+            .map(|_| 0)
+            .syscall_failed()
+    }
 }

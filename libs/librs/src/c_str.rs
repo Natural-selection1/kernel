@@ -40,16 +40,20 @@ impl<'a> CStr<'a> {
     ///
     /// The ptr must be valid up to and including the first NUL byte from the base ptr.
     pub const unsafe fn from_ptr(ptr: *const c_char) -> Self {
-        Self {
-            ptr: NonNull::new_unchecked(ptr as *mut c_char),
-            _marker: PhantomData,
+        unsafe {
+            Self {
+                ptr: NonNull::new_unchecked(ptr as *mut c_char),
+                _marker: PhantomData,
+            }
         }
     }
     pub unsafe fn from_nullable_ptr(ptr: *const c_char) -> Option<Self> {
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Self::from_ptr(ptr))
+        unsafe {
+            if ptr.is_null() {
+                None
+            } else {
+                Some(Self::from_ptr(ptr))
+            }
         }
     }
     pub fn to_bytes_with_nul(self) -> &'a [u8] {
@@ -73,7 +77,7 @@ impl<'a> CStr<'a> {
         self.ptr.as_ptr()
     }
     pub const unsafe fn from_bytes_with_nul_unchecked(bytes: &'a [u8]) -> Self {
-        Self::from_ptr(bytes.as_ptr().cast())
+        unsafe { Self::from_ptr(bytes.as_ptr().cast()) }
     }
     pub fn from_bytes_with_nul(bytes: &'a [u8]) -> Result<Self, FromBytesWithNulError> {
         if bytes.last() != Some(&b'\0') || bytes[..bytes.len() - 1].contains(&b'\0') {

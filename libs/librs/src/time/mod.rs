@@ -50,7 +50,7 @@ pub const CLOCK_THREAD_CPUTIME_ID: clockid_t = 3;
 
 pub const CLOCKS_PER_SEC: c_long = 1_000_000;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn clock_gettime(clock_id: clockid_t, tp: *mut timespec) -> c_int {
     let ret = bk_syscall!(ClockGetTime, clock_id, tp) as isize;
     if ret >= 0 {
@@ -62,40 +62,44 @@ pub unsafe extern "C" fn clock_gettime(clock_id: clockid_t, tp: *mut timespec) -
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/time.html>
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn time(tloc: *mut time_t) -> time_t {
-    let mut ts = timespec {
-        tv_sec: 0,
-        tv_nsec: 0,
-    };
-    if clock_gettime(CLOCK_REALTIME, &mut ts as *mut timespec) != 0 {
-        return -1;
+    unsafe {
+        let mut ts = timespec {
+            tv_sec: 0,
+            tv_nsec: 0,
+        };
+        if clock_gettime(CLOCK_REALTIME, &mut ts as *mut timespec) != 0 {
+            return -1;
+        }
+        if !tloc.is_null() {
+            *tloc = ts.tv_sec
+        };
+        ts.tv_sec
     }
-    if !tloc.is_null() {
-        *tloc = ts.tv_sec
-    };
-    ts.tv_sec
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/clock_getres.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn clock_getres(clock_id: clockid_t, tp: *mut timespec) -> c_int {
-    if !is_supported_clock(clock_id) {
-        ERRNO.set(EINVAL);
-        return -1;
+    unsafe {
+        if !is_supported_clock(clock_id) {
+            ERRNO.set(EINVAL);
+            return -1;
+        }
+        if tp.is_null() {
+            return 0;
+        }
+        *tp = timespec {
+            tv_sec: 0,
+            tv_nsec: CLOCK_RESOLUTION_NS,
+        };
+        0
     }
-    if tp.is_null() {
-        return 0;
-    }
-    *tp = timespec {
-        tv_sec: 0,
-        tv_nsec: CLOCK_RESOLUTION_NS,
-    };
-    0
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/clock_getres.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn clock_settime(clock_id: clockid_t, tp: *const timespec) -> c_int {
     // we havn't support wall clock source or rtc, now , it's an workaround, when user setting
     // CLOCK_REALTIME, we get the real system time, then the realtime offset to monotonic time
@@ -109,7 +113,7 @@ pub unsafe extern "C" fn clock_settime(clock_id: clockid_t, tp: *const timespec)
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/clock_nanosleep.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn clock_nanosleep(
     clock_id: clockid_t,
     flags: c_int,
@@ -126,7 +130,7 @@ pub unsafe extern "C" fn clock_nanosleep(
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/nanosleep.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn nanosleep(rqtp: *const timespec, rmtp: *mut timespec) -> c_int {
     let ret = bk_syscall!(ClockNanoSleep, CLOCK_MONOTONIC, 0, rqtp, rmtp) as isize;
     if ret >= 0 {
@@ -138,7 +142,7 @@ pub unsafe extern "C" fn nanosleep(rqtp: *const timespec, rmtp: *mut timespec) -
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/clock.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn clock() -> clock_t {
     let mut ts = mem::MaybeUninit::<timespec>::uninit();
 
@@ -153,12 +157,12 @@ pub extern "C" fn clock() -> clock_t {
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/difftime.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn difftime(time1: time_t, time0: time_t) -> c_double {
     (time1 - time0) as c_double
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn usleep(usec: c_uint) -> c_int {
     let rqtp = timespec {
         tv_sec: (usec / 1_000_000) as time_t,
@@ -168,7 +172,7 @@ pub extern "C" fn usleep(usec: c_uint) -> c_int {
     unsafe { nanosleep(&rqtp, rmtp) }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn msleep(msec: c_uint) -> c_int {
     let rqtp = timespec {
         tv_sec: (msec / 1000) as time_t,
@@ -178,7 +182,7 @@ pub extern "C" fn msleep(msec: c_uint) -> c_int {
     unsafe { nanosleep(&rqtp, rmtp) }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ssleep(sec: c_uint) -> c_int {
     let rqtp = timespec {
         tv_sec: sec as time_t,
@@ -189,7 +193,7 @@ pub extern "C" fn ssleep(sec: c_uint) -> c_int {
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/timer_create.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn timer_create(
     clock_id: clockid_t,
     evp: *mut sigevent,
@@ -205,7 +209,7 @@ pub unsafe extern "C" fn timer_create(
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/timer_delete.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn timer_delete(timerid: timer_t) -> c_int {
     let ret = bk_syscall!(TimerDelete, timerid) as isize;
     if ret >= 0 {
@@ -217,7 +221,7 @@ pub unsafe extern "C" fn timer_delete(timerid: timer_t) -> c_int {
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/timer_getoverrun.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn timer_getoverrun(timerid: timer_t) -> c_int {
     let ret = bk_syscall!(TimerGetOverrun, timerid) as isize;
     if ret >= 0 {
@@ -229,7 +233,7 @@ pub unsafe extern "C" fn timer_getoverrun(timerid: timer_t) -> c_int {
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/timer_gettime.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn timer_gettime(timerid: timer_t, value: *mut itimerspec) -> c_int {
     let ret = bk_syscall!(TimerGetTime, timerid, value) as isize;
     if ret >= 0 {
@@ -241,7 +245,7 @@ pub unsafe extern "C" fn timer_gettime(timerid: timer_t, value: *mut itimerspec)
 }
 
 /// See <https://pubs.opengroup.org/onlinepubs/9799919799/functions/timer_settime.html>.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn timer_settime(
     timerid: timer_t,
     flags: c_int,
@@ -259,7 +263,7 @@ pub unsafe extern "C" fn timer_settime(
 
 /// not defined in POSIX, but used in some implementations
 #[cfg(target_arch = "arm")]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn udelay(usec: c_uint) {
     const CYCLES_PER_USEC: u32 = 1_00; // not exact, this value should get from kernel
     let cycles = usec * CYCLES_PER_USEC;
@@ -272,18 +276,20 @@ pub extern "C" fn udelay(usec: c_uint) {
 #[inline(always)]
 #[allow(clippy::while_immutable_condition)]
 unsafe fn busy_wait(cycles: u32) {
-    let count = cycles;
-    while count > 0 {
-        asm!(
-            "subs {0}, {0}, #1",
-            inout(reg) count => _,
-            options(nomem, nostack, preserves_flags)
-        );
+    unsafe {
+        let count = cycles;
+        while count > 0 {
+            asm!(
+                "subs {0}, {0}, #1",
+                inout(reg) count => _,
+                options(nomem, nostack, preserves_flags)
+            );
+        }
     }
 }
 
 #[cfg(target_arch = "arm")]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn mdelay(msec: c_uint) {
     const CYCLES_PER_MSEC: u32 = 100_000; // not exact, this value should get from kernel
     let cycles = msec * CYCLES_PER_MSEC;
@@ -293,7 +299,7 @@ pub extern "C" fn mdelay(msec: c_uint) {
 }
 
 #[cfg(target_arch = "arm")]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ndelay(nsec: c_uint) {
     udelay(nsec / 1000); // convert nanoseconds to microseconds
 }
