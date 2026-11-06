@@ -81,15 +81,17 @@ impl BlockHdr {
     /// access to that next block, including writes if the result is mutated.
     #[inline]
     pub unsafe fn next_phys_block(block: NonNull<Self>) -> NonNull<BlockHdr> {
-        let size = (*block.as_ptr()).size;
-        debug_assert!(
-            (size & SIZE_SENTINEL) == 0,
-            "`block` must not be a sentinel"
-        );
+        unsafe {
+            let size = (*block.as_ptr()).size;
+            debug_assert!(
+                (size & SIZE_SENTINEL) == 0,
+                "`block` must not be a sentinel"
+            );
 
-        // Derive the next pointer from the pool pointer, not a shared header
-        // reference, so it retains permission to write the next header.
-        NonNull::new_unchecked(block.cast::<u8>().as_ptr().add(size & SIZE_SIZE_MASK)).cast()
+            // Derive the next pointer from the pool pointer, not a shared header
+            // reference, so it retains permission to write the next header.
+            NonNull::new_unchecked(block.cast::<u8>().as_ptr().add(size & SIZE_SIZE_MASK)).cast()
+        }
     }
 }
 
@@ -155,23 +157,25 @@ pub unsafe fn used_block_hdr_for_allocation(
     ptr: NonNull<u8>,
     align: usize,
 ) -> Option<NonNull<UsedBlockHdr>> {
-    let block_hdr = if align >= GRANULARITY {
-        // Read the header pointer
-        (*UsedBlockPad::get_for_allocation(ptr)).block_hdr
-    } else {
-        NonNull::new_unchecked(ptr.as_ptr().sub(GRANULARITY / 2)).cast()
-    };
+    unsafe {
+        let block_hdr = if align >= GRANULARITY {
+            // Read the header pointer
+            (*UsedBlockPad::get_for_allocation(ptr)).block_hdr
+        } else {
+            NonNull::new_unchecked(ptr.as_ptr().sub(GRANULARITY / 2)).cast()
+        };
 
-    if block_hdr.as_ref().common.size & SIZE_USED == 0
-        || block_hdr.as_ref().common.size & SIZE_SENTINEL == SIZE_SENTINEL
-    {
-        panic!("Double free detected")
+        if block_hdr.as_ref().common.size & SIZE_USED == 0
+            || block_hdr.as_ref().common.size & SIZE_SENTINEL == SIZE_SENTINEL
+        {
+            panic!("Double free detected")
+        }
+
+        debug_assert_ne!(block_hdr.as_ref().common.size & SIZE_SIZE_MASK, 0);
+        debug_assert_eq!(block_hdr, used_block_hdr_for_allocation_unknown_align(ptr)?);
+
+        Some(block_hdr)
     }
-
-    debug_assert_ne!(block_hdr.as_ref().common.size & SIZE_SIZE_MASK, 0);
-    debug_assert_eq!(block_hdr, used_block_hdr_for_allocation_unknown_align(ptr)?);
-
-    Some(block_hdr)
 }
 
 /// Find the `UsedBlockHdr` for an allocation (any `NonNull<u8>` returned by
@@ -189,65 +193,69 @@ pub unsafe fn used_block_hdr_for_allocation(
 pub unsafe fn used_block_hdr_for_allocation_unknown_align(
     ptr: NonNull<u8>,
 ) -> Option<NonNull<UsedBlockHdr>> {
-    // Case 1: `align >= GRANULARITY`
-    let c1_block_hdr_ptr: *const NonNull<UsedBlockHdr> =
-        addr_of!((*UsedBlockPad::get_for_allocation(ptr)).block_hdr);
-    // Case 2: `align < GRANULARITY`
-    let c2_block_hdr = ptr.cast::<UsedBlockHdr>().as_ptr().wrapping_sub(1);
-    let c2_prev_phys_block_ptr: *const Option<NonNull<BlockHdr>> =
-        addr_of!((*c2_block_hdr).common.prev_phys_block);
+    unsafe {
+        // Case 1: `align >= GRANULARITY`
+        let c1_block_hdr_ptr: *const NonNull<UsedBlockHdr> =
+            addr_of!((*UsedBlockPad::get_for_allocation(ptr)).block_hdr);
+        // Case 2: `align < GRANULARITY`
+        let c2_block_hdr = ptr.cast::<UsedBlockHdr>().as_ptr().wrapping_sub(1);
+        let c2_prev_phys_block_ptr: *const Option<NonNull<BlockHdr>> =
+            addr_of!((*c2_block_hdr).common.prev_phys_block);
 
-    // They are both present at the same location, so we can be assured that
-    // their contents are initialized and we can read them safely without
-    // knowing which case applies first.
-    debug_assert_eq!(
-        c1_block_hdr_ptr as *const usize,
-        c2_prev_phys_block_ptr as *const usize
-    );
+        // They are both present at the same location, so we can be assured that
+        // their contents are initialized and we can read them safely without
+        // knowing which case applies first.
+        debug_assert_eq!(
+            c1_block_hdr_ptr as *const usize,
+            c2_prev_phys_block_ptr as *const usize
+        );
 
-    // Read it as `Option<NonNull<BlockHdr>>`.
-    let block_hdr = if let Some(block_ptr) = *c2_prev_phys_block_ptr {
-        // Where does the block represented by `block_ptr` end?
-        // (Note: `block_ptr.size` might include `SIZE_USED`.)
-        let block_end = block_ptr.as_ptr() as usize + block_ptr.as_ref().size;
+        // Read it as `Option<NonNull<BlockHdr>>`.
+        let block_hdr = if let Some(block_ptr) = *c2_prev_phys_block_ptr {
+            // Where does the block represented by `block_ptr` end?
+            // (Note: `block_ptr.size` might include `SIZE_USED`.)
+            let block_end = block_ptr.as_ptr() as usize + block_ptr.as_ref().size;
 
-        if ptr.as_ptr() as usize > block_end {
-            // The block represented by `block_ptr` does not include `ptr`.
-            // It's Case 2.
-            NonNull::new_unchecked(c2_block_hdr)
+            if ptr.as_ptr() as usize > block_end {
+                // The block represented by `block_ptr` does not include `ptr`.
+                // It's Case 2.
+                NonNull::new_unchecked(c2_block_hdr)
+            } else {
+                // `ptr` is inside the block - it's Case 1.
+                // (Note: `ptr == block_end` should count as being inside
+                // because the payload might be zero-sized.)
+                *c1_block_hdr_ptr
+            }
         } else {
-            // `ptr` is inside the block - it's Case 1.
-            // (Note: `ptr == block_end` should count as being inside
-            // because the payload might be zero-sized.)
-            *c1_block_hdr_ptr
+            // It's non-nullable in Case 1, so we can rule out Case 1.
+            NonNull::new_unchecked(c2_block_hdr)
+        };
+
+        if block_hdr.as_ref().common.size & SIZE_USED == 0
+            || block_hdr.as_ref().common.size & SIZE_SENTINEL == SIZE_SENTINEL
+        {
+            panic!("Double free detected")
         }
-    } else {
-        // It's non-nullable in Case 1, so we can rule out Case 1.
-        NonNull::new_unchecked(c2_block_hdr)
-    };
 
-    if block_hdr.as_ref().common.size & SIZE_USED == 0
-        || block_hdr.as_ref().common.size & SIZE_SENTINEL == SIZE_SENTINEL
-    {
-        panic!("Double free detected")
+        debug_assert_ne!(block_hdr.as_ref().common.size & SIZE_SIZE_MASK, 0);
+
+        Some(block_hdr)
     }
-
-    debug_assert_ne!(block_hdr.as_ref().common.size & SIZE_SIZE_MASK, 0);
-
-    Some(block_hdr)
 }
 
 #[inline]
 pub unsafe fn size_of_allocation_in_block(ptr: NonNull<u8>, block: NonNull<UsedBlockHdr>) -> usize {
-    let size = block.as_ref().common.size - SIZE_USED;
-    debug_assert_eq!(size, block.as_ref().common.size & SIZE_SIZE_MASK);
-    debug_assert!(size > 0);
+    unsafe {
+        let size = block.as_ref().common.size - SIZE_USED;
+        debug_assert_eq!(size, block.as_ref().common.size & SIZE_SIZE_MASK);
+        debug_assert!(size > 0);
 
-    let block_end = block.as_ptr() as usize + size;
-    let payload_start = ptr.as_ptr() as usize;
+        let block_end = block.as_ptr() as usize + size;
+        let payload_start = ptr.as_ptr() as usize;
 
-    debug_assert!(block_end > payload_start);
-    block_end - payload_start
+        debug_assert!(block_end > payload_start);
+        block_end - payload_start
+    }
 }
 
 /// Get the payload size of the allocation. The returned size might be
@@ -261,8 +269,10 @@ pub unsafe fn size_of_allocation_in_block(ptr: NonNull<u8>, block: NonNull<UsedB
 ///
 #[inline]
 pub unsafe fn size_of_allocation(ptr: NonNull<u8>, align: usize) -> Option<usize> {
-    let block = used_block_hdr_for_allocation(ptr, align)?;
-    Some(size_of_allocation_in_block(ptr, block))
+    unsafe {
+        let block = used_block_hdr_for_allocation(ptr, align)?;
+        Some(size_of_allocation_in_block(ptr, block))
+    }
 }
 
 /// Get the payload size of the allocation with an unknown alignment. The
@@ -275,8 +285,10 @@ pub unsafe fn size_of_allocation(ptr: NonNull<u8>, align: usize) -> Option<usize
 ///
 #[inline]
 pub unsafe fn size_of_allocation_unknown_align(ptr: NonNull<u8>) -> Option<usize> {
-    // Safety: `ptr` is a previously allocated memory block.
-    //         This is upheld by the caller.
-    let block = used_block_hdr_for_allocation_unknown_align(ptr)?;
-    Some(size_of_allocation_in_block(ptr, block))
+    unsafe {
+        // Safety: `ptr` is a previously allocated memory block.
+        //         This is upheld by the caller.
+        let block = used_block_hdr_for_allocation_unknown_align(ptr)?;
+        Some(size_of_allocation_in_block(ptr, block))
+    }
 }

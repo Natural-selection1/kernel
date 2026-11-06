@@ -230,57 +230,60 @@ impl BuddyAllocator {
         total_pages: usize,
         manageable_pfns: Range<usize>,
     ) -> Result<(), BuddyInitError> {
-        if self.initialized {
-            return Err(BuddyInitError::AlreadyInitialized);
-        }
+        unsafe {
+            if self.initialized {
+                return Err(BuddyInitError::AlreadyInitialized);
+            }
 
-        let layout = Self::metadata_layout(total_pages)?;
-        if manageable_pfns.start > manageable_pfns.end || manageable_pfns.end > total_pages {
-            return Err(BuddyInitError::InvalidManageableRange);
-        }
-        if (metadata_ptr.as_ptr() as usize) & (layout.align() - 1) != 0 {
-            return Err(BuddyInitError::MetadataMisaligned);
-        }
-        if metadata_len < layout.size() {
-            return Err(BuddyInitError::MetadataTooSmall {
-                required: layout.size(),
-                provided: metadata_len,
-            });
-        }
+            let layout = Self::metadata_layout(total_pages)?;
+            if manageable_pfns.start > manageable_pfns.end || manageable_pfns.end > total_pages {
+                return Err(BuddyInitError::InvalidManageableRange);
+            }
+            if (metadata_ptr.as_ptr() as usize) & (layout.align() - 1) != 0 {
+                return Err(BuddyInitError::MetadataMisaligned);
+            }
+            if metadata_len < layout.size() {
+                return Err(BuddyInitError::MetadataTooSmall {
+                    required: layout.size(),
+                    provided: metadata_len,
+                });
+            }
 
-        for list in self.free_lists.iter_mut() {
-            let initialized = list.init();
-            debug_assert!(initialized);
+            for list in self.free_lists.iter_mut() {
+                let initialized = list.init();
+                debug_assert!(initialized);
+            }
+
+            self.pages = metadata_ptr.as_ptr().cast::<Page>();
+            self.total_pages = total_pages;
+            self.manageable_start = manageable_pfns.start;
+            self.manageable_end = manageable_pfns.end;
+
+            for pfn in 0..total_pages {
+                self.pages.add(pfn).write(Page::new(pfn));
+            }
+
+            let mut pfn = self.manageable_start;
+            while pfn < self.manageable_end {
+                let remaining = self.manageable_end - pfn;
+                let max_order =
+                    MAX_ORDER.min((usize::BITS - 1 - remaining.leading_zeros()) as usize);
+                let order = (0..=max_order)
+                    .rev()
+                    .find(|&candidate| pfn % (1 << candidate) == 0)
+                    .expect("order zero always satisfies buddy alignment");
+                let page = &mut *self.pfn_to_page(pfn);
+                page.state = PageState::Free;
+                page.order = order as u8;
+                self.free_lists[order]
+                    .push(page)
+                    .expect("new free block must be detached");
+                pfn += 1 << order;
+            }
+
+            self.initialized = true;
+            Ok(())
         }
-
-        self.pages = metadata_ptr.as_ptr().cast::<Page>();
-        self.total_pages = total_pages;
-        self.manageable_start = manageable_pfns.start;
-        self.manageable_end = manageable_pfns.end;
-
-        for pfn in 0..total_pages {
-            self.pages.add(pfn).write(Page::new(pfn));
-        }
-
-        let mut pfn = self.manageable_start;
-        while pfn < self.manageable_end {
-            let remaining = self.manageable_end - pfn;
-            let max_order = MAX_ORDER.min((usize::BITS - 1 - remaining.leading_zeros()) as usize);
-            let order = (0..=max_order)
-                .rev()
-                .find(|&candidate| pfn % (1 << candidate) == 0)
-                .expect("order zero always satisfies buddy alignment");
-            let page = &mut *self.pfn_to_page(pfn);
-            page.state = PageState::Free;
-            page.order = order as u8;
-            self.free_lists[order]
-                .push(page)
-                .expect("new free block must be detached");
-            pfn += 1 << order;
-        }
-
-        self.initialized = true;
-        Ok(())
     }
 
     /// Allocate `2^order` contiguous pages.
@@ -340,71 +343,73 @@ impl BuddyAllocator {
     /// allocator, and `order` must equal the order used to allocate it. The
     /// allocation must be released exactly once.
     pub unsafe fn free_pages(&mut self, frame: PageFrame, order: usize) {
-        let pfn = frame.pfn();
-        debug_assert!(self.initialized, "free on an uninitialized buddy");
-        debug_assert!(order <= MAX_ORDER, "free order exceeds MAX_ORDER");
-        debug_assert!(
-            pfn >= self.manageable_start && pfn < self.manageable_end,
-            "free PFN lies outside the manageable range"
-        );
-        if !self.initialized
-            || order > MAX_ORDER
-            || pfn < self.manageable_start
-            || pfn >= self.manageable_end
-        {
-            return;
-        }
-
-        debug_assert_eq!(pfn & ((1 << order) - 1), 0, "frame is not a block head");
-        let mut current_page = &mut *self.pfn_to_page(pfn);
-        debug_assert_eq!(
-            current_page.state,
-            PageState::Allocated,
-            "frame is not currently allocated"
-        );
-        debug_assert_eq!(
-            current_page.order as usize, order,
-            "free order differs from allocation order"
-        );
-        if pfn & ((1 << order) - 1) != 0
-            || current_page.state != PageState::Allocated
-            || current_page.order as usize != order
-        {
-            return;
-        }
-
-        let mut current_order = order;
-        current_page.state = PageState::Free;
-
-        while current_order < MAX_ORDER {
-            let buddy_pfn = current_page.pfn ^ (1 << current_order);
-            if buddy_pfn < self.manageable_start || buddy_pfn >= self.manageable_end {
-                break;
+        unsafe {
+            let pfn = frame.pfn();
+            debug_assert!(self.initialized, "free on an uninitialized buddy");
+            debug_assert!(order <= MAX_ORDER, "free order exceeds MAX_ORDER");
+            debug_assert!(
+                pfn >= self.manageable_start && pfn < self.manageable_end,
+                "free PFN lies outside the manageable range"
+            );
+            if !self.initialized
+                || order > MAX_ORDER
+                || pfn < self.manageable_start
+                || pfn >= self.manageable_end
+            {
+                return;
             }
 
-            let buddy = &mut *self.pfn_to_page(buddy_pfn);
-            if buddy.state != PageState::Free || buddy.order as usize != current_order {
-                break;
+            debug_assert_eq!(pfn & ((1 << order) - 1), 0, "frame is not a block head");
+            let mut current_page = &mut *self.pfn_to_page(pfn);
+            debug_assert_eq!(
+                current_page.state,
+                PageState::Allocated,
+                "frame is not currently allocated"
+            );
+            debug_assert_eq!(
+                current_page.order as usize, order,
+                "free order differs from allocation order"
+            );
+            if pfn & ((1 << order) - 1) != 0
+                || current_page.state != PageState::Allocated
+                || current_page.order as usize != order
+            {
+                return;
             }
 
-            let detached = IlistHead::detach(&mut buddy.list_node);
-            debug_assert!(detached);
-            if buddy_pfn < current_page.pfn {
-                current_page.state = PageState::Unavailable;
-                current_page.order = 0;
-                current_page = buddy;
-            } else {
-                buddy.state = PageState::Unavailable;
-                buddy.order = 0;
-            }
-            current_order += 1;
+            let mut current_order = order;
             current_page.state = PageState::Free;
-            current_page.order = current_order as u8;
-        }
 
-        self.free_lists[current_order]
-            .push(current_page)
-            .expect("coalesced block must be detached");
+            while current_order < MAX_ORDER {
+                let buddy_pfn = current_page.pfn ^ (1 << current_order);
+                if buddy_pfn < self.manageable_start || buddy_pfn >= self.manageable_end {
+                    break;
+                }
+
+                let buddy = &mut *self.pfn_to_page(buddy_pfn);
+                if buddy.state != PageState::Free || buddy.order as usize != current_order {
+                    break;
+                }
+
+                let detached = IlistHead::detach(&mut buddy.list_node);
+                debug_assert!(detached);
+                if buddy_pfn < current_page.pfn {
+                    current_page.state = PageState::Unavailable;
+                    current_page.order = 0;
+                    current_page = buddy;
+                } else {
+                    buddy.state = PageState::Unavailable;
+                    buddy.order = 0;
+                }
+                current_order += 1;
+                current_page.state = PageState::Free;
+                current_page.order = current_order as u8;
+            }
+
+            self.free_lists[current_order]
+                .push(current_page)
+                .expect("coalesced block must be detached");
+        }
     }
 
     /// Release a block by its caller-visible PFN.
@@ -415,7 +420,9 @@ impl BuddyAllocator {
     /// `order` must equal its allocation order, and the block must be released
     /// exactly once.
     pub unsafe fn free_pages_pfn(&mut self, pfn: usize, order: usize) {
-        self.free_pages(PageFrame(pfn), order);
+        unsafe {
+            self.free_pages(PageFrame(pfn), order);
+        }
     }
 
     /// Return current page accounting information.

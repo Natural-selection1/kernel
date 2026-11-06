@@ -322,34 +322,36 @@ impl HoleList {
     /// This can cause undefined behavior if this address is invalid or if memory from the
     /// `[hole_addr, hole_addr+size)` range is used somewhere else.
     pub unsafe fn new(hole_addr: *mut u8, hole_size: usize) -> HoleList {
-        debug_assert!(GRANULARITY >= size_of::<Hole>());
-        debug_assert!(hole_size >= GRANULARITY);
+        unsafe {
+            debug_assert!(GRANULARITY >= size_of::<Hole>());
+            debug_assert!(hole_size >= GRANULARITY);
 
-        let aligned_hole_addr = align_up(hole_addr, GRANULARITY);
-        let requested_hole_size =
-            hole_size.saturating_sub(aligned_hole_addr.wrapping_sub(hole_addr as usize) as usize);
-        let aligned_hole_size = align_down_size(requested_hole_size, GRANULARITY);
-        debug_assert!(aligned_hole_size >= GRANULARITY);
+            let aligned_hole_addr = align_up(hole_addr, GRANULARITY);
+            let requested_hole_size = hole_size
+                .saturating_sub(aligned_hole_addr.wrapping_sub(hole_addr as usize) as usize);
+            let aligned_hole_size = align_down_size(requested_hole_size, GRANULARITY);
+            debug_assert!(aligned_hole_size >= GRANULARITY);
 
-        let ptr = aligned_hole_addr as *mut Hole;
-        ptr.write(Hole {
-            size: aligned_hole_size,
-            next: None,
-        });
+            let ptr = aligned_hole_addr as *mut Hole;
+            ptr.write(Hole {
+                size: aligned_hole_size,
+                next: None,
+            });
 
-        debug_assert_eq!(
-            hole_addr.wrapping_add(hole_size),
-            aligned_hole_addr.wrapping_add(requested_hole_size)
-        );
+            debug_assert_eq!(
+                hole_addr.wrapping_add(hole_size),
+                aligned_hole_addr.wrapping_add(requested_hole_size)
+            );
 
-        HoleList {
-            first: Hole {
-                size: 0,
-                next: Some(NonNull::new_unchecked(ptr)),
-            },
-            bottom: aligned_hole_addr,
-            top: aligned_hole_addr.wrapping_add(aligned_hole_size),
-            pending_extend: (requested_hole_size - aligned_hole_size) as u8,
+            HoleList {
+                first: Hole {
+                    size: 0,
+                    next: Some(NonNull::new_unchecked(ptr)),
+                },
+                bottom: aligned_hole_addr,
+                top: aligned_hole_addr.wrapping_add(aligned_hole_size),
+                pending_extend: (requested_hole_size - aligned_hole_size) as u8,
+            }
         }
     }
 
@@ -415,31 +417,35 @@ impl HoleList {
     /// The function performs exactly the same layout adjustments as [`allocate_first_fit`] and
     /// returns the aligned layout.
     pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: &Layout) -> usize {
-        // Safety: `ptr` is a previously allocated memory block with the same
-        //         alignment as `align`. This is upheld by the caller.
-        let Some(old_block) = used_block_hdr_for_allocation(ptr, layout.align()) else {
-            return 0;
-        };
-        let old_block = old_block.cast::<UsedBlockHdr>();
-        let hole_addr_u8 = old_block.as_ptr() as *mut u8;
-        let hole_size = old_block.as_ref().common.size - SIZE_USED;
+        unsafe {
+            // Safety: `ptr` is a previously allocated memory block with the same
+            //         alignment as `align`. This is upheld by the caller.
+            let Some(old_block) = used_block_hdr_for_allocation(ptr, layout.align()) else {
+                return 0;
+            };
+            let old_block = old_block.cast::<UsedBlockHdr>();
+            let hole_addr_u8 = old_block.as_ptr() as *mut u8;
+            let hole_size = old_block.as_ref().common.size - SIZE_USED;
 
-        deallocate(self, hole_addr_u8, hole_size);
-        hole_size
+            deallocate(self, hole_addr_u8, hole_size);
+            hole_size
+        }
     }
 
     pub unsafe fn deallocate_unknown_align(&mut self, ptr: NonNull<u8>) -> usize {
-        // Safety: `ptr` is a previously allocated memory block with the same
-        //         alignment as `align`. This is upheld by the caller.
-        let Some(old_block) = used_block_hdr_for_allocation_unknown_align(ptr) else {
-            return 0;
-        };
-        let old_block = old_block.cast::<UsedBlockHdr>();
-        let hole_addr_u8 = old_block.as_ptr() as *mut u8;
-        let hole_size = old_block.as_ref().common.size - SIZE_USED;
+        unsafe {
+            // Safety: `ptr` is a previously allocated memory block with the same
+            //         alignment as `align`. This is upheld by the caller.
+            let Some(old_block) = used_block_hdr_for_allocation_unknown_align(ptr) else {
+                return 0;
+            };
+            let old_block = old_block.cast::<UsedBlockHdr>();
+            let hole_addr_u8 = old_block.as_ptr() as *mut u8;
+            let hole_size = old_block.as_ref().common.size - SIZE_USED;
 
-        deallocate(self, hole_addr_u8, hole_size);
-        hole_size
+            deallocate(self, hole_addr_u8, hole_size);
+            hole_size
+        }
     }
 
     /// Returns the minimal allocation size. Smaller allocations or deallocations are not allowed.
@@ -484,50 +490,54 @@ impl HoleList {
     }
 
     pub unsafe fn extend(&mut self, by: usize) {
-        debug_assert!(!self.top.is_null(), "tried to extend an empty heap");
+        unsafe {
+            debug_assert!(!self.top.is_null(), "tried to extend an empty heap");
 
-        let top = self.top;
+            let top = self.top;
 
-        let dead_space = top.align_offset(align_of::<Hole>());
-        debug_assert_eq!(
-            0, dead_space,
-            "dead space detected during extend: {} bytes. This means top was unaligned",
-            dead_space
-        );
+            let dead_space = top.align_offset(align_of::<Hole>());
+            debug_assert_eq!(
+                0, dead_space,
+                "dead space detected during extend: {} bytes. This means top was unaligned",
+                dead_space
+            );
 
-        debug_assert!(
-            (self.pending_extend as usize) < Self::min_size(),
-            "pending extend was larger than expected"
-        );
+            debug_assert!(
+                (self.pending_extend as usize) < Self::min_size(),
+                "pending extend was larger than expected"
+            );
 
-        // join this extend request with any pending (but not yet acted on) extension
-        let extend_by = self.pending_extend as usize + by;
+            // join this extend request with any pending (but not yet acted on) extension
+            let extend_by = self.pending_extend as usize + by;
 
-        let minimum_extend = Self::min_size();
-        if extend_by < minimum_extend {
-            self.pending_extend = extend_by as u8;
-            return;
+            let minimum_extend = Self::min_size();
+            if extend_by < minimum_extend {
+                self.pending_extend = extend_by as u8;
+                return;
+            }
+
+            // only extend up to another valid boundary
+            let new_hole_size = align_down_size(extend_by, align_of::<Hole>());
+            deallocate(self, top, new_hole_size);
+            self.top = top.add(new_hole_size);
+
+            // save extra bytes given to extend that weren't aligned to the hole size
+            self.pending_extend = (extend_by - new_hole_size) as u8;
         }
-
-        // only extend up to another valid boundary
-        let new_hole_size = align_down_size(extend_by, align_of::<Hole>());
-        deallocate(self, top, new_hole_size);
-        self.top = top.add(new_hole_size);
-
-        // save extra bytes given to extend that weren't aligned to the hole size
-        self.pending_extend = (extend_by - new_hole_size) as u8;
     }
 }
 
 unsafe fn make_hole(addr: *mut u8, size: usize) -> NonNull<Hole> {
-    let hole_addr = addr.cast::<Hole>();
-    debug_assert_eq!(
-        addr as usize % align_of::<Hole>(),
-        0,
-        "Hole address not aligned!",
-    );
-    hole_addr.write(Hole { size, next: None });
-    NonNull::new_unchecked(hole_addr)
+    unsafe {
+        let hole_addr = addr.cast::<Hole>();
+        debug_assert_eq!(
+            addr as usize % align_of::<Hole>(),
+            0,
+            "Hole address not aligned!",
+        );
+        hole_addr.write(Hole { size, next: None });
+        NonNull::new_unchecked(hole_addr)
+    }
 }
 
 impl Cursor {

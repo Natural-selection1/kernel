@@ -72,9 +72,11 @@ impl Heap {
     ///
     /// The provided memory range must be valid for the `'static` lifetime.
     pub unsafe fn init(&mut self, heap_bottom: usize, heap_size: usize) {
-        self.allocated = 0;
-        self.maximum = 0;
-        self.holes = HoleList::new(heap_bottom as *mut u8, heap_size);
+        unsafe {
+            self.allocated = 0;
+            self.maximum = 0;
+            self.holes = HoleList::new(heap_bottom as *mut u8, heap_size);
+        }
     }
 
     /// Initialize an empty heap with provided memory.
@@ -139,10 +141,12 @@ impl Heap {
     ///
     /// The provided memory range must be valid for the `'static` lifetime.
     pub unsafe fn new(heap_bottom: *mut u8, heap_size: usize) -> Self {
-        Self {
-            allocated: 0,
-            maximum: 0,
-            holes: HoleList::new(heap_bottom, heap_size),
+        unsafe {
+            Self {
+                allocated: 0,
+                maximum: 0,
+                holes: HoleList::new(heap_bottom, heap_size),
+            }
         }
     }
 
@@ -191,15 +195,19 @@ impl Heap {
     /// `ptr` must be a pointer returned by a call to the [`allocate_first_fit`] function with
     /// identical layout. Undefined behavior may occur for invalid arguments.
     pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: &Layout) -> usize {
-        let free_size = self.holes.deallocate(ptr, layout);
-        self.allocated -= free_size;
-        free_size
+        unsafe {
+            let free_size = self.holes.deallocate(ptr, layout);
+            self.allocated -= free_size;
+            free_size
+        }
     }
 
     pub unsafe fn deallocate_unknown_align(&mut self, ptr: NonNull<u8>) -> usize {
-        let free_size = self.holes.deallocate_unknown_align(ptr);
-        self.allocated -= free_size;
-        free_size
+        unsafe {
+            let free_size = self.holes.deallocate_unknown_align(ptr);
+            self.allocated -= free_size;
+            free_size
+        }
     }
 
     pub unsafe fn realloc(
@@ -208,23 +216,25 @@ impl Heap {
         layout: &Layout,
         new_size: usize,
     ) -> Option<NonNull<u8>> {
-        // Safety: `ptr` is a previously allocated memory block with the same
-        //         alignment as `align`. This is upheld by the caller.
-        let old_size = size_of_allocation(ptr, layout.align())?;
+        unsafe {
+            // Safety: `ptr` is a previously allocated memory block with the same
+            //         alignment as `align`. This is upheld by the caller.
+            let old_size = size_of_allocation(ptr, layout.align())?;
 
-        if new_size <= old_size {
-            return Some(ptr);
+            if new_size <= old_size {
+                return Some(ptr);
+            }
+
+            let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
+            // Allocate a whole new memory block
+            let new_ptr = self.allocate_first_fit(&new_layout)?;
+            // Move the existing data into the new location
+            core::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size);
+            // Deallocate the old memory block.
+            self.deallocate(ptr, layout);
+
+            Some(new_ptr)
         }
-
-        let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
-        // Allocate a whole new memory block
-        let new_ptr = self.allocate_first_fit(&new_layout)?;
-        // Move the existing data into the new location
-        core::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size);
-        // Deallocate the old memory block.
-        self.deallocate(ptr, layout);
-
-        Some(new_ptr)
     }
 
     pub unsafe fn realloc_unknown_align(
@@ -232,23 +242,25 @@ impl Heap {
         ptr: NonNull<u8>,
         new_size: usize,
     ) -> Option<NonNull<u8>> {
-        // Safety: `ptr` is a previously allocated memory block with the same
-        //         alignment as `align`. This is upheld by the caller.
-        let old_size = size_of_allocation_unknown_align(ptr)?;
-        if new_size <= old_size {
-            return Some(ptr);
+        unsafe {
+            // Safety: `ptr` is a previously allocated memory block with the same
+            //         alignment as `align`. This is upheld by the caller.
+            let old_size = size_of_allocation_unknown_align(ptr)?;
+            if new_size <= old_size {
+                return Some(ptr);
+            }
+
+            let new_layout = Layout::from_size_align_unchecked(new_size, mem::size_of::<usize>());
+            // Allocate a whole new memory block
+            let new_ptr = self.allocate_first_fit(&new_layout)?;
+            // Move the existing data into the new location
+            core::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size);
+
+            // Deallocate the old memory block.
+            self.deallocate_unknown_align(ptr);
+
+            Some(new_ptr)
         }
-
-        let new_layout = Layout::from_size_align_unchecked(new_size, mem::size_of::<usize>());
-        // Allocate a whole new memory block
-        let new_ptr = self.allocate_first_fit(&new_layout)?;
-        // Move the existing data into the new location
-        core::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size);
-
-        // Deallocate the old memory block.
-        self.deallocate_unknown_align(ptr);
-
-        Some(new_ptr)
     }
     /// Returns the bottom address of the heap.
     ///
@@ -310,7 +322,9 @@ impl Heap {
     /// by exactly `by` bytes, those bytes are still owned by the Heap for
     /// later use.
     pub unsafe fn extend(&mut self, by: usize) {
-        self.holes.extend(by);
+        unsafe {
+            self.holes.extend(by);
+        }
     }
 
     pub fn size_of_allocation(&self, ptr: NonNull<u8>) -> Option<usize> {
