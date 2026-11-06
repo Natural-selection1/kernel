@@ -1,0 +1,2847 @@
+{
+  "source_baseline": "7e124fa98f6acd4561736d4325a2edcb0f5b3de2",
+  "audit_commit": "ac8083de8c567c389d43a3dd6f37583f90a8d9db",
+  "date": "2026-11-06",
+  "transformation": "Remove ANSI color escapes and trailing horizontal whitespace; combine per-test logs with labeled section headers and a final end marker; relocate report links. Do not change observations.",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3196,
+      "sha256": "c36b1fd83d508361a25173f88af7ec8f2b5c7424aec190844da993c17968c4c7"
+    },
+    {
+      "path": "host/cases.txt",
+      "bytes": 40167,
+      "sha256": "ca6602cdb9809a7e155248f50e8adac98aa386decef66f93aca549314bee957d"
+    },
+    {
+      "path": "host/discovery.txt",
+      "bytes": 6259,
+      "sha256": "f279b6a74a1b98c1afa99da1891625e67185289e6940727680896c82ebac2b59"
+    },
+    {
+      "path": "host/results.json",
+      "bytes": 43827,
+      "sha256": "2663d2d6f5e059ba11f33ccbec1970a882d0c8e0a9ecc45c4288e170a62f40a7"
+    },
+    {
+      "path": "host/results.md",
+      "bytes": 8953,
+      "sha256": "b0a244f6718592583411a8b9d9132eea4ef2406302f0ac4d84602d2f19c633e5"
+    },
+    {
+      "path": "runner-failing/cases.txt",
+      "bytes": 2681,
+      "sha256": "4929c79b5eb27a8aeeb53422bdc7d613dc90468654c65496bc07c07da8ee0bd0"
+    },
+    {
+      "path": "runner-failing/discovery.txt",
+      "bytes": 7244,
+      "sha256": "155a1d350267e54b0fd01aa1f6bbb3f46be28ee7e9131a25cd80cec17fd91146"
+    },
+    {
+      "path": "runner-failing/results.json",
+      "bytes": 2387,
+      "sha256": "49557f887c9f8b2eed3b67d377d32f5bdc946cf0c6582d2b475df1e129527cae"
+    },
+    {
+      "path": "runner-failing/results.md",
+      "bytes": 146,
+      "sha256": "89c8ac73f55627a0633cf9ee16fb8dc34d4d5fc10c59046e1a79a1a6b1c1cc14"
+    },
+    {
+      "path": "runner-passing/cases.txt",
+      "bytes": 1569,
+      "sha256": "34524527881989bee8fc4c3c15fa299dd93cd0f8094037127a6aeacf6d249b5c"
+    },
+    {
+      "path": "runner-passing/discovery.txt",
+      "bytes": 7244,
+      "sha256": "155a1d350267e54b0fd01aa1f6bbb3f46be28ee7e9131a25cd80cec17fd91146"
+    },
+    {
+      "path": "runner-passing/results.json",
+      "bytes": 2347,
+      "sha256": "a9481654f3c0a51ae6393411f58bbb1f69f09e7be996b19c0deffde611d233c8"
+    },
+    {
+      "path": "runner-passing/results.md",
+      "bytes": 131,
+      "sha256": "68c4d907e03900f5d908bdb6c232f91b9c31ed665a607618639da75911862aff"
+    },
+    {
+      "path": "stacked/cases.txt",
+      "bytes": 327562,
+      "sha256": "b978a3d9b4ae8214d20ae191dd2e7a57c72c4c9fd53e97d283bebe1d6db6859c"
+    },
+    {
+      "path": "stacked/discovery.txt",
+      "bytes": 7244,
+      "sha256": "155a1d350267e54b0fd01aa1f6bbb3f46be28ee7e9131a25cd80cec17fd91146"
+    },
+    {
+      "path": "stacked/results.json",
+      "bytes": 52664,
+      "sha256": "057a915bf7476bf9c3367f6470a360c412659cabf1ead6477da92e745e84c700"
+    },
+    {
+      "path": "stacked/results.md",
+      "bytes": 11220,
+      "sha256": "8e23b3e38c5a07d2152dbf228333168936cc2d3a010b1d215751fb62f460f25c"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 155532,
+      "sha256": "3e72ad11c17849ff81ee6866b8e75ef64d584be1c4df088a86d2bd81df5361b9"
+    },
+    {
+      "path": "summary.md",
+      "bytes": 32328,
+      "sha256": "de5759ea8f87409eb3f394b8ef26955fb0acd42821c0f738410c8e4026877ba7"
+    },
+    {
+      "path": "tree/cases.txt",
+      "bytes": 327235,
+      "sha256": "32c784751d571a821c7bee991d13b9826ed7cafab4cc5fdd04c4da3b5bae9c3b"
+    },
+    {
+      "path": "tree/discovery.txt",
+      "bytes": 7244,
+      "sha256": "155a1d350267e54b0fd01aa1f6bbb3f46be28ee7e9131a25cd80cec17fd91146"
+    },
+    {
+      "path": "tree/results.json",
+      "bytes": 52630,
+      "sha256": "7007d2b6355ad6c5b804e8ab361213d3bd0286a90611e02feed2773a29fc659d"
+    },
+    {
+      "path": "tree/results.md",
+      "bytes": 11143,
+      "sha256": "55c3e138346bba80e6d5b9baae9c5b67d4b01ad8748f80122fe76e8b6cbd5394"
+    },
+    {
+      "path": "tree-slow-recheck/cases.txt",
+      "bytes": 1549,
+      "sha256": "e741b03e5cbd0895062565ba346b5081dd2e02693b0a93eed4cc0feb7732ae26"
+    },
+    {
+      "path": "tree-slow-recheck/discovery.txt",
+      "bytes": 7244,
+      "sha256": "155a1d350267e54b0fd01aa1f6bbb3f46be28ee7e9131a25cd80cec17fd91146"
+    },
+    {
+      "path": "tree-slow-recheck/results.json",
+      "bytes": 2335,
+      "sha256": "ce74a99e14a75cb449b89978fa06a71fbd89eff6487f8c7b70f5703de387c3bf"
+    },
+    {
+      "path": "tree-slow-recheck/results.md",
+      "bytes": 130,
+      "sha256": "cce8ffbd59da9a97d877192b295c85c75536c9e1121f4eece4ffc8bea68fb0d8"
+    },
+    {
+      "path": "validation/gn-final.txt",
+      "bytes": 45,
+      "sha256": "4f4073ecd116e0add749b2eefa8f55f9d5172be121c6a8daed5589aa8ea5669b"
+    },
+    {
+      "path": "validation/runner-integration.txt",
+      "bytes": 88,
+      "sha256": "06a99f442026e2da4cc37113edab89051100b4cb74d96b57dc68239e0aa4b1e4"
+    },
+    {
+      "path": "validation/runner-tests.txt",
+      "bytes": 103,
+      "sha256": "4af41b07eff0b79af094bb0a3874170ea34f89f129e1d95d461c2732fac69bf9"
+    },
+    {
+      "path": "validation/scope-check.txt",
+      "bytes": 178,
+      "sha256": "6e30620b1528e3f35e2e3ad88c5dc48b86a9121b29ef1e74874360f5f60ca38e"
+    },
+    {
+      "path": "validation/sync-check.txt",
+      "bytes": 43,
+      "sha256": "146f0cfb04d6502db8aaaf8e1db04d95da9df0a7b642dc803b06118b0c0a24b4"
+    }
+  ],
+  "source_logs": [
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/001-iheap__tests__concurrent_stress.log",
+      "sha256": "d55f5a0b36d52c22fffa049a07b9e5eeabe21cbedc68a316b464fe06fc71904c",
+      "archived": "stacked/cases.txt",
+      "start_line": 1,
+      "end_line": 47
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/002-iheap__tests__fuzz.log",
+      "sha256": "235d720342e65477caec0a2a8c2cea5be8db01ce1ee73e8d03787c9e57c38dd3",
+      "archived": "stacked/cases.txt",
+      "start_line": 48,
+      "end_line": 85
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/003-iheap__tests__fuzz1.log",
+      "sha256": "f03e740e6c115d5ea6548db4ef3308a3dda4f0e1b3725d897d13ad45e6c2baf8",
+      "archived": "stacked/cases.txt",
+      "start_line": 86,
+      "end_line": 123
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/004-iheap__tests__fuzz2.log",
+      "sha256": "1117bfccfa840501b675e3cc94c6982dacddf785811f3900a44abbbf8d4a68a4",
+      "archived": "stacked/cases.txt",
+      "start_line": 124,
+      "end_line": 161
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/005-iheap__tests__push_root_twice.log",
+      "sha256": "ba4114b285731cf97d2e5e0110e7486ba8a50996ec689740ca28d341aee29bc5",
+      "archived": "stacked/cases.txt",
+      "start_line": 162,
+      "end_line": 170
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/006-iheap__tests__test_basic_insertion.log",
+      "sha256": "fe98f41619648807276392cc5f68a603c7c3f092aced7bcd7f757dc3c17863f9",
+      "archived": "stacked/cases.txt",
+      "start_line": 171,
+      "end_line": 208
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/007-iheap__tests__test_compute_path.log",
+      "sha256": "cccab310a8888b92562a5a7091066a332b3d9205c1211f6f5bf154912e8526d4",
+      "archived": "stacked/cases.txt",
+      "start_line": 209,
+      "end_line": 217
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/008-iheap__tests__test_removal.log",
+      "sha256": "731f4797aba82b615ebba4bcdb4a713b09bb49d86ea65be506957d7d0ae597d2",
+      "archived": "stacked/cases.txt",
+      "start_line": 218,
+      "end_line": 255
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/009-iheap__tests__test_remove_sibling.log",
+      "sha256": "3bda5707b51a5514212722779915595451766438bbf8896d6842ac97c7d67507",
+      "archived": "stacked/cases.txt",
+      "start_line": 256,
+      "end_line": 299
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/010-iheap__tests__test_stack_removal.log",
+      "sha256": "ca195cdab9387d92ab2e19a1adffefb2def15571d644dce6e0d5059aea457e0c",
+      "archived": "stacked/cases.txt",
+      "start_line": 300,
+      "end_line": 343
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/011-intrusive__tests__test_relative_adapter.log",
+      "sha256": "916e3bd707d2c5630ea18cf4e521eef17cd959f91f1b3d4b7d181fa8ace5aa70",
+      "archived": "stacked/cases.txt",
+      "start_line": 344,
+      "end_line": 352
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/012-lifetime__tests__test_stack_val.log",
+      "sha256": "5394037f833f91a2963c48ba6166201b7d2cf4e1a25af851db9ac308bf7edc77",
+      "archived": "stacked/cases.txt",
+      "start_line": 353,
+      "end_line": 361
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/013-list__singly_linked_list__tests__create_new_list.log",
+      "sha256": "8701f4094331498f8688457fbe9e83009b7017b7cb14d9db9daae3b08a12b029",
+      "archived": "stacked/cases.txt",
+      "start_line": 362,
+      "end_line": 370
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/014-list__singly_linked_list__tests__insert_node.log",
+      "sha256": "296864c815ac35a24602bdedee1bdbbbb816e9068f1f9f1d7a17452dc97c5009",
+      "archived": "stacked/cases.txt",
+      "start_line": 371,
+      "end_line": 379
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/015-list__singly_linked_list__tests__listnode_pop_via_iter_mut.log",
+      "sha256": "55f942f14e10dfebc9b8a8ec6cb3a911da1f091ae903a5ec4610a35d74b7b812",
+      "archived": "stacked/cases.txt",
+      "start_line": 380,
+      "end_line": 388
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/016-list__singly_linked_list__tests__listnode_push_pop.log",
+      "sha256": "dbb09ab60e22d0d1ebc21b5dad9df3a9dcae2660d8162aa31e7eb57e240b0944",
+      "archived": "stacked/cases.txt",
+      "start_line": 389,
+      "end_line": 397
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/017-list__singly_linked_list__tests__make_sequence_and_count.log",
+      "sha256": "ce7ccfabaf18dcec69aea72024b793191aa65a3b17d859cc84bd55027ceb27d5",
+      "archived": "stacked/cases.txt",
+      "start_line": 398,
+      "end_line": 406
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/018-list__singly_linked_list__tests__make_sequence_and_remove.log",
+      "sha256": "041d78383fb4ed3d3863ce0b328950e7ed50819c59fd1caee32d6f43c7f00f89",
+      "archived": "stacked/cases.txt",
+      "start_line": 407,
+      "end_line": 415
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/019-list__singly_linked_list__tests__remove_node.log",
+      "sha256": "b66d56889b7da1e4d1d87bda83dc3386af62f7706a64e09b17d3dc6b1a3f55b3",
+      "archived": "stacked/cases.txt",
+      "start_line": 416,
+      "end_line": 424
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/020-list__singly_linked_list__tests__singlylinkedlist_basic_ops.log",
+      "sha256": "2b9424f6398018a13505cac9e5eec8bf9efde096a38e566d412927c80e45b58a",
+      "archived": "stacked/cases.txt",
+      "start_line": 425,
+      "end_line": 433
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/021-list__singly_linked_list__tests__singlylinkedlist_iter.log",
+      "sha256": "b3efeb5211570817d5847cbf50bb127c87e15e28f773dcc5bf0519e657b7d656",
+      "archived": "stacked/cases.txt",
+      "start_line": 434,
+      "end_line": 442
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/022-list__singly_linked_list__tests__singlylinkedlist_pop_from_empty.log",
+      "sha256": "8e6273ab16338b5292673beac5434f86f6eee0a2bf604ce5b00b42729de733be",
+      "archived": "stacked/cases.txt",
+      "start_line": 443,
+      "end_line": 451
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/023-list__singly_linked_list__tests__test_push.log",
+      "sha256": "266053127da67882969a0c61d8073bf6aacb7c02bb1b3cdc1a0cead54a38c74b",
+      "archived": "stacked/cases.txt",
+      "start_line": 452,
+      "end_line": 460
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/024-list__typed_atomic_ilist__tests__test_basic.log",
+      "sha256": "8176889c738f7dbeb57e7fc3b32ce5842055d51324e2a9f2c0a068b8e2f5c29a",
+      "archived": "stacked/cases.txt",
+      "start_line": 461,
+      "end_line": 491
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/025-list__typed_atomic_ilist__tests__test_concurrent_ops.log",
+      "sha256": "f9e3ca10dbcdde315c3ee5d5d048e5203a402fc73ba7a2076fb073293f3117b8",
+      "archived": "stacked/cases.txt",
+      "start_line": 492,
+      "end_line": 542
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/026-list__typed_atomic_ilist__tests__test_concurrent_ops1.log",
+      "sha256": "c249fcbd2fe292c1babf6501cc88e64375c5dd15679663f208d016846766650d",
+      "archived": "stacked/cases.txt",
+      "start_line": 543,
+      "end_line": 586
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/027-list__typed_atomic_ilist__tests__test_concurrent_ops2.log",
+      "sha256": "da046a3f0d90dec34b27d3d9dcb2f106f7c471a7cebc1a84cffd4183dc7ec2cc",
+      "archived": "stacked/cases.txt",
+      "start_line": 587,
+      "end_line": 622
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/028-list__typed_atomic_ilist__tests__test_insert_and_detach.log",
+      "sha256": "0750be3fe912d2b4b3ba3e067ca65c6b3782291c870eec19ff877873fbaab762",
+      "archived": "stacked/cases.txt",
+      "start_line": 623,
+      "end_line": 665
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/029-list__typed_ilist__tests__test_adapter.log",
+      "sha256": "9e6fa1020b8eadb16518728cbdb63cc9de9c8aad5f09b981d9b16230aeff8346",
+      "archived": "stacked/cases.txt",
+      "start_line": 666,
+      "end_line": 674
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/030-list__typed_ilist__tests__test_basic.log",
+      "sha256": "c030c0ddd5cc707c4a4daf8ddf960fc7fd5e740ab357bda0adbd713b2bcafcd6",
+      "archived": "stacked/cases.txt",
+      "start_line": 675,
+      "end_line": 705
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/031-list__typed_ilist__tests__test_insert_and_detach.log",
+      "sha256": "1eaf125fbc5df2eaa0fa69c6ddb3033f972a4959f56dbcb4ca2f45448f0ad88b",
+      "archived": "stacked/cases.txt",
+      "start_line": 706,
+      "end_line": 743
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/032-list__typed_ilist__tests__test_insert_before.log",
+      "sha256": "8fcafe5ea3fb1fb3d597578b7c8b13f49d56ee40b4e27a326910d31969572f23",
+      "archived": "stacked/cases.txt",
+      "start_line": 744,
+      "end_line": 781
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/033-list__typed_ilist__tests__test_list_basic.log",
+      "sha256": "89e1ec8ea4c0ce0fc83b2d2b0986b1f116ea3933917f841eb33a8d46405cbb13",
+      "archived": "stacked/cases.txt",
+      "start_line": 782,
+      "end_line": 825
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/034-list__typed_ilist__tests__test_list_basic_hole.log",
+      "sha256": "67f2b32b682e88919f010adabf7c6470ded0a4299e39b5de0a48417993c87a0a",
+      "archived": "stacked/cases.txt",
+      "start_line": 826,
+      "end_line": 869
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/035-list__typed_ilist__tests__test_list_push_and_pop_several.log",
+      "sha256": "25e0bee70a5d664423780e9a0f8d22ec3d5c69c3d987401081741da37da06a14",
+      "archived": "stacked/cases.txt",
+      "start_line": 870,
+      "end_line": 913
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/036-list__typed_ilist__tests__test_list_push_by_and_pop_several.log",
+      "sha256": "318eda666b157e09670f24b09d555233e90b97dc5ccea6fe60d148f22a16edf2",
+      "archived": "stacked/cases.txt",
+      "start_line": 914,
+      "end_line": 962
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/037-list__typed_ilist__tests__test_list_reorder_chosen_value.log",
+      "sha256": "8272979dd231440c28df37a39df9d12c7013bde6f73028dbf04d2afc5a5eadc6",
+      "archived": "stacked/cases.txt",
+      "start_line": 963,
+      "end_line": 1011
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/038-list__typed_ilist__tests__test_listiterator.log",
+      "sha256": "4b498f5eec1bbffdc1b5585da63c3f87a7b11548c221d408aa0875146c9f77f2",
+      "archived": "stacked/cases.txt",
+      "start_line": 1012,
+      "end_line": 1062
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/039-list__typed_ilist__tests__test_listiterator_shoild_panic.log",
+      "sha256": "9dc2193ba585306ead781cff02c43beabc12c4f37d2fb4f69c10e4fac041e154",
+      "archived": "stacked/cases.txt",
+      "start_line": 1063,
+      "end_line": 1076
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/040-list__typed_ilist__tests__test_listreverseiterator.log",
+      "sha256": "6edbc1462872fd8e8a292774f198e39b777e846dd5af8274ee820b166d7aa7f3",
+      "archived": "stacked/cases.txt",
+      "start_line": 1077,
+      "end_line": 1127
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/041-list__typed_ilist__tests__test_safer_insert_and_detach.log",
+      "sha256": "836fa755d0ad2a37d74f9e1640e7e88ea6698d6969118de89d0192e42af7335b",
+      "archived": "stacked/cases.txt",
+      "start_line": 1128,
+      "end_line": 1169
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/042-list__typed_ilist__tests__test_safer_insert_and_detach_several.log",
+      "sha256": "f1571e4d2a342431e821ba90e8b885e45c1d9da61ff400187bb1bb83527074a3",
+      "archived": "stacked/cases.txt",
+      "start_line": 1170,
+      "end_line": 1211
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/043-miri_contract_tests__intrusive_nolock_projects_mutable_owner.log",
+      "sha256": "41036daa84f1792943922651e47e37ca89bcddf44766249bc11fb25a862aba4b",
+      "archived": "stacked/cases.txt",
+      "start_line": 1212,
+      "end_line": 1244
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/044-miri_contract_tests__intrusive_rwlock_projects_mutable_owner.log",
+      "sha256": "a92de1fe99c66ccf6d45fbd35c3217211a65f4c3ac54ae21d2172196313cd143",
+      "archived": "stacked/cases.txt",
+      "start_line": 1245,
+      "end_line": 1277
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/045-miri_contract_tests__nolock_overlapping_mutable_references.log",
+      "sha256": "ac46a736d48281834c8d30260a0a845a24ab4d0ce0959426a9ac1a927a0e63d0",
+      "archived": "stacked/cases.txt",
+      "start_line": 1278,
+      "end_line": 1311
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/046-miri_contract_tests__nolock_reader_overlaps_writer.log",
+      "sha256": "027f4237a66037c63a44be372454e11a7b9a84329cf92a29f3aaf6d91ed25f76",
+      "archived": "stacked/cases.txt",
+      "start_line": 1312,
+      "end_line": 1345
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/047-miri_contract_tests__nolock_shared_across_threads.log",
+      "sha256": "be6b49d86c700a1b7a53b1d181489c332832f8d1c7a52908887753fe606e50da",
+      "archived": "stacked/cases.txt",
+      "start_line": 1346,
+      "end_line": 1379
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/048-miri_contract_tests__ringbuffer_owned_writer_exposes_uninitialized_bytes.log",
+      "sha256": "98035442c116c245e1b6c08e2cc002456b7f6fbe297d543874507407de711ec9",
+      "archived": "stacked/cases.txt",
+      "start_line": 1380,
+      "end_line": 1408
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/049-miri_contract_tests__ringbuffer_zero_capacity.log",
+      "sha256": "b9f4238adcf47cc34b8ff05740966cde71d9a4d0622166d656de8b2ae480104f",
+      "archived": "stacked/cases.txt",
+      "start_line": 1409,
+      "end_line": 1436
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/050-miri_contract_tests__storage_borrowed_initialized_bytes.log",
+      "sha256": "607dba0a097cf24f0ba1f46bc9cb47a8560df3b36423b708a3f595f733a194b7",
+      "archived": "stacked/cases.txt",
+      "start_line": 1437,
+      "end_line": 1445
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/051-miri_contract_tests__storage_empty_mutable_slice.log",
+      "sha256": "ea5655afcf71d740be88ea63ecc1fc93c93d4664ee2ff8a4169a41cc419267f5",
+      "archived": "stacked/cases.txt",
+      "start_line": 1446,
+      "end_line": 1471
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/052-miri_contract_tests__storage_empty_shared_slice.log",
+      "sha256": "c93861f31a5e598355c86aeef87151c3a16e1f1e450540d13dd955d72c49c790",
+      "archived": "stacked/cases.txt",
+      "start_line": 1472,
+      "end_line": 1497
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/053-miri_contract_tests__storage_initialized_owned_bytes.log",
+      "sha256": "637574ce20e5a44339f0c680e68fa6056b343021d96ebd1ded2b141d8c2acd1f",
+      "archived": "stacked/cases.txt",
+      "start_line": 1498,
+      "end_line": 1506
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/054-miri_contract_tests__storage_safe_public_variant_can_own_null.log",
+      "sha256": "65b9b34447fb5371788d462d1a63a52e6674a17cf79813c6acfeba5ccf7f8eb2",
+      "archived": "stacked/cases.txt",
+      "start_line": 1507,
+      "end_line": 1536
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/055-miri_contract_tests__storage_uninitialized_bytes_exposed_by_safe_api.log",
+      "sha256": "a50215573fc08c16454de295f9e1ab27b81f7be5d7ae9dae8484d68d838d6f44",
+      "archived": "stacked/cases.txt",
+      "start_line": 1537,
+      "end_line": 1565
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/056-miri_contract_tests__storage_zero_size_allocation.log",
+      "sha256": "eab0c61b03dc499bd33d3cff87b1db56da2d6697c1dde000a52641f2fa13dbc2",
+      "archived": "stacked/cases.txt",
+      "start_line": 1566,
+      "end_line": 1591
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/057-miri_contract_tests__tinyarc_cell_shared_across_threads.log",
+      "sha256": "77da4e60e8000a9536ce8ae298c560f582c1983467cc610f4e535ebf04bf1f7a",
+      "archived": "stacked/cases.txt",
+      "start_line": 1592,
+      "end_line": 1627
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/058-miri_contract_tests__tinyarc_plain_ownership.log",
+      "sha256": "c64b8c5cab8ef1e4e424b1443f07722db06918983246a290985fd9273240f4af",
+      "archived": "stacked/cases.txt",
+      "start_line": 1628,
+      "end_line": 1636
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/059-nolock__tests__test_read.log",
+      "sha256": "dc9b08c5385bf4e012af69ca1192ee738c90f48b1fa78498d68a0055f46b077e",
+      "archived": "stacked/cases.txt",
+      "start_line": 1637,
+      "end_line": 1645
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/060-nolock__tests__test_write.log",
+      "sha256": "58cabf447e5ca43239a4e28a6dee4e67a0d813197613a23b6e60697360188763",
+      "archived": "stacked/cases.txt",
+      "start_line": 1646,
+      "end_line": 1654
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/061-rbtree__tests__test_clrs_13_4_3.log",
+      "sha256": "350d0490d84594c9f51d423996230e3c36f3d9e925d11abfc8b030d79e8ec038",
+      "archived": "stacked/cases.txt",
+      "start_line": 1655,
+      "end_line": 1687
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/062-rbtree__tests__test_delete_complex.log",
+      "sha256": "d68c5038826a4540ae292f692d10cdf33cd1f1e364fd3449ac66d07e9ff99872",
+      "archived": "stacked/cases.txt",
+      "start_line": 1688,
+      "end_line": 1747
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/063-rbtree__tests__test_delete_root_scenarios.log",
+      "sha256": "db60bc0ac5fc566c48aca0d9bb488c9b26b802019e9aee806c1f64228c802fc9",
+      "archived": "stacked/cases.txt",
+      "start_line": 1748,
+      "end_line": 1807
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/064-rbtree__tests__test_insert_and_search.log",
+      "sha256": "7feba29571217b900a55861ca50b802dcecbb11923cc30fd7a2b07e2528deba4",
+      "archived": "stacked/cases.txt",
+      "start_line": 1808,
+      "end_line": 1867
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/065-rbtree__tests__test_iterator.log",
+      "sha256": "f43c61e198e3905db182a94abd96f0ebfa810a3316b3b7052ec0ff530cf5924f",
+      "archived": "stacked/cases.txt",
+      "start_line": 1868,
+      "end_line": 1927
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/066-rbtree__tests__test_sequential_insert_stress.log",
+      "sha256": "8fdec2755b1f737b8303bdb5b1c703a9742ecaa8f3a9eeaf3f4238b0aa8d3cf0",
+      "archived": "stacked/cases.txt",
+      "start_line": 1928,
+      "end_line": 1987
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/067-ringbuffer__tests__pop_slices.log",
+      "sha256": "d4ffe32694c1b0f7974d6a9a93aecc6a677ae7687e96fe7f089d649513e6b2dc",
+      "archived": "stacked/cases.txt",
+      "start_line": 1988,
+      "end_line": 1996
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/068-ringbuffer__tests__push_pop.log",
+      "sha256": "c952afce1b2f262a4c84f0965ba144313bd56f12759345812a52f615d54a3bf7",
+      "archived": "stacked/cases.txt",
+      "start_line": 1997,
+      "end_line": 2005
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/069-ringbuffer__tests__push_pop_loop.log",
+      "sha256": "71718130182a9f106ce476c56ab1454144ba914de0000619f49636b3d09b443e",
+      "archived": "stacked/cases.txt",
+      "start_line": 2006,
+      "end_line": 2014
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/070-ringbuffer__tests__push_slices.log",
+      "sha256": "b86657d4025c469d61842432a7c4fef7fabbd843f1764fd2bf65fb54b7a1b257",
+      "archived": "stacked/cases.txt",
+      "start_line": 2015,
+      "end_line": 2023
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/071-ringbuffer__tests__test_boxed_ringbuffer.log",
+      "sha256": "5cb93a27251342a37300ffcccc2686aa00d6eac30728de6716f649ca5217eefa",
+      "archived": "stacked/cases.txt",
+      "start_line": 2024,
+      "end_line": 2032
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/072-ringbuffer__tests__test_boxed_ringbuffer_partial_operations.log",
+      "sha256": "a36393f3e9baf525df997b36eab1a79f1efa4633c63c84606fb662cbf5e7d077",
+      "archived": "stacked/cases.txt",
+      "start_line": 2033,
+      "end_line": 2041
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/073-ringbuffer__tests__test_boxed_ringbuffer_wrap_around.log",
+      "sha256": "02ac0ae9064fe3576f475326d52b031363ba232da7b8e21a78a8e30de8b1e126",
+      "archived": "stacked/cases.txt",
+      "start_line": 2042,
+      "end_line": 2050
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/074-ringbuffer__tests__test_concurrent_boxed_ringbuffer.log",
+      "sha256": "6c830b4327a5b05a8c1aac04bbace7b88820150b28ca34e9993e060af931090f",
+      "archived": "stacked/cases.txt",
+      "start_line": 2051,
+      "end_line": 2059
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/075-ringbuffer__tests__test_concurrent_push_pop.log",
+      "sha256": "4ab373461eafc996f773f74f9a5a828f623fdcdf0cf8dea4cc196ebc56a18fa5",
+      "archived": "stacked/cases.txt",
+      "start_line": 2060,
+      "end_line": 2068
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/076-ringbuffer__tests__zero_len.log",
+      "sha256": "910529a043eeeaa3d0cbe519da838ce4cbd1ab76138a8beb64b5fc6fb8f4db3a",
+      "archived": "stacked/cases.txt",
+      "start_line": 2069,
+      "end_line": 2077
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/077-spinarc__tests__detach_me.log",
+      "sha256": "2414293d1762bf0c14201c7f02341ca9117de3eee4eeb7c98ea2012894100598",
+      "archived": "stacked/cases.txt",
+      "start_line": 2078,
+      "end_line": 2086
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/078-spinarc__tests__i_list.log",
+      "sha256": "ef9e124acbe27873fdfc811f735a53541bc4d89530c9a643d623940d90817dfc",
+      "archived": "stacked/cases.txt",
+      "start_line": 2087,
+      "end_line": 2095
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/079-spinarc__tests__insert_after_many.log",
+      "sha256": "6f510749389ed5c2558ff6cd3d2dfc1304c886f261bd0089180b8a6511cb12db",
+      "archived": "stacked/cases.txt",
+      "start_line": 2096,
+      "end_line": 2104
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/080-spinarc__tests__insert_before_many.log",
+      "sha256": "79f755ba59634c1995ca98e4b4d157e2c1a724e4f2d3e18a5e605bc8499754e2",
+      "archived": "stacked/cases.txt",
+      "start_line": 2105,
+      "end_line": 2113
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/081-spinarc__tests__mutex_iter.log",
+      "sha256": "0097b2424315e1ce8c2f6be872115bae7de1c97fbc41d4744aea67d9d6036186",
+      "archived": "stacked/cases.txt",
+      "start_line": 2114,
+      "end_line": 2122
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/082-spinarc__tests__remove_after.log",
+      "sha256": "6a589be9b0184b003d473754750a375dec7b5149cc01a703bc6cb94ea80470d3",
+      "archived": "stacked/cases.txt",
+      "start_line": 2123,
+      "end_line": 2131
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/083-spinarc__tests__threaded_insert_after_many.log",
+      "sha256": "8eed71a36191bbd886020ca4ebaed45367af4e367fc6a874528ac2e9cb67b48a",
+      "archived": "stacked/cases.txt",
+      "start_line": 2132,
+      "end_line": 2140
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/084-spinarc__tests__threaded_mutex_iter.log",
+      "sha256": "33aebb48d6b34de84b4c1f7bc45a3ea508e61eccc5d057608683511510c93d12",
+      "archived": "stacked/cases.txt",
+      "start_line": 2141,
+      "end_line": 2149
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/085-spinarc__tests__ver_iter.log",
+      "sha256": "4f2870d9d0a6d3461196b05b181048c6ad67a30f9e0be4244502df3630992ae5",
+      "archived": "stacked/cases.txt",
+      "start_line": 2150,
+      "end_line": 2158
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/086-string__tests__test_memcmp.log",
+      "sha256": "1f585d315568889dec5263829088225f3010c182189634819acae4079696e679",
+      "archived": "stacked/cases.txt",
+      "start_line": 2159,
+      "end_line": 2167
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/087-string__tests__test_memcpy.log",
+      "sha256": "d79a1aa67ca756f059c4ba5264b8be7e12c8a394bd70866cbb158cefb2cc5e44",
+      "archived": "stacked/cases.txt",
+      "start_line": 2168,
+      "end_line": 2176
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/088-string__tests__test_memmove.log",
+      "sha256": "45e0ca3c8b906cf8f7d2221ff5056d309aa478d7d3f9c33dc6906abda366707f",
+      "archived": "stacked/cases.txt",
+      "start_line": 2177,
+      "end_line": 2185
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/089-string__tests__test_memset.log",
+      "sha256": "9421cef59bf38286ddf0f927ad53a4dd12760de4af3f1abbfe785323f6546c45",
+      "archived": "stacked/cases.txt",
+      "start_line": 2186,
+      "end_line": 2194
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/090-string__tests__test_strlen.log",
+      "sha256": "775b08f3827f45d28a20b4f0d1ca61f67636eefbf13667bf9f8ab17b79f0547a",
+      "archived": "stacked/cases.txt",
+      "start_line": 2195,
+      "end_line": 2203
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/091-string__tests__test_strncpy.log",
+      "sha256": "57839068be48d243fd34af4324a729300bf6ef539a35e9b878a4d7104d069dff",
+      "archived": "stacked/cases.txt",
+      "start_line": 2204,
+      "end_line": 2212
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/092-string__tests__test_strnlen.log",
+      "sha256": "a556078f6b31da893087b863a0ec1309732c3a2b730867b74c38b8bc73066948",
+      "archived": "stacked/cases.txt",
+      "start_line": 2213,
+      "end_line": 2221
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/093-tinyarc__sorted_list__tests__test_basic_creation.log",
+      "sha256": "8cc2615250b21b082940692c73b179a36572ecd5836663a308eabd3089f9cb55",
+      "archived": "stacked/cases.txt",
+      "start_line": 2222,
+      "end_line": 2230
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/094-tinyarc__sorted_list__tests__test_basic_functionality.log",
+      "sha256": "410aa458a1821bdc64cdcd3d4c8fbb404db618d75e6ddf9f286e79c1f50d35ce",
+      "archived": "stacked/cases.txt",
+      "start_line": 2231,
+      "end_line": 2283
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/095-tinyarc__sorted_list__tests__test_empty_list_operations.log",
+      "sha256": "9284888524d366272152bee0fdb01dfa3ade45c42abcbc098689e2913fc94e6d",
+      "archived": "stacked/cases.txt",
+      "start_line": 2284,
+      "end_line": 2292
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/096-tinyarc__sorted_list__tests__test_find_and_remove.log",
+      "sha256": "395cd39987ac2d9d59055a7739317afdec42ef68272dfc4d43a2ea40c52c885d",
+      "archived": "stacked/cases.txt",
+      "start_line": 2293,
+      "end_line": 2345
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/097-tinyarc__sorted_list__tests__test_task_operations.log",
+      "sha256": "cf345ed064bbc240762772323c32e04700b627c11f474a0e89231329d6a0dfc9",
+      "archived": "stacked/cases.txt",
+      "start_line": 2346,
+      "end_line": 2398
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/098-tinyarc__tests__insert_by_prio.log",
+      "sha256": "d28f9ff6231b638c88c852dc6fc2709e6c34a4071269dbad56098ea3b6fdb1a8",
+      "archived": "stacked/cases.txt",
+      "start_line": 2399,
+      "end_line": 2447
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/099-tinyarc__tests__test_arc_cas_basic.log",
+      "sha256": "0da73008f8ea3eba6879ff6f8c7e4f39650462f4a017f5a79ac892cd66e7eb45",
+      "archived": "stacked/cases.txt",
+      "start_line": 2448,
+      "end_line": 2478
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/100-tinyarc__tests__test_basic.log",
+      "sha256": "8b03898a6db1ca69d6fd243a4cf2d97c5d1923605c1bf51b3a8f35d7c044c4cb",
+      "archived": "stacked/cases.txt",
+      "start_line": 2479,
+      "end_line": 2487
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/101-tinyarc__tests__test_detach_and_insert_during_iter.log",
+      "sha256": "144c85faf4bf75719bacffdf53616303f8c51ee6224265ebca40a59133bfd859",
+      "archived": "stacked/cases.txt",
+      "start_line": 2488,
+      "end_line": 2534
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/102-tinyarc__tests__test_detach_during_iter.log",
+      "sha256": "0e215438da534efd23c861774a73a584a150624bb09fb90dc302e65180d0de7c",
+      "archived": "stacked/cases.txt",
+      "start_line": 2535,
+      "end_line": 2579
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/103-tinyarc__tests__test_detach_during_iter_2.log",
+      "sha256": "9613cd614f3962344057d7e49253f4b0325240911be13bb87df8d82415669e28",
+      "archived": "stacked/cases.txt",
+      "start_line": 2580,
+      "end_line": 2626
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/104-tinyarc__tests__test_get_mut.log",
+      "sha256": "6a650c901e60de5ed80e30232acbea55d29768a3c8bdfa38944365f9f4c4ab20",
+      "archived": "stacked/cases.txt",
+      "start_line": 2627,
+      "end_line": 2635
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/105-tinyarc__tests__test_insert_after_false.log",
+      "sha256": "42ebd9f0a34902dbbd201fd14012995bcefae07a45061801bf6f8b164a392f2b",
+      "archived": "stacked/cases.txt",
+      "start_line": 2636,
+      "end_line": 2644
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/106-tinyarc__tests__test_insert_and_detach.log",
+      "sha256": "c4fc1c2bd92948b3e7e5a73f7623132f2779e5ba9d256b6c95dffbe2bef4aee0",
+      "archived": "stacked/cases.txt",
+      "start_line": 2645,
+      "end_line": 2693
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/107-tinyarc__tests__test_insert_before_and_detach.log",
+      "sha256": "f2120439492ea72d7f32b8465566d05674713fe521b488043b7aa3e3eeeacdb7",
+      "archived": "stacked/cases.txt",
+      "start_line": 2694,
+      "end_line": 2733
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/108-tinyarc__tests__test_into_raw_and_from_raw.log",
+      "sha256": "0cf5a3f396931aa973dd216a9580ccf886a2ede6cdc1c55ecb967e1833531158",
+      "archived": "stacked/cases.txt",
+      "start_line": 2734,
+      "end_line": 2742
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/109-tinyarc__tests__test_push_and_drop.log",
+      "sha256": "92671bbb74b634f9d1843a895ac66445a89cc47895d0958be21ee981dcc5e4b2",
+      "archived": "stacked/cases.txt",
+      "start_line": 2743,
+      "end_line": 2789
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/110-tinyarc__tests__test_push_and_pop.log",
+      "sha256": "c93d7150c319e3d368d136d84c8c3a59e773a0962c73ed5770916d87d76a061d",
+      "archived": "stacked/cases.txt",
+      "start_line": 2790,
+      "end_line": 2836
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/111-tinyarc__tests__test_push_back_false.log",
+      "sha256": "631f38099898b07f9e68cf526fda552fa69aa6e13f4b181e290ed6522323c216",
+      "archived": "stacked/cases.txt",
+      "start_line": 2837,
+      "end_line": 2845
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/112-tinyarc__tests__test_remove_if.log",
+      "sha256": "0a9a015cf7517f8e766c230b24b39064b0dcafd8049e231916319d1503c77929",
+      "archived": "stacked/cases.txt",
+      "start_line": 2846,
+      "end_line": 2892
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/113-tinyarc__tests__test_swap_basic.log",
+      "sha256": "1a782a2ea2cb4801b42e0583a0ad38796ff73c66be5094a575b7050c9e1705d7",
+      "archived": "stacked/cases.txt",
+      "start_line": 2893,
+      "end_line": 2923
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/114-tinyarc__tests__test_swap_no_none.log",
+      "sha256": "81be828e95611ac9576d5a7c9787582ba06180e7594d1116e2471037264419fe",
+      "archived": "stacked/cases.txt",
+      "start_line": 2924,
+      "end_line": 2954
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/115-tinyrwlock__tests__smoke.log",
+      "sha256": "086f7505f71bf846cb64570e4f8fdf5e7fac8cb32c9dac2745260596f3882759",
+      "archived": "stacked/cases.txt",
+      "start_line": 2955,
+      "end_line": 2963
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/116-tinyrwlock__tests__test_acquire_reader_panic.log",
+      "sha256": "d39ddf81e5ae9566f5fb33c9a4f8502bf309f7f43e8ee28b40332c8e8f8ba29e",
+      "archived": "stacked/cases.txt",
+      "start_line": 2964,
+      "end_line": 2977
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/117-tinyrwlock__tests__test_force_read_decrement.log",
+      "sha256": "f47cfb14533b46ded062ca88cfa0e3abdda4c61529268e93b82c9033828c0fd9",
+      "archived": "stacked/cases.txt",
+      "start_line": 2978,
+      "end_line": 2986
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/118-tinyrwlock__tests__test_force_write_unlock.log",
+      "sha256": "442cc8abe3360a866c6e48d18321f797b35d8d014cfed9913ecdf8bce52b177f",
+      "archived": "stacked/cases.txt",
+      "start_line": 2987,
+      "end_line": 2995
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/119-tinyrwlock__tests__test_get_mut.log",
+      "sha256": "285279758605251d1387b61d74845c4334f96b307859a663727ddc32dc444797",
+      "archived": "stacked/cases.txt",
+      "start_line": 2996,
+      "end_line": 3004
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/120-tinyrwlock__tests__test_into_inner.log",
+      "sha256": "1b70fd7098c38e3c57edf6e5551490150909a2ccb96131555b69c4c2b5588573",
+      "archived": "stacked/cases.txt",
+      "start_line": 3005,
+      "end_line": 3013
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/121-tinyrwlock__tests__test_into_inner_drop.log",
+      "sha256": "8aeb44d0e59822d60015e2215d959138aee895d9abbfd2087f54902af21f8725",
+      "archived": "stacked/cases.txt",
+      "start_line": 3014,
+      "end_line": 3022
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/122-tinyrwlock__tests__test_reader_writer_count.log",
+      "sha256": "0ff3961cfb3cff569dd748ef248fc15be87fbfad3d2a648830edd30855d2cc02",
+      "archived": "stacked/cases.txt",
+      "start_line": 3023,
+      "end_line": 3031
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/123-tinyrwlock__tests__test_rw_access_in_unwind.log",
+      "sha256": "57a921bb8784bfe6374e55e6fcdabbfe80361ceb785a348f233edc7cda7c501d",
+      "archived": "stacked/cases.txt",
+      "start_line": 3032,
+      "end_line": 3045
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/124-tinyrwlock__tests__test_rw_arc.log",
+      "sha256": "a1e14851e0fa39e967315c102abaee2fa6cee0c34234a75f3c4d1d962a5e38ca",
+      "archived": "stacked/cases.txt",
+      "start_line": 3046,
+      "end_line": 3054
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/125-tinyrwlock__tests__test_rw_try_read.log",
+      "sha256": "d5ddab5f3445fdcb7666d40d65dc7281b3e5ae1a8f1b17f378dcac45b0ae432c",
+      "archived": "stacked/cases.txt",
+      "start_line": 3055,
+      "end_line": 3063
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/126-tinyrwlock__tests__test_rwlock_try_write.log",
+      "sha256": "9f0e1eeb1f5645911a0cadb2fc273b6c9c6158b874cd765c60168c5adfe9fb1c",
+      "archived": "stacked/cases.txt",
+      "start_line": 3064,
+      "end_line": 3072
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/127-tinyrwlock__tests__test_rwlock_unsized.log",
+      "sha256": "7b343e48ca8caeb5151a33c6705e012087ae80b1875c8e6a4289a26b31b19979",
+      "archived": "stacked/cases.txt",
+      "start_line": 3073,
+      "end_line": 3081
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/128-tinyrwlock__tests__test_upgrade.log",
+      "sha256": "e7489c2b3139d4c007025182a25128122b2a5d821faedcf93800fe6d895a3f4c",
+      "archived": "stacked/cases.txt",
+      "start_line": 3082,
+      "end_line": 3090
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/129-tinyrwlock__tests__test_upgrade_downgrade.log",
+      "sha256": "1a8e12e8129752e7d1f164b2d8d054e313d390d87d900e76ee7c3981f63a2dcd",
+      "archived": "stacked/cases.txt",
+      "start_line": 3091,
+      "end_line": 3099
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/001-iheap__tests__concurrent_stress.log",
+      "sha256": "531c62cd05a1140f198b797fcfe80e01e72de0e60a76c59e18b743c69d210f6d",
+      "archived": "tree/cases.txt",
+      "start_line": 1,
+      "end_line": 57
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/002-iheap__tests__fuzz.log",
+      "sha256": "3dea4c5308427d50ff5596e9721b146dade23cd2584c12c3fe31668fd6e6afb0",
+      "archived": "tree/cases.txt",
+      "start_line": 58,
+      "end_line": 111
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/003-iheap__tests__fuzz1.log",
+      "sha256": "4572ab7e5b1a3e87a164bf6ad785fd6a68c0219fcbfa97c578c8880635378d75",
+      "archived": "tree/cases.txt",
+      "start_line": 112,
+      "end_line": 165
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/004-iheap__tests__fuzz2.log",
+      "sha256": "3eed9f8b3e7dad59d8a8b5ad02175e5ac4b46cd7e4bcd551a760ee22a9d45416",
+      "archived": "tree/cases.txt",
+      "start_line": 166,
+      "end_line": 219
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/005-iheap__tests__push_root_twice.log",
+      "sha256": "16daf6d378d9119c208d5241ec66d4d8a0678fc456ea6435f3dc0310c69fa644",
+      "archived": "tree/cases.txt",
+      "start_line": 220,
+      "end_line": 228
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/006-iheap__tests__test_basic_insertion.log",
+      "sha256": "cdf4b81d5b9355b7be119ae10fe1512a52e3780dd61c629c77c4578a71c5a07c",
+      "archived": "tree/cases.txt",
+      "start_line": 229,
+      "end_line": 282
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/007-iheap__tests__test_compute_path.log",
+      "sha256": "14e5f1248cce55ddd481598b32230e865ecc209cac8757814088d76465eebded",
+      "archived": "tree/cases.txt",
+      "start_line": 283,
+      "end_line": 291
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/008-iheap__tests__test_removal.log",
+      "sha256": "3316f876b0efbbd19e5d8f3ad957ec46062d5c0e1b7e661a23f50ab65ae468b3",
+      "archived": "tree/cases.txt",
+      "start_line": 292,
+      "end_line": 345
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/009-iheap__tests__test_remove_sibling.log",
+      "sha256": "2cb7eff4c9ceadb9621acb83b88b3d1b7b1b91cb7ef90bbfd627a683e279070d",
+      "archived": "tree/cases.txt",
+      "start_line": 346,
+      "end_line": 399
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/010-iheap__tests__test_stack_removal.log",
+      "sha256": "48e66fbad29744ce43c1c569ccf36f5380a18e5f643348ce1fccabce0cbb03d5",
+      "archived": "tree/cases.txt",
+      "start_line": 400,
+      "end_line": 453
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/011-intrusive__tests__test_relative_adapter.log",
+      "sha256": "154b1a38f9884a382592893a19b96a20ddb94882517802c118f687d846b15285",
+      "archived": "tree/cases.txt",
+      "start_line": 454,
+      "end_line": 462
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/012-lifetime__tests__test_stack_val.log",
+      "sha256": "30e247f3231bb2f8287f8e213c4171fe6708d92b2ab6bfce2dabd9925104d87b",
+      "archived": "tree/cases.txt",
+      "start_line": 463,
+      "end_line": 471
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/013-list__singly_linked_list__tests__create_new_list.log",
+      "sha256": "50a65884d45a098759260c55482597d4919671b2f2844c8c8ae60b3129f9c95c",
+      "archived": "tree/cases.txt",
+      "start_line": 472,
+      "end_line": 480
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/014-list__singly_linked_list__tests__insert_node.log",
+      "sha256": "43e6e6869a720a9958add4e3dfa7972d9b24cdc16dba696aa9eae96c9e580867",
+      "archived": "tree/cases.txt",
+      "start_line": 481,
+      "end_line": 489
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/015-list__singly_linked_list__tests__listnode_pop_via_iter_mut.log",
+      "sha256": "ec055ab477d2aecef936f2e4abba3e81b0d31fc9bd418169531be453b5cfd219",
+      "archived": "tree/cases.txt",
+      "start_line": 490,
+      "end_line": 498
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/016-list__singly_linked_list__tests__listnode_push_pop.log",
+      "sha256": "a9a5b08961380f38e33a7f9f8af00984641b3136ffe2b1aa30dde2a39f8d42f9",
+      "archived": "tree/cases.txt",
+      "start_line": 499,
+      "end_line": 507
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/017-list__singly_linked_list__tests__make_sequence_and_count.log",
+      "sha256": "844ae9ac47399eba97d24b325c3c2be1a697aa18bc3dd9c88f0b19ee4e8a537c",
+      "archived": "tree/cases.txt",
+      "start_line": 508,
+      "end_line": 516
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/018-list__singly_linked_list__tests__make_sequence_and_remove.log",
+      "sha256": "d17ff4c5f303de37577ad767a4f6ec671f086717913c337d4d7d6737c3d39ae2",
+      "archived": "tree/cases.txt",
+      "start_line": 517,
+      "end_line": 525
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/019-list__singly_linked_list__tests__remove_node.log",
+      "sha256": "0df698fdb219b6cee23d24036615a0d20288781136166d29bc1d0ef0e776888e",
+      "archived": "tree/cases.txt",
+      "start_line": 526,
+      "end_line": 534
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/020-list__singly_linked_list__tests__singlylinkedlist_basic_ops.log",
+      "sha256": "ecea955f8efca19e67dfdbdd5aef3d04f4ada2656889b193e5cd4e1827e90aab",
+      "archived": "tree/cases.txt",
+      "start_line": 535,
+      "end_line": 543
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/021-list__singly_linked_list__tests__singlylinkedlist_iter.log",
+      "sha256": "24b1129f65bccdd21a6c0f540ab8cac7c0b5f38ac96950d74c956bdd93f540fd",
+      "archived": "tree/cases.txt",
+      "start_line": 544,
+      "end_line": 552
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/022-list__singly_linked_list__tests__singlylinkedlist_pop_from_empty.log",
+      "sha256": "823c37583a6a898f5220f53afebcacff432325522a45b0f78f27f1c9cec720af",
+      "archived": "tree/cases.txt",
+      "start_line": 553,
+      "end_line": 561
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/023-list__singly_linked_list__tests__test_push.log",
+      "sha256": "1999ad356a94cb6adac8a7bebeb9f1a260de352af58f51dcba3fb9b656f78e78",
+      "archived": "tree/cases.txt",
+      "start_line": 562,
+      "end_line": 567
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/024-list__typed_atomic_ilist__tests__test_basic.log",
+      "sha256": "13587bbc11253087d4f0341fe8fce14b32f69ae36bf14cda43be26eda8840e66",
+      "archived": "tree/cases.txt",
+      "start_line": 568,
+      "end_line": 576
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/025-list__typed_atomic_ilist__tests__test_concurrent_ops.log",
+      "sha256": "86e5f13bbe50ab011f842e9259a36018cf5ea5e51ed3651296d59e00b54540d7",
+      "archived": "tree/cases.txt",
+      "start_line": 577,
+      "end_line": 634
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/026-list__typed_atomic_ilist__tests__test_concurrent_ops1.log",
+      "sha256": "b46918d1d984049cbc5fe962171c25cf2fdf9b9799bf9d8555c5865ff273a813",
+      "archived": "tree/cases.txt",
+      "start_line": 635,
+      "end_line": 681
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/027-list__typed_atomic_ilist__tests__test_concurrent_ops2.log",
+      "sha256": "3ee6aeda8c3d86859d44e3fb06e5dd8b2f06e6bd94dbc1638ad739d74e8fc166",
+      "archived": "tree/cases.txt",
+      "start_line": 682,
+      "end_line": 718
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/028-list__typed_atomic_ilist__tests__test_insert_and_detach.log",
+      "sha256": "055b2d1bf0db651e9544c42f05954b5c03fc2a42ec09238bcffd192a816883fd",
+      "archived": "tree/cases.txt",
+      "start_line": 719,
+      "end_line": 768
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/029-list__typed_ilist__tests__test_adapter.log",
+      "sha256": "0341e9284c992fef07c7b810e93be5a28367f287a9b0fd7cd755812c3a88b9ab",
+      "archived": "tree/cases.txt",
+      "start_line": 769,
+      "end_line": 777
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/030-list__typed_ilist__tests__test_basic.log",
+      "sha256": "2498b10d91b571ce7725e972ecfbcb80112016358b96e089a4367257710a1c4c",
+      "archived": "tree/cases.txt",
+      "start_line": 778,
+      "end_line": 786
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/031-list__typed_ilist__tests__test_insert_and_detach.log",
+      "sha256": "b5d275672bb656017f5594f014c5426263ddd2ac77ce04f58504a5599f05b7de",
+      "archived": "tree/cases.txt",
+      "start_line": 787,
+      "end_line": 838
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/032-list__typed_ilist__tests__test_insert_before.log",
+      "sha256": "cc9f4598a746360243f8021c62cb361dc2875237145005b9de61298daf2ba0dd",
+      "archived": "tree/cases.txt",
+      "start_line": 839,
+      "end_line": 890
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/033-list__typed_ilist__tests__test_list_basic.log",
+      "sha256": "0fb85fd7d3f86d68cc872c764afb94f68755bdc4335369a41d0419a6a261fad6",
+      "archived": "tree/cases.txt",
+      "start_line": 891,
+      "end_line": 950
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/034-list__typed_ilist__tests__test_list_basic_hole.log",
+      "sha256": "9fbc3d9570180f7b30748889c5bb3086af03eeccfb7e0942632ed60fba4b96cd",
+      "archived": "tree/cases.txt",
+      "start_line": 951,
+      "end_line": 1010
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/035-list__typed_ilist__tests__test_list_push_and_pop_several.log",
+      "sha256": "cecab270bb6349ee2b5ea76865de1373702527c08008724b8e20c8c729a9b8ed",
+      "archived": "tree/cases.txt",
+      "start_line": 1011,
+      "end_line": 1070
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/036-list__typed_ilist__tests__test_list_push_by_and_pop_several.log",
+      "sha256": "a9214839abd6c2ccab55ae70dbc2349092836d8c063f26a4b46dc7371bd24cbf",
+      "archived": "tree/cases.txt",
+      "start_line": 1071,
+      "end_line": 1118
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/037-list__typed_ilist__tests__test_list_reorder_chosen_value.log",
+      "sha256": "729b9d7240268610c92ec50749b3ea36bdcffa9220079aa48151d57dda6cc875",
+      "archived": "tree/cases.txt",
+      "start_line": 1119,
+      "end_line": 1166
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/038-list__typed_ilist__tests__test_listiterator.log",
+      "sha256": "c52c72f9c6a1dc9c43ce0780cf884c25618131c2fe6588ffe88cc5f3a2cecd3a",
+      "archived": "tree/cases.txt",
+      "start_line": 1167,
+      "end_line": 1217
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/039-list__typed_ilist__tests__test_listiterator_shoild_panic.log",
+      "sha256": "2e3f84ca73b0fc3286a5b8c12ed928fe7a4140e73eeb5e4236fa3777d65e5efc",
+      "archived": "tree/cases.txt",
+      "start_line": 1218,
+      "end_line": 1231
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/040-list__typed_ilist__tests__test_listreverseiterator.log",
+      "sha256": "ba03bb8281dad9e2af9305300207984b9dc6e8ab18e6f7d49a6ed565c19e09cb",
+      "archived": "tree/cases.txt",
+      "start_line": 1232,
+      "end_line": 1282
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/041-list__typed_ilist__tests__test_safer_insert_and_detach.log",
+      "sha256": "f958d88d246bc5055de6348b8d9c4ce6708e926f182df908539d63f2c261b967",
+      "archived": "tree/cases.txt",
+      "start_line": 1283,
+      "end_line": 1338
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/042-list__typed_ilist__tests__test_safer_insert_and_detach_several.log",
+      "sha256": "f780a7499d6ef29fa2918edbac4f0e7da4185357eb7866554c8962956a1c8d9a",
+      "archived": "tree/cases.txt",
+      "start_line": 1339,
+      "end_line": 1382
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/043-miri_contract_tests__intrusive_nolock_projects_mutable_owner.log",
+      "sha256": "81170abed6f87d62ad01574fca5c076824b0abc2ad62db78bd03f41508765f90",
+      "archived": "tree/cases.txt",
+      "start_line": 1383,
+      "end_line": 1418
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/044-miri_contract_tests__intrusive_rwlock_projects_mutable_owner.log",
+      "sha256": "29fd4a8e95f892862efa1ad878cb3a0820c514aed864c6dcc25da288da5a2af5",
+      "archived": "tree/cases.txt",
+      "start_line": 1419,
+      "end_line": 1454
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/045-miri_contract_tests__nolock_overlapping_mutable_references.log",
+      "sha256": "31af9908c4c12ac2dba728f524ae25f0ae061d549afafb0699a1f7564d4be998",
+      "archived": "tree/cases.txt",
+      "start_line": 1455,
+      "end_line": 1490
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/046-miri_contract_tests__nolock_reader_overlaps_writer.log",
+      "sha256": "b2e6a8aa3054b5b78e8407c7a2f8f695faf8925bf3a215e8fa168922095216e1",
+      "archived": "tree/cases.txt",
+      "start_line": 1491,
+      "end_line": 1526
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/047-miri_contract_tests__nolock_shared_across_threads.log",
+      "sha256": "4f7c20d4ac55c3bb17fca46c731afcba9aed37ffe3798f5b9ba66fababfabd61",
+      "archived": "tree/cases.txt",
+      "start_line": 1527,
+      "end_line": 1560
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/048-miri_contract_tests__ringbuffer_owned_writer_exposes_uninitialized_bytes.log",
+      "sha256": "44e51253255812dd2b482ec964db8936bb058bed0ead0e358768b801aee0ce81",
+      "archived": "tree/cases.txt",
+      "start_line": 1561,
+      "end_line": 1589
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/049-miri_contract_tests__ringbuffer_zero_capacity.log",
+      "sha256": "fce857365daa332aa0e966456d798d916537988bef6128687dd36454d85d1bd4",
+      "archived": "tree/cases.txt",
+      "start_line": 1590,
+      "end_line": 1617
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/050-miri_contract_tests__storage_borrowed_initialized_bytes.log",
+      "sha256": "95dc5c983340073331ce7426b48edd26c993251b11ffe9f5defb8883e72ed3f6",
+      "archived": "tree/cases.txt",
+      "start_line": 1618,
+      "end_line": 1626
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/051-miri_contract_tests__storage_empty_mutable_slice.log",
+      "sha256": "c3d1ec2317872333ad709da498c0f43a791b134294f0e71068f516ea3c383bf1",
+      "archived": "tree/cases.txt",
+      "start_line": 1627,
+      "end_line": 1652
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/052-miri_contract_tests__storage_empty_shared_slice.log",
+      "sha256": "efc327463dbc4d6c74ed74558257da14757ab47959e81fdb2888c2c62f439aa4",
+      "archived": "tree/cases.txt",
+      "start_line": 1653,
+      "end_line": 1678
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/053-miri_contract_tests__storage_initialized_owned_bytes.log",
+      "sha256": "8683ee838f9164cb1622b9406946343875e99118d21c1cd4bd4bc0010db60d08",
+      "archived": "tree/cases.txt",
+      "start_line": 1679,
+      "end_line": 1687
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/054-miri_contract_tests__storage_safe_public_variant_can_own_null.log",
+      "sha256": "1e5609cab2466022f3e3661777c506ddd2838a3fdbe1945be48addf0a9461aa5",
+      "archived": "tree/cases.txt",
+      "start_line": 1688,
+      "end_line": 1717
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/055-miri_contract_tests__storage_uninitialized_bytes_exposed_by_safe_api.log",
+      "sha256": "08b9917b69ef90621d39d2b0cdc3a757008eaa5b398e45845a8019af4d87a04d",
+      "archived": "tree/cases.txt",
+      "start_line": 1718,
+      "end_line": 1746
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/056-miri_contract_tests__storage_zero_size_allocation.log",
+      "sha256": "f2cfe5e80822ba5bdbaf59dc9ddd29a0e595977334fef35ffc3d6900cb861258",
+      "archived": "tree/cases.txt",
+      "start_line": 1747,
+      "end_line": 1772
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/057-miri_contract_tests__tinyarc_cell_shared_across_threads.log",
+      "sha256": "2ebb8a2e97054c0c78f494cb14b850c29d5e5c0ecae1a3b76fb528ed838e6420",
+      "archived": "tree/cases.txt",
+      "start_line": 1773,
+      "end_line": 1808
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/058-miri_contract_tests__tinyarc_plain_ownership.log",
+      "sha256": "cb9baebe420636c867bff2589012689361e9f12a4e3d1acec707aece30a1448c",
+      "archived": "tree/cases.txt",
+      "start_line": 1809,
+      "end_line": 1817
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/059-nolock__tests__test_read.log",
+      "sha256": "8125d133009ef37f7d041bfcb6793a4e436d0f14d1503e395f630780ede95030",
+      "archived": "tree/cases.txt",
+      "start_line": 1818,
+      "end_line": 1826
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/060-nolock__tests__test_write.log",
+      "sha256": "e9a830217dc374f73be09117ae3e6ef862d175556eac993d00503136face52b9",
+      "archived": "tree/cases.txt",
+      "start_line": 1827,
+      "end_line": 1835
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/061-rbtree__tests__test_clrs_13_4_3.log",
+      "sha256": "f5ca189216d0fa389546b0b1436c3af2b8c376367d03b8c0cc30d5ff58d7654d",
+      "archived": "tree/cases.txt",
+      "start_line": 1836,
+      "end_line": 1868
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/062-rbtree__tests__test_delete_complex.log",
+      "sha256": "cf96e7b67c945ab382638676181d697af8a99190e63059301cf567ff7ce3bc1f",
+      "archived": "tree/cases.txt",
+      "start_line": 1869,
+      "end_line": 1901
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/063-rbtree__tests__test_delete_root_scenarios.log",
+      "sha256": "caaea3821fa84f9e577901456928d409c47276f4aac9f392f5fb368811754d3c",
+      "archived": "tree/cases.txt",
+      "start_line": 1902,
+      "end_line": 1934
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/064-rbtree__tests__test_insert_and_search.log",
+      "sha256": "ca88572bf227def8c311313c14968cd35c15c3d7e18dc699677128b38c1d9908",
+      "archived": "tree/cases.txt",
+      "start_line": 1935,
+      "end_line": 1967
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/065-rbtree__tests__test_iterator.log",
+      "sha256": "043974f54794b117fa5d04dee0cebd08c757506ee2c44f5d03bdc0ce747eb3d1",
+      "archived": "tree/cases.txt",
+      "start_line": 1968,
+      "end_line": 2000
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/066-rbtree__tests__test_sequential_insert_stress.log",
+      "sha256": "5a5423f362b1ebb0d251ba182c22265e13348856b42ac35e78de8ef47ae762c8",
+      "archived": "tree/cases.txt",
+      "start_line": 2001,
+      "end_line": 2033
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/067-ringbuffer__tests__pop_slices.log",
+      "sha256": "232a113ba1034e2a1c6ab0ad6350ef36368772855b4d10eef2fd1b1483e3178c",
+      "archived": "tree/cases.txt",
+      "start_line": 2034,
+      "end_line": 2042
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/068-ringbuffer__tests__push_pop.log",
+      "sha256": "31f97d349e800e5210b9d70fec7d044f3059f79731c153aaa922141bc4b5bc1d",
+      "archived": "tree/cases.txt",
+      "start_line": 2043,
+      "end_line": 2051
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/069-ringbuffer__tests__push_pop_loop.log",
+      "sha256": "2afb1b77205271595aac80d6b3d1ad6687b5e376703fc4b007467b7994acdfa4",
+      "archived": "tree/cases.txt",
+      "start_line": 2052,
+      "end_line": 2060
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/070-ringbuffer__tests__push_slices.log",
+      "sha256": "0dd6b1db7998dc038c6e187a545816419c0fbffbfc12e10f74cb2a46852164cb",
+      "archived": "tree/cases.txt",
+      "start_line": 2061,
+      "end_line": 2069
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/071-ringbuffer__tests__test_boxed_ringbuffer.log",
+      "sha256": "626df504ca910535c6c38f9b216f648a0c831b799f5eb7615659603678804e47",
+      "archived": "tree/cases.txt",
+      "start_line": 2070,
+      "end_line": 2078
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/072-ringbuffer__tests__test_boxed_ringbuffer_partial_operations.log",
+      "sha256": "4d92cae45bbb34f5aecac28da8d42ee045c646e18db41f938f1919eb7c0f2d36",
+      "archived": "tree/cases.txt",
+      "start_line": 2079,
+      "end_line": 2087
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/073-ringbuffer__tests__test_boxed_ringbuffer_wrap_around.log",
+      "sha256": "c40a7b0b1a2852d269e8780528bdef99355d53d6a06b4a783786e62057548906",
+      "archived": "tree/cases.txt",
+      "start_line": 2088,
+      "end_line": 2096
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/074-ringbuffer__tests__test_concurrent_boxed_ringbuffer.log",
+      "sha256": "0eed79ee778cae47b7cbf67c7fa21b557a395025564a468b114a3cc6f3890149",
+      "archived": "tree/cases.txt",
+      "start_line": 2097,
+      "end_line": 2105
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/075-ringbuffer__tests__test_concurrent_push_pop.log",
+      "sha256": "19b68ef391cb135163e7f54a0ecc69f18ce098d57d52f2235af6f089551cf747",
+      "archived": "tree/cases.txt",
+      "start_line": 2106,
+      "end_line": 2114
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/076-ringbuffer__tests__zero_len.log",
+      "sha256": "96c2acd92f4faeda01f8d8cbcbbc559eb456d786d4ec29fd79d545ca271c2512",
+      "archived": "tree/cases.txt",
+      "start_line": 2115,
+      "end_line": 2123
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/077-spinarc__tests__detach_me.log",
+      "sha256": "bb9b25c533c607d213c7f8ab0903b347e8b7c76373ab60b968d9e5b1e7008460",
+      "archived": "tree/cases.txt",
+      "start_line": 2124,
+      "end_line": 2132
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/078-spinarc__tests__i_list.log",
+      "sha256": "92432734b1dfc3ce60ff26c41c4458cefdb422dc8c283741ec64530081e98438",
+      "archived": "tree/cases.txt",
+      "start_line": 2133,
+      "end_line": 2141
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/079-spinarc__tests__insert_after_many.log",
+      "sha256": "f8ed561fa6a58a8800c1e78f6b37bb8dc0e95ca38f2079c519ca19192776f6b7",
+      "archived": "tree/cases.txt",
+      "start_line": 2142,
+      "end_line": 2150
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/080-spinarc__tests__insert_before_many.log",
+      "sha256": "0184e5c199cd3fe19cfba928bfd7846c1ddb3257203c91cb52ad7c2c1f831eb7",
+      "archived": "tree/cases.txt",
+      "start_line": 2151,
+      "end_line": 2159
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/081-spinarc__tests__mutex_iter.log",
+      "sha256": "4cfc2dc8dc89e837f2c80f6c75473a0e1a4b8c332012636ea9bae8db6fa9aeff",
+      "archived": "tree/cases.txt",
+      "start_line": 2160,
+      "end_line": 2168
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/082-spinarc__tests__remove_after.log",
+      "sha256": "9b3a7d3d73c6a9b61f0fe38534aaf971200530b78fe881365ab1effe7407b1b6",
+      "archived": "tree/cases.txt",
+      "start_line": 2169,
+      "end_line": 2177
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/083-spinarc__tests__threaded_insert_after_many.log",
+      "sha256": "787d919dd52b5cd37adba9b6b7d9cb4918ad2e92e9223df6bf35322e3637ddf6",
+      "archived": "tree/cases.txt",
+      "start_line": 2178,
+      "end_line": 2186
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/084-spinarc__tests__threaded_mutex_iter.log",
+      "sha256": "d1880620a292458d665c37a8809aff651b16f51539a2aef7118122401c4cb006",
+      "archived": "tree/cases.txt",
+      "start_line": 2187,
+      "end_line": 2195
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/085-spinarc__tests__ver_iter.log",
+      "sha256": "da942eadca2cf6a90dea54329eee64f88da4267b4f4a43a2b8e6ec0557bf30ff",
+      "archived": "tree/cases.txt",
+      "start_line": 2196,
+      "end_line": 2204
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/086-string__tests__test_memcmp.log",
+      "sha256": "a0cfa1e19bd919462bc831f281e906588b8b1db0f2f8f8a9f1a23b61464dcbcd",
+      "archived": "tree/cases.txt",
+      "start_line": 2205,
+      "end_line": 2213
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/087-string__tests__test_memcpy.log",
+      "sha256": "d5d617ef47ebf8a1f6b8159066496f41296d802aad253dfdcf1ee35e82d60e27",
+      "archived": "tree/cases.txt",
+      "start_line": 2214,
+      "end_line": 2222
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/088-string__tests__test_memmove.log",
+      "sha256": "564b2069e03d289a074259d900828e72c01a6cc7c3f3f3b7150a933e0dc6791b",
+      "archived": "tree/cases.txt",
+      "start_line": 2223,
+      "end_line": 2231
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/089-string__tests__test_memset.log",
+      "sha256": "a79aa7dec7dfb3c0516a455900aa424f08c5b5a1e1ee3d157e739189d5047952",
+      "archived": "tree/cases.txt",
+      "start_line": 2232,
+      "end_line": 2240
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/090-string__tests__test_strlen.log",
+      "sha256": "87b66526404d3c04aaeac78aa720f4284ed8028e30c0fbdbe4b815a10ab0fa9b",
+      "archived": "tree/cases.txt",
+      "start_line": 2241,
+      "end_line": 2249
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/091-string__tests__test_strncpy.log",
+      "sha256": "8983c4c4dcc98cd30c598334c422bbcccdcf4b70fcd418c082e5161305f0f2f1",
+      "archived": "tree/cases.txt",
+      "start_line": 2250,
+      "end_line": 2258
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/092-string__tests__test_strnlen.log",
+      "sha256": "0071bec65cd8f4133ebe58dc4474dcf8dcbfef7b002e856c7c3fa46a84bd8d32",
+      "archived": "tree/cases.txt",
+      "start_line": 2259,
+      "end_line": 2267
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/093-tinyarc__sorted_list__tests__test_basic_creation.log",
+      "sha256": "e25e2a0b9dbae71981dd12b561a1e3495940a0a7308cad451e92055670748b44",
+      "archived": "tree/cases.txt",
+      "start_line": 2268,
+      "end_line": 2276
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/094-tinyarc__sorted_list__tests__test_basic_functionality.log",
+      "sha256": "4675ca3a2fbe80cd07064fb832815bee48dcd9a3dc26d27023300f4a6d987473",
+      "archived": "tree/cases.txt",
+      "start_line": 2277,
+      "end_line": 2329
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/095-tinyarc__sorted_list__tests__test_empty_list_operations.log",
+      "sha256": "00f1e1556dc180c873678b87e38e08c11f01e63cb2b9b73e3fd276f8d3f92ea0",
+      "archived": "tree/cases.txt",
+      "start_line": 2330,
+      "end_line": 2338
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/096-tinyarc__sorted_list__tests__test_find_and_remove.log",
+      "sha256": "976d3599759e101758a729ba4cafe14b24efdbc5fa8654444f555492ab4b585f",
+      "archived": "tree/cases.txt",
+      "start_line": 2339,
+      "end_line": 2391
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/097-tinyarc__sorted_list__tests__test_task_operations.log",
+      "sha256": "2036a5765a285c09b3d870267b79ede0ec9411bb5a173864f2084526ed136dc3",
+      "archived": "tree/cases.txt",
+      "start_line": 2392,
+      "end_line": 2444
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/098-tinyarc__tests__insert_by_prio.log",
+      "sha256": "03b4fafb34ee82490a026b1f1065e573fbbf18f03500d960ddb9a5c20a29e621",
+      "archived": "tree/cases.txt",
+      "start_line": 2445,
+      "end_line": 2490
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/099-tinyarc__tests__test_arc_cas_basic.log",
+      "sha256": "ba9bbc4dbb7a52600e3fdfca303c206cd7765ed297148581d1599bc750289fe3",
+      "archived": "tree/cases.txt",
+      "start_line": 2491,
+      "end_line": 2528
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/100-tinyarc__tests__test_basic.log",
+      "sha256": "0a2743c65985ee751333f8b5961f356579d51350980db581ab3b3ce1a376f805",
+      "archived": "tree/cases.txt",
+      "start_line": 2529,
+      "end_line": 2537
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/101-tinyarc__tests__test_detach_and_insert_during_iter.log",
+      "sha256": "5f9557b4dd49b9d27119cc633092687753e409204ae8845fe479340a694554b7",
+      "archived": "tree/cases.txt",
+      "start_line": 2538,
+      "end_line": 2591
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/102-tinyarc__tests__test_detach_during_iter.log",
+      "sha256": "c801c99dbaa15b12598a4af9800a81f2d5b3c86c151526db07de8e39e9e473db",
+      "archived": "tree/cases.txt",
+      "start_line": 2592,
+      "end_line": 2633
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/103-tinyarc__tests__test_detach_during_iter_2.log",
+      "sha256": "df7f3ed520ad01e11e6375958b0cd6482c4dcd90f996d861c9318d9b1309c075",
+      "archived": "tree/cases.txt",
+      "start_line": 2634,
+      "end_line": 2687
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/104-tinyarc__tests__test_get_mut.log",
+      "sha256": "d2ef87a8c48524ee964adc587b96d0416261ccf728cbb7bc9b14d3406f502f20",
+      "archived": "tree/cases.txt",
+      "start_line": 2688,
+      "end_line": 2696
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/105-tinyarc__tests__test_insert_after_false.log",
+      "sha256": "6ff7d6cd5ee14c5a83c3b0e605689172a3547fd453150bca5a27652a3fb6140f",
+      "archived": "tree/cases.txt",
+      "start_line": 2697,
+      "end_line": 2705
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/106-tinyarc__tests__test_insert_and_detach.log",
+      "sha256": "1794a27ab4190c74e9d42a72a7bd7e06e4d343296e36af43bff0e514befe7351",
+      "archived": "tree/cases.txt",
+      "start_line": 2706,
+      "end_line": 2754
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/107-tinyarc__tests__test_insert_before_and_detach.log",
+      "sha256": "850e198e3d34840f9321ac5962aba97ace95c894ee22d02468e92497bd6135ef",
+      "archived": "tree/cases.txt",
+      "start_line": 2755,
+      "end_line": 2806
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/108-tinyarc__tests__test_into_raw_and_from_raw.log",
+      "sha256": "025e36da527619cee1494e57ce0b5b1aa4e117c2942111a2a80b0194f0b4232c",
+      "archived": "tree/cases.txt",
+      "start_line": 2807,
+      "end_line": 2815
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/109-tinyarc__tests__test_push_and_drop.log",
+      "sha256": "a240634ecbd66efcca3a495cbb955ed1bcffc3b7b2fdfabecab48e4b45bcfa7a",
+      "archived": "tree/cases.txt",
+      "start_line": 2816,
+      "end_line": 2869
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/110-tinyarc__tests__test_push_and_pop.log",
+      "sha256": "f1a03fee4da24e0654e657702decb148bf8bdb160e6572ee43c31ce2852ef23a",
+      "archived": "tree/cases.txt",
+      "start_line": 2870,
+      "end_line": 2923
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/111-tinyarc__tests__test_push_back_false.log",
+      "sha256": "f63b3b705ed64a83bcfc4168929d2a1e86eaa6568c017a525ab2c97212fbad38",
+      "archived": "tree/cases.txt",
+      "start_line": 2924,
+      "end_line": 2932
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/112-tinyarc__tests__test_remove_if.log",
+      "sha256": "df542c53b905958343640807736e3a4781e52c9705d6e577b33a797ad033a57c",
+      "archived": "tree/cases.txt",
+      "start_line": 2933,
+      "end_line": 2986
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/113-tinyarc__tests__test_swap_basic.log",
+      "sha256": "f4ce622e9d2a797f941af7e370e5342b135cd602c36e8e1549df547f2b72dcb1",
+      "archived": "tree/cases.txt",
+      "start_line": 2987,
+      "end_line": 3024
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/114-tinyarc__tests__test_swap_no_none.log",
+      "sha256": "4bce5d4d1b0b6f4c7672368b551ed3bcaf3bcd1045b97426f2624be8fb53de68",
+      "archived": "tree/cases.txt",
+      "start_line": 3025,
+      "end_line": 3062
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/115-tinyrwlock__tests__smoke.log",
+      "sha256": "64c8784fd0ecdb056733d4460d106c428c21f154dadca4ef2193582846410d62",
+      "archived": "tree/cases.txt",
+      "start_line": 3063,
+      "end_line": 3071
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/116-tinyrwlock__tests__test_acquire_reader_panic.log",
+      "sha256": "bc5c4b6416d8e2ac5f8ad720a69d6a11b1e5145e18a9ff7481c34793e60f9a0a",
+      "archived": "tree/cases.txt",
+      "start_line": 3072,
+      "end_line": 3085
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/117-tinyrwlock__tests__test_force_read_decrement.log",
+      "sha256": "730bf93063025842aface8fe19ff9db452556695f869dc50f4670718e03e3b00",
+      "archived": "tree/cases.txt",
+      "start_line": 3086,
+      "end_line": 3094
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/118-tinyrwlock__tests__test_force_write_unlock.log",
+      "sha256": "3e850b5af80f3a0829e0ce3e0f379960710d252a2416e8273f51011e07088b2e",
+      "archived": "tree/cases.txt",
+      "start_line": 3095,
+      "end_line": 3103
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/119-tinyrwlock__tests__test_get_mut.log",
+      "sha256": "1b962d4730a18514bbe1dfc4017329428e09dbb208b64908b0bb30edf0d6d85f",
+      "archived": "tree/cases.txt",
+      "start_line": 3104,
+      "end_line": 3112
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/120-tinyrwlock__tests__test_into_inner.log",
+      "sha256": "dedc2762730bda826b5af4c746425cc08637cd1e25e3242564c02d430ae29f24",
+      "archived": "tree/cases.txt",
+      "start_line": 3113,
+      "end_line": 3121
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/121-tinyrwlock__tests__test_into_inner_drop.log",
+      "sha256": "3ec585e8f592605b1e90dfc216b4500c3be2798cfd0f0cbd5a554abb10ffa923",
+      "archived": "tree/cases.txt",
+      "start_line": 3122,
+      "end_line": 3130
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/122-tinyrwlock__tests__test_reader_writer_count.log",
+      "sha256": "79ecd04f0b251bec0a618a9932999fac1a946b0dfab8ba7dd1ff5f4904c00393",
+      "archived": "tree/cases.txt",
+      "start_line": 3131,
+      "end_line": 3139
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/123-tinyrwlock__tests__test_rw_access_in_unwind.log",
+      "sha256": "df98cf5ca744820dd34c84082d835729f9f5e44f17af77d83487819abaccf02e",
+      "archived": "tree/cases.txt",
+      "start_line": 3140,
+      "end_line": 3153
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/124-tinyrwlock__tests__test_rw_arc.log",
+      "sha256": "85c7e9b2090a1a153d5ac499e206531509e4b435fbd0e89d969b4ca27fc57d27",
+      "archived": "tree/cases.txt",
+      "start_line": 3154,
+      "end_line": 3162
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/125-tinyrwlock__tests__test_rw_try_read.log",
+      "sha256": "13cdde3ea7859ff4ca87ffd52ca6638c674a8f5270837fb54321576784200f5c",
+      "archived": "tree/cases.txt",
+      "start_line": 3163,
+      "end_line": 3171
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/126-tinyrwlock__tests__test_rwlock_try_write.log",
+      "sha256": "9b3f0e47afb480d3bc42322296ac98488a6e5f58524e8ebb64539f7b4755e236",
+      "archived": "tree/cases.txt",
+      "start_line": 3172,
+      "end_line": 3180
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/127-tinyrwlock__tests__test_rwlock_unsized.log",
+      "sha256": "b60687461ba1fcc786667f38c87c34d76b239bf75a420085d497bb50b40d4ffc",
+      "archived": "tree/cases.txt",
+      "start_line": 3181,
+      "end_line": 3189
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/128-tinyrwlock__tests__test_upgrade.log",
+      "sha256": "d1acc338cb6ef07541be61f92261a4faeff079e9a2e50694d41d0020b057e544",
+      "archived": "tree/cases.txt",
+      "start_line": 3190,
+      "end_line": 3198
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/129-tinyrwlock__tests__test_upgrade_downgrade.log",
+      "sha256": "f3c9bcb4525a1ae46c55b988a52ac5fad3b4acca033618868f227535d135b3c4",
+      "archived": "tree/cases.txt",
+      "start_line": 3199,
+      "end_line": 3207
+    },
+    {
+      "source": "out/miri-audit-review/host/001-iheap__tests__concurrent_stress.log",
+      "sha256": "9e9e0560e96029a4eae0b34e1b93c4fe02f9eed6e220d8f575e86c170cc5f4d4",
+      "archived": "host/cases.txt",
+      "start_line": 1,
+      "end_line": 9
+    },
+    {
+      "source": "out/miri-audit-review/host/002-iheap__tests__fuzz.log",
+      "sha256": "884f68652a4355f1e49663cc677cbf91caa00324d092383fdf814dfee9a62af9",
+      "archived": "host/cases.txt",
+      "start_line": 10,
+      "end_line": 18
+    },
+    {
+      "source": "out/miri-audit-review/host/003-iheap__tests__fuzz1.log",
+      "sha256": "72cd53297277ba2ca7e67c702e63691ba4b363da5fbbd813f2f982072ad02f4b",
+      "archived": "host/cases.txt",
+      "start_line": 19,
+      "end_line": 27
+    },
+    {
+      "source": "out/miri-audit-review/host/004-iheap__tests__fuzz2.log",
+      "sha256": "80c74785fbcbcf629acef63ffb0751875c337a04bfaf2902aadb21e924af76e9",
+      "archived": "host/cases.txt",
+      "start_line": 28,
+      "end_line": 36
+    },
+    {
+      "source": "out/miri-audit-review/host/005-iheap__tests__push_root_twice.log",
+      "sha256": "6cb1abadac1f5e4126cc03c80857d015c1219c1d3ea6ad021b80ec0fbe6ca2f6",
+      "archived": "host/cases.txt",
+      "start_line": 37,
+      "end_line": 45
+    },
+    {
+      "source": "out/miri-audit-review/host/006-iheap__tests__test_basic_insertion.log",
+      "sha256": "d880fe21c431a811ba30d6df2e982a8299c2db3c0f50b0f817aee2043e79ba62",
+      "archived": "host/cases.txt",
+      "start_line": 46,
+      "end_line": 54
+    },
+    {
+      "source": "out/miri-audit-review/host/007-iheap__tests__test_compute_path.log",
+      "sha256": "73161a9f6347c6ba634fb12fc43a353dc8315d23150267506484510b0fac8621",
+      "archived": "host/cases.txt",
+      "start_line": 55,
+      "end_line": 63
+    },
+    {
+      "source": "out/miri-audit-review/host/008-iheap__tests__test_removal.log",
+      "sha256": "876cc37bbadd5f48f8d034c93ac240dae2b0895adbc32744b859935eb97064d1",
+      "archived": "host/cases.txt",
+      "start_line": 64,
+      "end_line": 72
+    },
+    {
+      "source": "out/miri-audit-review/host/009-iheap__tests__test_remove_sibling.log",
+      "sha256": "3a3aaad9a4feb54960b91cb1d7851cf6865726623ac6dacd5de7055d343155ea",
+      "archived": "host/cases.txt",
+      "start_line": 73,
+      "end_line": 81
+    },
+    {
+      "source": "out/miri-audit-review/host/010-iheap__tests__test_stack_removal.log",
+      "sha256": "9eaafeefd145f006cf53c0bc81df39645971779edb802bac4904ec063f75ed35",
+      "archived": "host/cases.txt",
+      "start_line": 82,
+      "end_line": 90
+    },
+    {
+      "source": "out/miri-audit-review/host/011-intrusive__tests__test_relative_adapter.log",
+      "sha256": "ee0e70083f26abbd16ed1d0d70d15f67e9600a6f34bd5dd27131d60e9b117e83",
+      "archived": "host/cases.txt",
+      "start_line": 91,
+      "end_line": 99
+    },
+    {
+      "source": "out/miri-audit-review/host/012-lifetime__tests__test_stack_val.log",
+      "sha256": "139ef75695c8760b5485c91c7428880072c1b6a0c66d011422a794e0ed89f61f",
+      "archived": "host/cases.txt",
+      "start_line": 100,
+      "end_line": 108
+    },
+    {
+      "source": "out/miri-audit-review/host/013-list__singly_linked_list__tests__create_new_list.log",
+      "sha256": "4b8c0ddfd07bc00ed3716d35a4a4b19f4fc4df192abab8c0b2984f4ec32c784a",
+      "archived": "host/cases.txt",
+      "start_line": 109,
+      "end_line": 117
+    },
+    {
+      "source": "out/miri-audit-review/host/014-list__singly_linked_list__tests__insert_node.log",
+      "sha256": "7b3f2cd542688ed1999d6af168f6cd60956d326912b15fb5a5c50d0064ca57c6",
+      "archived": "host/cases.txt",
+      "start_line": 118,
+      "end_line": 126
+    },
+    {
+      "source": "out/miri-audit-review/host/015-list__singly_linked_list__tests__listnode_pop_via_iter_mut.log",
+      "sha256": "671ce7fc2c2988d1fb4faf38df5b2f506b5cdf3842d93a2609de9102c2dfb321",
+      "archived": "host/cases.txt",
+      "start_line": 127,
+      "end_line": 135
+    },
+    {
+      "source": "out/miri-audit-review/host/016-list__singly_linked_list__tests__listnode_push_pop.log",
+      "sha256": "ecb82a1eb2fa6c1112c65ff0d52309af46ee35c233833c56f676156c72531cfe",
+      "archived": "host/cases.txt",
+      "start_line": 136,
+      "end_line": 144
+    },
+    {
+      "source": "out/miri-audit-review/host/017-list__singly_linked_list__tests__make_sequence_and_count.log",
+      "sha256": "b93e527ad6bfb5abbd07065ed674a90d065b56aea84b6d45fce9a2827f4d4c8f",
+      "archived": "host/cases.txt",
+      "start_line": 145,
+      "end_line": 153
+    },
+    {
+      "source": "out/miri-audit-review/host/018-list__singly_linked_list__tests__make_sequence_and_remove.log",
+      "sha256": "111376e22250f4cc7319551d45742e88e30ff431df353a44581c676c41a37e40",
+      "archived": "host/cases.txt",
+      "start_line": 154,
+      "end_line": 162
+    },
+    {
+      "source": "out/miri-audit-review/host/019-list__singly_linked_list__tests__remove_node.log",
+      "sha256": "773dfc819a15bfa21f28a8f879b780ffec46f10152b3f5c4399fa1521b0a4f27",
+      "archived": "host/cases.txt",
+      "start_line": 163,
+      "end_line": 171
+    },
+    {
+      "source": "out/miri-audit-review/host/020-list__singly_linked_list__tests__singlylinkedlist_basic_ops.log",
+      "sha256": "e598359b1041703948bb121fff8adbd58ec7698c4179df4b1c85276b2812287b",
+      "archived": "host/cases.txt",
+      "start_line": 172,
+      "end_line": 180
+    },
+    {
+      "source": "out/miri-audit-review/host/021-list__singly_linked_list__tests__singlylinkedlist_iter.log",
+      "sha256": "debfbd0118de5cea5841ac9027b563fba22758ba19f23272dc42699e30a123a7",
+      "archived": "host/cases.txt",
+      "start_line": 181,
+      "end_line": 189
+    },
+    {
+      "source": "out/miri-audit-review/host/022-list__singly_linked_list__tests__singlylinkedlist_pop_from_empty.log",
+      "sha256": "99896085f6b5c66b8e2aaba2e541d224ff90ef56e2b01eb0a8c10a2e55b4f14b",
+      "archived": "host/cases.txt",
+      "start_line": 190,
+      "end_line": 198
+    },
+    {
+      "source": "out/miri-audit-review/host/023-list__singly_linked_list__tests__test_push.log",
+      "sha256": "978b8e2191fd2e3a227189624589d25b22aba8e8965f487e36009fedfb76319e",
+      "archived": "host/cases.txt",
+      "start_line": 199,
+      "end_line": 207
+    },
+    {
+      "source": "out/miri-audit-review/host/024-list__typed_atomic_ilist__tests__test_basic.log",
+      "sha256": "003e3ebfa4d4e84a940e24f40a836da440e2184c78a1bbc53a52474f1f679fc9",
+      "archived": "host/cases.txt",
+      "start_line": 208,
+      "end_line": 216
+    },
+    {
+      "source": "out/miri-audit-review/host/025-list__typed_atomic_ilist__tests__test_concurrent_ops.log",
+      "sha256": "2b8d83a2f6c922b37bff0238b97672f169fb8bde364ca47a6cee52a66b9a6ecc",
+      "archived": "host/cases.txt",
+      "start_line": 217,
+      "end_line": 225
+    },
+    {
+      "source": "out/miri-audit-review/host/026-list__typed_atomic_ilist__tests__test_concurrent_ops1.log",
+      "sha256": "6cf14ab964ab5458417651ba3767fb54c157710ff77ede3383b60bc54bfde9df",
+      "archived": "host/cases.txt",
+      "start_line": 226,
+      "end_line": 234
+    },
+    {
+      "source": "out/miri-audit-review/host/027-list__typed_atomic_ilist__tests__test_concurrent_ops2.log",
+      "sha256": "12d7934dfe22280af981107201848685c5c2524affbb0b702a45d4481fe8d69b",
+      "archived": "host/cases.txt",
+      "start_line": 235,
+      "end_line": 245
+    },
+    {
+      "source": "out/miri-audit-review/host/028-list__typed_atomic_ilist__tests__test_insert_and_detach.log",
+      "sha256": "6753a3b309c1295e64058ff2e2873dbf80368a1cb723df4f974906b26a6ddfed",
+      "archived": "host/cases.txt",
+      "start_line": 246,
+      "end_line": 254
+    },
+    {
+      "source": "out/miri-audit-review/host/029-list__typed_ilist__tests__test_adapter.log",
+      "sha256": "754231e6091a258eff0f9399445bbd7af21ddb2b4f6e53ad907f503a2dba1f24",
+      "archived": "host/cases.txt",
+      "start_line": 255,
+      "end_line": 263
+    },
+    {
+      "source": "out/miri-audit-review/host/030-list__typed_ilist__tests__test_basic.log",
+      "sha256": "883763bc35739f53bea6f422970320daf0ff3f5c82ffc38f60818ac02cb716b3",
+      "archived": "host/cases.txt",
+      "start_line": 264,
+      "end_line": 272
+    },
+    {
+      "source": "out/miri-audit-review/host/031-list__typed_ilist__tests__test_insert_and_detach.log",
+      "sha256": "3880bf759a939356a23ecd3f5af576affaea0a932368e331ea073474f2ad73df",
+      "archived": "host/cases.txt",
+      "start_line": 273,
+      "end_line": 281
+    },
+    {
+      "source": "out/miri-audit-review/host/032-list__typed_ilist__tests__test_insert_before.log",
+      "sha256": "fb50e5b00a62f7c29dfb5fe78b90dffbb23122d03e118987fb842bcbccdf917e",
+      "archived": "host/cases.txt",
+      "start_line": 282,
+      "end_line": 290
+    },
+    {
+      "source": "out/miri-audit-review/host/033-list__typed_ilist__tests__test_list_basic.log",
+      "sha256": "3af933486d15d35f77f9d4501b9ea322a6f45065b2fc3e21676dffdb2e434acf",
+      "archived": "host/cases.txt",
+      "start_line": 291,
+      "end_line": 299
+    },
+    {
+      "source": "out/miri-audit-review/host/034-list__typed_ilist__tests__test_list_basic_hole.log",
+      "sha256": "d225f8607fcf472059248ab0573ea2f58ea283afff93db8cbcd6d6a2ff6ae59d",
+      "archived": "host/cases.txt",
+      "start_line": 300,
+      "end_line": 308
+    },
+    {
+      "source": "out/miri-audit-review/host/035-list__typed_ilist__tests__test_list_push_and_pop_several.log",
+      "sha256": "4fe3fc6a4abdd93c439a4f420446bb340808a4dd12bac7ed3ca7116a1f8740e8",
+      "archived": "host/cases.txt",
+      "start_line": 309,
+      "end_line": 317
+    },
+    {
+      "source": "out/miri-audit-review/host/036-list__typed_ilist__tests__test_list_push_by_and_pop_several.log",
+      "sha256": "18cc46772b9304e632e7f73234298a68063761a8441558990030242c6a40ae3a",
+      "archived": "host/cases.txt",
+      "start_line": 318,
+      "end_line": 326
+    },
+    {
+      "source": "out/miri-audit-review/host/037-list__typed_ilist__tests__test_list_reorder_chosen_value.log",
+      "sha256": "124ebd3043ab05fade49b865a2686497e7a816bd0aa1e5a27e2b744090982962",
+      "archived": "host/cases.txt",
+      "start_line": 327,
+      "end_line": 335
+    },
+    {
+      "source": "out/miri-audit-review/host/038-list__typed_ilist__tests__test_listiterator.log",
+      "sha256": "09f1cd6326f69053f77d922f5f4709944dd5d54bf9a4cddd2581ff75ad7a0ca8",
+      "archived": "host/cases.txt",
+      "start_line": 336,
+      "end_line": 344
+    },
+    {
+      "source": "out/miri-audit-review/host/039-list__typed_ilist__tests__test_listiterator_shoild_panic.log",
+      "sha256": "720f11ec5a684c6321d8b6be01f90ddaed453c3a0cd46e4f866c10fe39e06540",
+      "archived": "host/cases.txt",
+      "start_line": 345,
+      "end_line": 357
+    },
+    {
+      "source": "out/miri-audit-review/host/040-list__typed_ilist__tests__test_listreverseiterator.log",
+      "sha256": "04bde845f14c59ba7702efc346914157530a2743b27d06cebee7dc155a4dbd2d",
+      "archived": "host/cases.txt",
+      "start_line": 358,
+      "end_line": 366
+    },
+    {
+      "source": "out/miri-audit-review/host/041-list__typed_ilist__tests__test_safer_insert_and_detach.log",
+      "sha256": "ad8925d780fac5cb939c24fef3f4839511bb365680e42f9c8247f35d3040b583",
+      "archived": "host/cases.txt",
+      "start_line": 367,
+      "end_line": 375
+    },
+    {
+      "source": "out/miri-audit-review/host/042-list__typed_ilist__tests__test_safer_insert_and_detach_several.log",
+      "sha256": "035cdc407a9bf81d551d6b1bdc4419735626c5ff53c31fa99c8360c0f436c179",
+      "archived": "host/cases.txt",
+      "start_line": 376,
+      "end_line": 384
+    },
+    {
+      "source": "out/miri-audit-review/host/043-nolock__tests__test_read.log",
+      "sha256": "a3d9b8b2dc8f40a64de93b5369d3e700c118244fcb4a0b52dc5968ff37768a6f",
+      "archived": "host/cases.txt",
+      "start_line": 385,
+      "end_line": 393
+    },
+    {
+      "source": "out/miri-audit-review/host/044-nolock__tests__test_write.log",
+      "sha256": "46f4df065b1ed1126dbd18c76f432c6e7b2532f74a6cb6e36535f0e3eea8a2e8",
+      "archived": "host/cases.txt",
+      "start_line": 394,
+      "end_line": 402
+    },
+    {
+      "source": "out/miri-audit-review/host/045-rbtree__tests__test_clrs_13_4_3.log",
+      "sha256": "c0e1505f289733b2e02f9b9c4ed97f373995030b08b2459c27ecf7917da4305e",
+      "archived": "host/cases.txt",
+      "start_line": 403,
+      "end_line": 411
+    },
+    {
+      "source": "out/miri-audit-review/host/046-rbtree__tests__test_delete_complex.log",
+      "sha256": "7d48ff45dc5a814aaf70e16a71eccabbb6c262b60acaa1149e17f256456b1382",
+      "archived": "host/cases.txt",
+      "start_line": 412,
+      "end_line": 420
+    },
+    {
+      "source": "out/miri-audit-review/host/047-rbtree__tests__test_delete_root_scenarios.log",
+      "sha256": "00b0b76a5226459cddf9084103f3cac9429f7ad9060b8c292e58c6ce73a1957d",
+      "archived": "host/cases.txt",
+      "start_line": 421,
+      "end_line": 429
+    },
+    {
+      "source": "out/miri-audit-review/host/048-rbtree__tests__test_insert_and_search.log",
+      "sha256": "2f445dc65fdd5953322ffd13ace12050e72ea5a717468098b7218d2011202779",
+      "archived": "host/cases.txt",
+      "start_line": 430,
+      "end_line": 438
+    },
+    {
+      "source": "out/miri-audit-review/host/049-rbtree__tests__test_iterator.log",
+      "sha256": "323d2d54ce28bd26c5d077c395ceac3dd6ad8fb79f818eebfabd151ea94454ed",
+      "archived": "host/cases.txt",
+      "start_line": 439,
+      "end_line": 447
+    },
+    {
+      "source": "out/miri-audit-review/host/050-rbtree__tests__test_sequential_insert_stress.log",
+      "sha256": "df7f6802746d0ccc0165f29e9ec258fd4c4c7794f35b8efdced89ff5b5606b0a",
+      "archived": "host/cases.txt",
+      "start_line": 448,
+      "end_line": 456
+    },
+    {
+      "source": "out/miri-audit-review/host/051-ringbuffer__tests__pop_slices.log",
+      "sha256": "63f422e8d8b167afbdd9c27272fea62cdbe49bdae01f4fb84043ecb1e76ce42b",
+      "archived": "host/cases.txt",
+      "start_line": 457,
+      "end_line": 465
+    },
+    {
+      "source": "out/miri-audit-review/host/052-ringbuffer__tests__push_pop.log",
+      "sha256": "66b4ad66a4277780882fef4291647b12ed5893b31c5b334039bb49edcef1eeb9",
+      "archived": "host/cases.txt",
+      "start_line": 466,
+      "end_line": 474
+    },
+    {
+      "source": "out/miri-audit-review/host/053-ringbuffer__tests__push_pop_loop.log",
+      "sha256": "336a8d2a7f9f1ba2db01c5e62255e6e45f5c2e8dc00a7f1e801ebff0625cfab3",
+      "archived": "host/cases.txt",
+      "start_line": 475,
+      "end_line": 483
+    },
+    {
+      "source": "out/miri-audit-review/host/054-ringbuffer__tests__push_slices.log",
+      "sha256": "62b4c55d41efec4da0f779f98df11694935cb808ea56c364692949724131f12b",
+      "archived": "host/cases.txt",
+      "start_line": 484,
+      "end_line": 492
+    },
+    {
+      "source": "out/miri-audit-review/host/055-ringbuffer__tests__test_boxed_ringbuffer.log",
+      "sha256": "db7055e8ab3353d1b79bd76907f782e38eda77970b5569807e417d4c99eb2fef",
+      "archived": "host/cases.txt",
+      "start_line": 493,
+      "end_line": 501
+    },
+    {
+      "source": "out/miri-audit-review/host/056-ringbuffer__tests__test_boxed_ringbuffer_partial_operations.log",
+      "sha256": "6150784881e2d1ab40b9e0fe710b4b2aef6ccd0197789b4a57c053f0d390f23f",
+      "archived": "host/cases.txt",
+      "start_line": 502,
+      "end_line": 510
+    },
+    {
+      "source": "out/miri-audit-review/host/057-ringbuffer__tests__test_boxed_ringbuffer_wrap_around.log",
+      "sha256": "64b7f51ec422312cfe0dbcf6866781b37beeb08f6a23c191c58864e177623a36",
+      "archived": "host/cases.txt",
+      "start_line": 511,
+      "end_line": 519
+    },
+    {
+      "source": "out/miri-audit-review/host/058-ringbuffer__tests__test_concurrent_boxed_ringbuffer.log",
+      "sha256": "ff9cd4df148739dcbaef09cc008ea86548d1245360b57437665f5ffa3ede5563",
+      "archived": "host/cases.txt",
+      "start_line": 520,
+      "end_line": 528
+    },
+    {
+      "source": "out/miri-audit-review/host/059-ringbuffer__tests__test_concurrent_push_pop.log",
+      "sha256": "764907783b4a86581d848a7f6cb9e14e6767a08c338236ab0e4fde384771ee8c",
+      "archived": "host/cases.txt",
+      "start_line": 529,
+      "end_line": 537
+    },
+    {
+      "source": "out/miri-audit-review/host/060-ringbuffer__tests__zero_len.log",
+      "sha256": "b3708bf44c42ee0cc8cbb8bdb98825abf7bacabdce7270185eed9f8ea2f0f547",
+      "archived": "host/cases.txt",
+      "start_line": 538,
+      "end_line": 546
+    },
+    {
+      "source": "out/miri-audit-review/host/061-spinarc__tests__detach_me.log",
+      "sha256": "4c788a73c9a3b5220d796388291bb4c12fe1097a3203027688e282ee704b74e3",
+      "archived": "host/cases.txt",
+      "start_line": 547,
+      "end_line": 555
+    },
+    {
+      "source": "out/miri-audit-review/host/062-spinarc__tests__i_list.log",
+      "sha256": "46aaef6982b3ccdfc1bda70f49b3ad2c81b820c5b05d496ef0010b94f7590f21",
+      "archived": "host/cases.txt",
+      "start_line": 556,
+      "end_line": 564
+    },
+    {
+      "source": "out/miri-audit-review/host/063-spinarc__tests__insert_after_many.log",
+      "sha256": "456f71e804c239f2eba0e52e2a07ec4c505946e5b3180f1a4ef80c63bd4b2471",
+      "archived": "host/cases.txt",
+      "start_line": 565,
+      "end_line": 573
+    },
+    {
+      "source": "out/miri-audit-review/host/064-spinarc__tests__insert_before_many.log",
+      "sha256": "e45daa5549ca9110adb26e1787dd657fe49a93d4530897f2713a48b8aaef119e",
+      "archived": "host/cases.txt",
+      "start_line": 574,
+      "end_line": 582
+    },
+    {
+      "source": "out/miri-audit-review/host/065-spinarc__tests__mutex_iter.log",
+      "sha256": "c3b87860e5e555464b3f37c06b56cdb79c104a2d660bbe1d649f6dff73c37b2d",
+      "archived": "host/cases.txt",
+      "start_line": 583,
+      "end_line": 591
+    },
+    {
+      "source": "out/miri-audit-review/host/066-spinarc__tests__remove_after.log",
+      "sha256": "3e1d454b9125b38f63491444b4ff4b1d8f4e66dd16519bd41919ec570476d319",
+      "archived": "host/cases.txt",
+      "start_line": 592,
+      "end_line": 600
+    },
+    {
+      "source": "out/miri-audit-review/host/067-spinarc__tests__threaded_insert_after_many.log",
+      "sha256": "6c13665833b11c536b713d52f9ad15e05a303324bbbec876e0713a4e13b4d31e",
+      "archived": "host/cases.txt",
+      "start_line": 601,
+      "end_line": 609
+    },
+    {
+      "source": "out/miri-audit-review/host/068-spinarc__tests__threaded_mutex_iter.log",
+      "sha256": "711cc41ace80e8e97d0565ea01ea6c405c377021556609e2ae967c01d2e2809c",
+      "archived": "host/cases.txt",
+      "start_line": 610,
+      "end_line": 618
+    },
+    {
+      "source": "out/miri-audit-review/host/069-spinarc__tests__ver_iter.log",
+      "sha256": "83be68c8c2c140f8da947faa1237b9c6bcb64523d1c44fb62b8f1b704d756db9",
+      "archived": "host/cases.txt",
+      "start_line": 619,
+      "end_line": 627
+    },
+    {
+      "source": "out/miri-audit-review/host/070-string__tests__test_memcmp.log",
+      "sha256": "14f6f12ac2404c66fd2acb928f3271c4d455c9f5b83c0136784df4d8c7d5278d",
+      "archived": "host/cases.txt",
+      "start_line": 628,
+      "end_line": 636
+    },
+    {
+      "source": "out/miri-audit-review/host/071-string__tests__test_memcpy.log",
+      "sha256": "1a0e49292a41a8668e470ceedac4438bdde4d9b1b48bf0581184004a4c93825b",
+      "archived": "host/cases.txt",
+      "start_line": 637,
+      "end_line": 645
+    },
+    {
+      "source": "out/miri-audit-review/host/072-string__tests__test_memmove.log",
+      "sha256": "b45d05571ce0193b5d6fa198cac93931e270cf10db287c94097ba9076dc151c8",
+      "archived": "host/cases.txt",
+      "start_line": 646,
+      "end_line": 654
+    },
+    {
+      "source": "out/miri-audit-review/host/073-string__tests__test_memset.log",
+      "sha256": "9314305bbe7ff6921e4e65927befcbb1e24a1febcbe16a63e35d5166349667fe",
+      "archived": "host/cases.txt",
+      "start_line": 655,
+      "end_line": 663
+    },
+    {
+      "source": "out/miri-audit-review/host/074-string__tests__test_strlen.log",
+      "sha256": "651e79322e1a117c615cefbc5f956981ef5182affe445ccba3867d1c03fbf878",
+      "archived": "host/cases.txt",
+      "start_line": 664,
+      "end_line": 672
+    },
+    {
+      "source": "out/miri-audit-review/host/075-string__tests__test_strncpy.log",
+      "sha256": "397e82066e30110a4c53b83cd829cd8ee652d5e2015b907c4eba942114234082",
+      "archived": "host/cases.txt",
+      "start_line": 673,
+      "end_line": 681
+    },
+    {
+      "source": "out/miri-audit-review/host/076-string__tests__test_strnlen.log",
+      "sha256": "6a1b98042982c1c634b7cb0bd5f363b92421653c5eef1750554f1bf6b8ce6216",
+      "archived": "host/cases.txt",
+      "start_line": 682,
+      "end_line": 690
+    },
+    {
+      "source": "out/miri-audit-review/host/077-tinyarc__sorted_list__tests__test_basic_creation.log",
+      "sha256": "1c8f5832c3ebd7dc5fa114da83de8aaf6c589457775f270a897ad9e5181306f7",
+      "archived": "host/cases.txt",
+      "start_line": 691,
+      "end_line": 699
+    },
+    {
+      "source": "out/miri-audit-review/host/078-tinyarc__sorted_list__tests__test_basic_functionality.log",
+      "sha256": "f361939e70d3070967ee09d4d5ec91646d4809ae1242e3ac7780a0f581e87a0f",
+      "archived": "host/cases.txt",
+      "start_line": 700,
+      "end_line": 708
+    },
+    {
+      "source": "out/miri-audit-review/host/079-tinyarc__sorted_list__tests__test_empty_list_operations.log",
+      "sha256": "45cfbf100901c3c1a3a1522f5265d90d5732c81e91c52bdc96f9c52e91f38129",
+      "archived": "host/cases.txt",
+      "start_line": 709,
+      "end_line": 717
+    },
+    {
+      "source": "out/miri-audit-review/host/080-tinyarc__sorted_list__tests__test_find_and_remove.log",
+      "sha256": "588830dfa8814db875d1afbd903ee5e35eeca1106fc9c2d220eee3bcd857b6c5",
+      "archived": "host/cases.txt",
+      "start_line": 718,
+      "end_line": 726
+    },
+    {
+      "source": "out/miri-audit-review/host/081-tinyarc__sorted_list__tests__test_task_operations.log",
+      "sha256": "0621dd0edaef8ef968c9ee00362883a98c36ceb73c61053f898d77260e1ac896",
+      "archived": "host/cases.txt",
+      "start_line": 727,
+      "end_line": 735
+    },
+    {
+      "source": "out/miri-audit-review/host/082-tinyarc__tests__insert_by_prio.log",
+      "sha256": "d1e0682e49e5de02cce4927bc3e18b91818bdacaf7fbe8d0051ccbf45731914e",
+      "archived": "host/cases.txt",
+      "start_line": 736,
+      "end_line": 744
+    },
+    {
+      "source": "out/miri-audit-review/host/083-tinyarc__tests__test_arc_cas_basic.log",
+      "sha256": "4bb6087351596b9672d8cc055e3d546e15e14c8e447d030e4bd3500793e3a4fc",
+      "archived": "host/cases.txt",
+      "start_line": 745,
+      "end_line": 753
+    },
+    {
+      "source": "out/miri-audit-review/host/084-tinyarc__tests__test_basic.log",
+      "sha256": "ca82027be30fcee606e1e2d94d2253746f9de472ddd4d61285c2488bcbeb37ba",
+      "archived": "host/cases.txt",
+      "start_line": 754,
+      "end_line": 762
+    },
+    {
+      "source": "out/miri-audit-review/host/085-tinyarc__tests__test_detach_and_insert_during_iter.log",
+      "sha256": "c661afe40f710baa2a424dfa30ae35f720c9a5cf10977354ccf0eb7f0cfa2a76",
+      "archived": "host/cases.txt",
+      "start_line": 763,
+      "end_line": 771
+    },
+    {
+      "source": "out/miri-audit-review/host/086-tinyarc__tests__test_detach_during_iter.log",
+      "sha256": "0d72fbc9498ef6406cfa86c275b0db5913dddf5043759942d055325ec0646d68",
+      "archived": "host/cases.txt",
+      "start_line": 772,
+      "end_line": 780
+    },
+    {
+      "source": "out/miri-audit-review/host/087-tinyarc__tests__test_detach_during_iter_2.log",
+      "sha256": "c76ff16908a0b65c3e01e69dfa45b28b06002482e0f20c00a0b313e33fca2e66",
+      "archived": "host/cases.txt",
+      "start_line": 781,
+      "end_line": 789
+    },
+    {
+      "source": "out/miri-audit-review/host/088-tinyarc__tests__test_get_mut.log",
+      "sha256": "c3a89ebb8a3dd2326dd03b0ca69d2b25a1d3418f6d13b391d05a2ed96dd6ca07",
+      "archived": "host/cases.txt",
+      "start_line": 790,
+      "end_line": 798
+    },
+    {
+      "source": "out/miri-audit-review/host/089-tinyarc__tests__test_insert_after_false.log",
+      "sha256": "b65537b0c619d316231d96cdc71d4fd38189c6d7d5bea4add68c8f0c7a0e3230",
+      "archived": "host/cases.txt",
+      "start_line": 799,
+      "end_line": 807
+    },
+    {
+      "source": "out/miri-audit-review/host/090-tinyarc__tests__test_insert_and_detach.log",
+      "sha256": "c83a342709b46fa1759ca08618125cd43e63db870619a9fdea90c33bededbfc9",
+      "archived": "host/cases.txt",
+      "start_line": 808,
+      "end_line": 816
+    },
+    {
+      "source": "out/miri-audit-review/host/091-tinyarc__tests__test_insert_before_and_detach.log",
+      "sha256": "a7bd27b9c4459327548218d8ed1a9e38790a35956a5c3ce7a220ddd627353cbe",
+      "archived": "host/cases.txt",
+      "start_line": 817,
+      "end_line": 825
+    },
+    {
+      "source": "out/miri-audit-review/host/092-tinyarc__tests__test_into_raw_and_from_raw.log",
+      "sha256": "8ae209df7d3873ccc25f5c4120f202f297e18bde1c17adfdeb95a4fe8c128055",
+      "archived": "host/cases.txt",
+      "start_line": 826,
+      "end_line": 834
+    },
+    {
+      "source": "out/miri-audit-review/host/093-tinyarc__tests__test_push_and_drop.log",
+      "sha256": "2db349df7e6a8d5c6d791d741bb041519788b240b7306f4f7fd09c7e177bbe03",
+      "archived": "host/cases.txt",
+      "start_line": 835,
+      "end_line": 843
+    },
+    {
+      "source": "out/miri-audit-review/host/094-tinyarc__tests__test_push_and_pop.log",
+      "sha256": "90211c0d674aef2e178c6a8ece02f5e990e24b54ce4557a1e45e8783a808eb9d",
+      "archived": "host/cases.txt",
+      "start_line": 844,
+      "end_line": 852
+    },
+    {
+      "source": "out/miri-audit-review/host/095-tinyarc__tests__test_push_back_false.log",
+      "sha256": "fd12a3dba3f748822ca038b428106a575c93b51b3a7c051bb2d584c61d4748f6",
+      "archived": "host/cases.txt",
+      "start_line": 853,
+      "end_line": 861
+    },
+    {
+      "source": "out/miri-audit-review/host/096-tinyarc__tests__test_remove_if.log",
+      "sha256": "05b042fd81f32fa57635b8ff62363a04a0b56dc688afe83721b002c6c1a64d49",
+      "archived": "host/cases.txt",
+      "start_line": 862,
+      "end_line": 870
+    },
+    {
+      "source": "out/miri-audit-review/host/097-tinyarc__tests__test_swap_basic.log",
+      "sha256": "8ad6e07dff9aa71ff4d21c7ae3a8a67138cdd4376c11da281fa1f09eb7010f84",
+      "archived": "host/cases.txt",
+      "start_line": 871,
+      "end_line": 879
+    },
+    {
+      "source": "out/miri-audit-review/host/098-tinyarc__tests__test_swap_no_none.log",
+      "sha256": "abbe78288b84446f0c9f73c87409ccf95529812196d6a5d8f015b43e6343f6e0",
+      "archived": "host/cases.txt",
+      "start_line": 880,
+      "end_line": 888
+    },
+    {
+      "source": "out/miri-audit-review/host/099-tinyrwlock__tests__smoke.log",
+      "sha256": "ebac26920a8b0b3437752a09c0f699afd575c426e8e7d09eeed3c6a4babd056f",
+      "archived": "host/cases.txt",
+      "start_line": 889,
+      "end_line": 897
+    },
+    {
+      "source": "out/miri-audit-review/host/100-tinyrwlock__tests__test_acquire_reader_panic.log",
+      "sha256": "90541831fbd1ce1a9d97cb853ca3c3f93186887931b259fd379fdd1562d6fc78",
+      "archived": "host/cases.txt",
+      "start_line": 898,
+      "end_line": 910
+    },
+    {
+      "source": "out/miri-audit-review/host/101-tinyrwlock__tests__test_force_read_decrement.log",
+      "sha256": "fe29963c85c6281ec63e6d2ac917c4d8c749e29b9cb330e6f687119a860b413f",
+      "archived": "host/cases.txt",
+      "start_line": 911,
+      "end_line": 919
+    },
+    {
+      "source": "out/miri-audit-review/host/102-tinyrwlock__tests__test_force_write_unlock.log",
+      "sha256": "967f539dcee34c2c3a7ab30f59359473c64a85286a7da441e5b8c6abcd5cc0fc",
+      "archived": "host/cases.txt",
+      "start_line": 920,
+      "end_line": 928
+    },
+    {
+      "source": "out/miri-audit-review/host/103-tinyrwlock__tests__test_get_mut.log",
+      "sha256": "b2036eebd31b54759bd5489a7a5bd87d12e844a75d5d80eaf1a08ef3055fdd77",
+      "archived": "host/cases.txt",
+      "start_line": 929,
+      "end_line": 937
+    },
+    {
+      "source": "out/miri-audit-review/host/104-tinyrwlock__tests__test_into_inner.log",
+      "sha256": "0570cfc229fa55673a90c03a013ba61fe8b44e9360cbe61498da7c738b5de0cf",
+      "archived": "host/cases.txt",
+      "start_line": 938,
+      "end_line": 946
+    },
+    {
+      "source": "out/miri-audit-review/host/105-tinyrwlock__tests__test_into_inner_drop.log",
+      "sha256": "6334cc84edcac6f05f1dff3614a8898b0c629c00c66896c87c14516222fc53f2",
+      "archived": "host/cases.txt",
+      "start_line": 947,
+      "end_line": 955
+    },
+    {
+      "source": "out/miri-audit-review/host/106-tinyrwlock__tests__test_reader_writer_count.log",
+      "sha256": "1714e739d5de857d552b1d8170430208988e52223531bf0dd28ec964b8a4aa93",
+      "archived": "host/cases.txt",
+      "start_line": 956,
+      "end_line": 964
+    },
+    {
+      "source": "out/miri-audit-review/host/107-tinyrwlock__tests__test_rw_access_in_unwind.log",
+      "sha256": "5725f4f16d254dbc2e26651e4d4144726c34830e4af1d017a69a7bd0b2bb804d",
+      "archived": "host/cases.txt",
+      "start_line": 965,
+      "end_line": 977
+    },
+    {
+      "source": "out/miri-audit-review/host/108-tinyrwlock__tests__test_rw_arc.log",
+      "sha256": "64c4654b0fd39332370e6207d3e4b65df8b0097cab515f63b4ad9c1bd1de8d7a",
+      "archived": "host/cases.txt",
+      "start_line": 978,
+      "end_line": 986
+    },
+    {
+      "source": "out/miri-audit-review/host/109-tinyrwlock__tests__test_rw_try_read.log",
+      "sha256": "b45ec06cd3fcb994c400b026057bb7586c05b125836207c4b59c663cae386c73",
+      "archived": "host/cases.txt",
+      "start_line": 987,
+      "end_line": 995
+    },
+    {
+      "source": "out/miri-audit-review/host/110-tinyrwlock__tests__test_rwlock_try_write.log",
+      "sha256": "44a5e558bfa00ee6a9282e84d068b93b19901329ae34c265b0d739a73a905b9b",
+      "archived": "host/cases.txt",
+      "start_line": 996,
+      "end_line": 1004
+    },
+    {
+      "source": "out/miri-audit-review/host/111-tinyrwlock__tests__test_rwlock_unsized.log",
+      "sha256": "eb02b60e5d8ff95d75b51d1a10facc99d3219dd7f1fd7ec21fbff82c34c2cd50",
+      "archived": "host/cases.txt",
+      "start_line": 1005,
+      "end_line": 1013
+    },
+    {
+      "source": "out/miri-audit-review/host/112-tinyrwlock__tests__test_upgrade.log",
+      "sha256": "8b255effe3badce34e9055d270eb154cb3635a36694770882bd6a4618fe9a0bd",
+      "archived": "host/cases.txt",
+      "start_line": 1014,
+      "end_line": 1022
+    },
+    {
+      "source": "out/miri-audit-review/host/113-tinyrwlock__tests__test_upgrade_downgrade.log",
+      "sha256": "6e947c7453335eca9fce88bb31225af92dfb6cbfad23a3689254f4c2e71d52fb",
+      "archived": "host/cases.txt",
+      "start_line": 1023,
+      "end_line": 1031
+    },
+    {
+      "source": "out/miri-audit-review/tree-slow-recheck/001-list__singly_linked_list__tests__test_push.log",
+      "sha256": "8e7602f702b5a2031a3f3b29aababd15c3edeb764a3499eb09b86000bca76850",
+      "archived": "tree-slow-recheck/cases.txt",
+      "start_line": 1,
+      "end_line": 9
+    },
+    {
+      "source": "out/miri-audit-review/runner-integration/tinyarc_plain_ownership.cases/001-miri_contract_tests__tinyarc_plain_ownership.log",
+      "sha256": "2f95b186880f1eac33e6a93e2bc0651af3dd97e249ae59954a8bbbac0ddde608",
+      "archived": "runner-passing/cases.txt",
+      "start_line": 1,
+      "end_line": 9
+    },
+    {
+      "source": "out/miri-audit-review/runner-integration/storage_empty_shared_slice.cases/001-miri_contract_tests__storage_empty_shared_slice.log",
+      "sha256": "e7ff2660edc6047df24e667664a9a2456f4f7762116bb469f595568fb6652ff1",
+      "archived": "runner-failing/cases.txt",
+      "start_line": 1,
+      "end_line": 26
+    },
+    {
+      "source": "out/miri-audit-review/gn-final.log",
+      "sha256": "4f4073ecd116e0add749b2eefa8f55f9d5172be121c6a8daed5589aa8ea5669b",
+      "archived": "validation/gn-final.txt"
+    },
+    {
+      "source": "out/miri-audit-review/sync-check.log",
+      "sha256": "146f0cfb04d6502db8aaaf8e1db04d95da9df0a7b642dc803b06118b0c0a24b4",
+      "archived": "validation/sync-check.txt"
+    },
+    {
+      "source": "out/miri-audit-review/runner-tests.log",
+      "sha256": "4af41b07eff0b79af094bb0a3874170ea34f89f129e1d95d461c2732fac69bf9",
+      "archived": "validation/runner-tests.txt"
+    },
+    {
+      "source": "out/miri-audit-review/runner-integration.log",
+      "sha256": "06a99f442026e2da4cc37113edab89051100b4cb74d96b57dc68239e0aa4b1e4",
+      "archived": "validation/runner-integration.txt"
+    },
+    {
+      "source": "out/miri-audit-review/scope-check.txt",
+      "sha256": "6e30620b1528e3f35e2e3ad88c5dc48b86a9121b29ef1e74874360f5f60ca38e",
+      "archived": "validation/scope-check.txt"
+    }
+  ],
+  "source_reports": [
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_stacked.cases/results.json",
+      "sha256": "7baf5414398bcd02a58f1fd459e98ba478d1af318d224034cf361bac5aef2346"
+    },
+    {
+      "source": "out/miri-audit/miri/bin/infra_miri_audit_tree.cases/results.json",
+      "sha256": "8e17f6fe22340c72a319b133227a4dc7b48dd70470233a834cf6cf724502a640"
+    },
+    {
+      "source": "out/miri-audit-review/host/results.json",
+      "sha256": "7f87ec31c4928c684b56a5ed534592276cf35d67069c973b08791ec7842e3e8d"
+    },
+    {
+      "source": "out/miri-audit-review/tree-slow-recheck/results.json",
+      "sha256": "4ec62f838494785202b04f38344e737fa5924435bf1087fa167583e26f1591cc"
+    },
+    {
+      "source": "out/miri-audit-review/runner-integration/tinyarc_plain_ownership.cases/results.json",
+      "sha256": "873aa840249f7716a0331a469bfdf209cf9a39ff182e08b51454be84a0a91314"
+    },
+    {
+      "source": "out/miri-audit-review/runner-integration/storage_empty_shared_slice.cases/results.json",
+      "sha256": "d835e88b4141db378447a7c098fddc23fb70f897fb7343a2543cb52ec01f74cd"
+    },
+    {
+      "source": "out/miri-audit-review/summary.json",
+      "sha256": "bfec7881783473ea7c4652694298f8ba43791dbaa5a6da51edda9d51c5c61814"
+    },
+    {
+      "source": "out/miri-audit-review/summary.md",
+      "sha256": "b03557f3b4645114cbdb3f2475cf6d87f5176a0e9489a6213017db104d153ee6"
+    }
+  ]
+}

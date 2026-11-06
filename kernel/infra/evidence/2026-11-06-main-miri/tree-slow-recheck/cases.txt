@@ -1,0 +1,10 @@
+===== 1/1: list::singly_linked_list::tests::test_push (passed) =====
+$ miri --sysroot /home/hegui/.cache/miri --crate-name infra_miri_audit_tree --crate-type bin --emit=dep-info=/home/hegui/vivoblueos/infra-main-miri-audit/out/miri-audit-review/tree-slow-recheck/probe.d,link --test -Zmiri-tree-borrows --edition=2021 -Copt-level=1 -Cforce-frame-pointers=yes -Cdebug-assertions -Cdebuginfo=full --color=always -D warnings -A unused -A dead_code -A static_mut_refs -Copt-level=0 -Cdebuginfo=0 -o /home/hegui/vivoblueos/infra-main-miri-audit/out/miri-audit-review/tree-slow-recheck/probe.stamp ../../kernel/infra/src/lib.rs --extern cfg_if=miri/obj/external/vendor/cfg-if-1.0.4/cfg_if_variant_target/libcfg_if.rlib --extern memchr=miri/obj/external/vendor/memchr-2.7.6/memchr_variant_target/libmemchr.rlib --extern spin=miri/obj/external/vendor/spin-0.9.8/spin_variant_target/libspin.rlib -Ldependency=miri/obj/external/vendor/cfg-if-1.0.4/cfg_if_variant_target -Ldependency=miri/obj/external/vendor/memchr-2.7.6/memchr_variant_target -Ldependency=miri/obj/external/vendor/spin-0.9.8/spin_variant_target -Ldependency=miri/obj/external/vendor/lock_api-0.4.14/lock_api_variant_target -Ldependency=miri/obj/external/vendor/scopeguard-1.2.0/scopeguard_variant_target -- list::singly_linked_list::tests::test_push --exact --nocapture --test-threads=1
+
+running 1 test
+test list::singly_linked_list::tests::test_push ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 147 filtered out; finished in 78.13s
+
+
+===== END OF ARCHIVED CASES =====

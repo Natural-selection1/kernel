@@ -90,8 +90,11 @@ Of these, the 16 added probes yield 3 passes and 13 UB diagnoses in each model.
 The original tests contribute 43 Stacked/36 Tree UB diagnoses. These are counts
 of failing test cases, not counts of independent bugs.
 
-The complete per-module/per-case table and original command logs are preserved in
-`out/miri-audit-review/summary.md` and each model's `.cases` directory. The Python
+The checked-in [evidence archive](evidence/2026-11-06-main-miri/README.md) contains
+the [complete per-module/per-case table](evidence/2026-11-06-main-miri/summary.md),
+all case logs, host results, the slow-test recheck and validation records.
+New runs still write to `out/`; those local outputs are not needed to read this
+snapshot. The Python
 runner's five regression tests pass, including failure continuation, timeout,
 empty selection, discovery failure, and colored diagnostic classification.
 Real-Miri runner integration also confirms that a passing case creates a GN
