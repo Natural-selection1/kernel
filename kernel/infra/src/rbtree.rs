@@ -178,106 +178,112 @@ impl<T, A: Adapter<T>> RBTree<T, A> {
     }
 
     unsafe fn fix_after_insertion(&mut self, mut z: NonNull<RBLink>) {
-        while let Some(mut parent) = z.as_ref().parent() {
-            if !parent.as_ref().is_red() {
-                break;
-            }
+        unsafe {
+            while let Some(mut parent) = z.as_ref().parent() {
+                if !parent.as_ref().is_red() {
+                    break;
+                }
 
-            let mut grandparent = parent.as_ref().parent().unwrap_unchecked();
-            let is_parent_left = grandparent.as_ref().left == Some(parent);
-            let uncle = if is_parent_left {
-                grandparent.as_ref().right
-            } else {
-                grandparent.as_ref().left
-            };
-            // Case 1: Uncle is Red
-            if let Some(mut uncle_node) = uncle {
-                if uncle_node.as_ref().is_red() {
+                let mut grandparent = parent.as_ref().parent().unwrap_unchecked();
+                let is_parent_left = grandparent.as_ref().left == Some(parent);
+                let uncle = if is_parent_left {
+                    grandparent.as_ref().right
+                } else {
+                    grandparent.as_ref().left
+                };
+                // Case 1: Uncle is Red
+                if let Some(mut uncle_node) = uncle
+                    && uncle_node.as_ref().is_red()
+                {
                     parent.as_mut().set_color(Color::Black);
                     uncle_node.as_mut().set_color(Color::Black);
                     grandparent.as_mut().set_color(Color::Red);
                     z = grandparent;
                     continue;
                 }
-            }
-            // Case 2 & 3: Uncle is Black (or None)
-            let is_z_left = parent.as_ref().left == Some(z);
-            if is_parent_left {
-                if !is_z_left {
-                    // Case 2: Triangle shape (Left-Right) -> Rotate Left
-                    self.rotate_left(parent);
-                    z = parent;
-                    parent = z.as_ref().parent().unwrap_unchecked();
+                // Case 2 & 3: Uncle is Black (or None)
+                let is_z_left = parent.as_ref().left == Some(z);
+                if is_parent_left {
+                    if !is_z_left {
+                        // Case 2: Triangle shape (Left-Right) -> Rotate Left
+                        self.rotate_left(parent);
+                        z = parent;
+                        parent = z.as_ref().parent().unwrap_unchecked();
+                    }
+                    // Case 3: Line shape (Left-Left) -> Rotate Right
+                    parent.as_mut().set_color(Color::Black);
+                    grandparent.as_mut().set_color(Color::Red);
+                    self.rotate_right(grandparent);
+                } else {
+                    if is_z_left {
+                        // Case 2: Triangle shape (Right-Left) -> Rotate Right
+                        self.rotate_right(parent);
+                        z = parent;
+                        parent = z.as_ref().parent().unwrap_unchecked();
+                    }
+                    // Case 3: Line shape (Right-Right) -> Rotate Left
+                    parent.as_mut().set_color(Color::Black);
+                    grandparent.as_mut().set_color(Color::Red);
+                    self.rotate_left(grandparent);
                 }
-                // Case 3: Line shape (Left-Left) -> Rotate Right
-                parent.as_mut().set_color(Color::Black);
-                grandparent.as_mut().set_color(Color::Red);
-                self.rotate_right(grandparent);
-            } else {
-                if is_z_left {
-                    // Case 2: Triangle shape (Right-Left) -> Rotate Right
-                    self.rotate_right(parent);
-                    z = parent;
-                    parent = z.as_ref().parent().unwrap_unchecked();
-                }
-                // Case 3: Line shape (Right-Right) -> Rotate Left
-                parent.as_mut().set_color(Color::Black);
-                grandparent.as_mut().set_color(Color::Red);
-                self.rotate_left(grandparent);
             }
-        }
 
-        // Sometime we changed color of root.
-        if let Some(mut root) = self.root {
-            root.as_mut().set_color(Color::Black);
+            // Sometime we changed color of root.
+            if let Some(mut root) = self.root {
+                root.as_mut().set_color(Color::Black);
+            }
         }
     }
 
     unsafe fn rotate_left(&mut self, mut x: NonNull<RBLink>) {
-        let mut y = x.as_ref().right.expect("Rotate left expects right child");
+        unsafe {
+            let mut y = x.as_ref().right.expect("Rotate left expects right child");
 
-        x.as_mut().right = y.as_ref().left;
-        if let Some(mut beta) = y.as_ref().left {
-            beta.as_mut().set_parent(Some(x));
-        }
-
-        let p = x.as_ref().parent();
-        y.as_mut().set_parent(p);
-        if let Some(mut p_node) = p {
-            if p_node.as_ref().left == Some(x) {
-                p_node.as_mut().left = Some(y);
-            } else {
-                p_node.as_mut().right = Some(y);
+            x.as_mut().right = y.as_ref().left;
+            if let Some(mut beta) = y.as_ref().left {
+                beta.as_mut().set_parent(Some(x));
             }
-        } else {
-            self.root = Some(y);
+
+            let p = x.as_ref().parent();
+            y.as_mut().set_parent(p);
+            if let Some(mut p_node) = p {
+                if p_node.as_ref().left == Some(x) {
+                    p_node.as_mut().left = Some(y);
+                } else {
+                    p_node.as_mut().right = Some(y);
+                }
+            } else {
+                self.root = Some(y);
+            }
+            y.as_mut().left = Some(x);
+            x.as_mut().set_parent(Some(y));
         }
-        y.as_mut().left = Some(x);
-        x.as_mut().set_parent(Some(y));
     }
 
     unsafe fn rotate_right(&mut self, mut x: NonNull<RBLink>) {
-        let mut y = x.as_ref().left.expect("Rotate right expects left child");
+        unsafe {
+            let mut y = x.as_ref().left.expect("Rotate right expects left child");
 
-        x.as_mut().left = y.as_ref().right;
-        if let Some(mut beta) = y.as_ref().right {
-            beta.as_mut().set_parent(Some(x));
-        }
-
-        let p = x.as_ref().parent();
-        y.as_mut().set_parent(p);
-        if let Some(mut p_node) = p {
-            if p_node.as_ref().right == Some(x) {
-                p_node.as_mut().right = Some(y);
-            } else {
-                p_node.as_mut().left = Some(y);
+            x.as_mut().left = y.as_ref().right;
+            if let Some(mut beta) = y.as_ref().right {
+                beta.as_mut().set_parent(Some(x));
             }
-        } else {
-            self.root = Some(y);
-        }
 
-        y.as_mut().right = Some(x);
-        x.as_mut().set_parent(Some(y));
+            let p = x.as_ref().parent();
+            y.as_mut().set_parent(p);
+            if let Some(mut p_node) = p {
+                if p_node.as_ref().right == Some(x) {
+                    p_node.as_mut().right = Some(y);
+                } else {
+                    p_node.as_mut().left = Some(y);
+                }
+            } else {
+                self.root = Some(y);
+            }
+
+            y.as_mut().right = Some(x);
+            x.as_mut().set_parent(Some(y));
+        }
     }
 
     pub fn remove<K, F>(&mut self, key: &K, compare: F) -> Option<TinyArc<T>>
@@ -306,50 +312,52 @@ impl<T, A: Adapter<T>> RBTree<T, A> {
     }
 
     unsafe fn delete_node(&mut self, mut z: NonNull<RBLink>) {
-        let mut y = z;
-        let mut y_original_color = y.as_ref().color();
-        let x: Option<NonNull<RBLink>>;
-        let x_parent: Option<NonNull<RBLink>>;
-        //Case 1. z has no more than one child node.
-        if z.as_ref().left.is_none() {
-            x = z.as_ref().right;
-            x_parent = z.as_ref().parent();
-            self.transplant(z, z.as_ref().right);
-        } else if z.as_ref().right.is_none() {
-            x = z.as_ref().left;
-            x_parent = z.as_ref().parent();
-            self.transplant(z, z.as_ref().left);
-        } else {
-            //Case 2. z is internal node.
-            let z_right = z.as_ref().right.unwrap();
-            y = self.minimum(z_right);
-            y_original_color = y.as_ref().color();
-            x = y.as_ref().right;
-            if y.as_ref().parent() == Some(z) {
-                x_parent = Some(y);
+        unsafe {
+            let mut y = z;
+            let mut y_original_color = y.as_ref().color();
+            let x: Option<NonNull<RBLink>>;
+            let x_parent: Option<NonNull<RBLink>>;
+            //Case 1. z has no more than one child node.
+            if z.as_ref().left.is_none() {
+                x = z.as_ref().right;
+                x_parent = z.as_ref().parent();
+                self.transplant(z, z.as_ref().right);
+            } else if z.as_ref().right.is_none() {
+                x = z.as_ref().left;
+                x_parent = z.as_ref().parent();
+                self.transplant(z, z.as_ref().left);
             } else {
-                x_parent = y.as_ref().parent();
-                self.transplant(y, y.as_ref().right);
-                y.as_mut().right = z.as_ref().right;
-                if let Some(mut yr) = y.as_ref().right {
-                    yr.as_mut().set_parent(Some(y));
+                //Case 2. z is internal node.
+                let z_right = z.as_ref().right.unwrap();
+                y = self.minimum(z_right);
+                y_original_color = y.as_ref().color();
+                x = y.as_ref().right;
+                if y.as_ref().parent() == Some(z) {
+                    x_parent = Some(y);
+                } else {
+                    x_parent = y.as_ref().parent();
+                    self.transplant(y, y.as_ref().right);
+                    y.as_mut().right = z.as_ref().right;
+                    if let Some(mut yr) = y.as_ref().right {
+                        yr.as_mut().set_parent(Some(y));
+                    }
                 }
+                self.transplant(z, Some(y));
+                y.as_mut().left = z.as_ref().left;
+                if let Some(mut yl) = y.as_ref().left {
+                    yl.as_mut().set_parent(Some(y));
+                }
+                y.as_mut().set_color(z.as_ref().color());
             }
-            self.transplant(z, Some(y));
-            y.as_mut().left = z.as_ref().left;
-            if let Some(mut yl) = y.as_ref().left {
-                yl.as_mut().set_parent(Some(y));
+            if y_original_color == Color::Black {
+                self.fix_after_deletion(x, x_parent);
             }
-            y.as_mut().set_color(z.as_ref().color());
-        }
-        if y_original_color == Color::Black {
-            self.fix_after_deletion(x, x_parent);
-        }
 
-        let z_mut = z.as_mut();
-        z_mut.left = None;
-        z_mut.right = None;
-        z_mut.tagged_parent_ptr = 0;
+            let z_mut = z.as_mut();
+            z_mut.left = None;
+            z_mut.right = None;
+            z_mut.tagged_parent_ptr = 0;
+        }
     }
 
     unsafe fn fix_after_deletion(
@@ -357,108 +365,112 @@ impl<T, A: Adapter<T>> RBTree<T, A> {
         mut x: Option<NonNull<RBLink>>,
         mut parent: Option<NonNull<RBLink>>,
     ) {
-        // w is silbling of x.
-        while x != self.root && (x.is_none() || x.unwrap().as_ref().is_black()) {
-            if parent.is_none() {
-                break;
-            }
-            let mut p_node = parent.unwrap();
-
-            let is_x_left = x == p_node.as_ref().left;
-
-            let mut w = if is_x_left {
-                p_node.as_ref().right
-            } else {
-                p_node.as_ref().left
-            };
-            if w.is_none() {
-                x = parent;
-                parent = x.unwrap().as_ref().parent();
-                continue;
-            }
-            let mut w_node = w.unwrap();
-            // Case 1: Sibling w is Red
-            if w_node.as_ref().is_red() {
-                w_node.as_mut().set_color(Color::Black);
-                p_node.as_mut().set_color(Color::Red);
-                if is_x_left {
-                    self.rotate_left(p_node);
-                    w = p_node.as_ref().right;
-                } else {
-                    self.rotate_right(p_node);
-                    w = p_node.as_ref().left;
+        unsafe {
+            // w is silbling of x.
+            while x != self.root && (x.is_none() || x.unwrap().as_ref().is_black()) {
+                if parent.is_none() {
+                    break;
                 }
-                w_node = w.unwrap();
-            }
-            // w is Black now.
-            let left_child = w_node.as_ref().left;
-            let right_child = w_node.as_ref().right;
-            let left_black = left_child.is_none_or(|n| n.as_ref().is_black());
-            let right_black = right_child.is_none_or(|n| n.as_ref().is_black());
-            // Case 2: Sibling w's children are both Black
-            if left_black && right_black {
-                w_node.as_mut().set_color(Color::Red);
-                x = parent;
-                parent = x.unwrap().as_ref().parent();
-            } else if is_x_left {
-                // Case 3: w is black, w.left is red, w.right is black.
-                if right_black {
-                    if let Some(mut l) = left_child {
-                        l.as_mut().set_color(Color::Black);
+                let mut p_node = parent.unwrap();
+
+                let is_x_left = x == p_node.as_ref().left;
+
+                let mut w = if is_x_left {
+                    p_node.as_ref().right
+                } else {
+                    p_node.as_ref().left
+                };
+                if w.is_none() {
+                    x = parent;
+                    parent = x.unwrap().as_ref().parent();
+                    continue;
+                }
+                let mut w_node = w.unwrap();
+                // Case 1: Sibling w is Red
+                if w_node.as_ref().is_red() {
+                    w_node.as_mut().set_color(Color::Black);
+                    p_node.as_mut().set_color(Color::Red);
+                    if is_x_left {
+                        self.rotate_left(p_node);
+                        w = p_node.as_ref().right;
+                    } else {
+                        self.rotate_right(p_node);
+                        w = p_node.as_ref().left;
                     }
-                    w_node.as_mut().set_color(Color::Red);
-                    self.rotate_right(w_node);
-                    w = p_node.as_ref().right;
                     w_node = w.unwrap();
                 }
-                // Case 4: w is black, w.right is red.
-                w_node.as_mut().set_color(p_node.as_ref().color());
-                p_node.as_mut().set_color(Color::Black);
-                if let Some(mut r) = w_node.as_ref().right {
-                    r.as_mut().set_color(Color::Black);
-                }
-                self.rotate_left(p_node);
-                x = self.root;
-            } else {
-                // Mirror Case 3
-                if left_black {
-                    if let Some(mut r) = right_child {
+                // w is Black now.
+                let left_child = w_node.as_ref().left;
+                let right_child = w_node.as_ref().right;
+                let left_black = left_child.is_none_or(|n| n.as_ref().is_black());
+                let right_black = right_child.is_none_or(|n| n.as_ref().is_black());
+                // Case 2: Sibling w's children are both Black
+                if left_black && right_black {
+                    w_node.as_mut().set_color(Color::Red);
+                    x = parent;
+                    parent = x.unwrap().as_ref().parent();
+                } else if is_x_left {
+                    // Case 3: w is black, w.left is red, w.right is black.
+                    if right_black {
+                        if let Some(mut l) = left_child {
+                            l.as_mut().set_color(Color::Black);
+                        }
+                        w_node.as_mut().set_color(Color::Red);
+                        self.rotate_right(w_node);
+                        w = p_node.as_ref().right;
+                        w_node = w.unwrap();
+                    }
+                    // Case 4: w is black, w.right is red.
+                    w_node.as_mut().set_color(p_node.as_ref().color());
+                    p_node.as_mut().set_color(Color::Black);
+                    if let Some(mut r) = w_node.as_ref().right {
                         r.as_mut().set_color(Color::Black);
                     }
-                    w_node.as_mut().set_color(Color::Red);
-                    self.rotate_left(w_node);
-                    w = p_node.as_ref().left;
-                    w_node = w.unwrap();
+                    self.rotate_left(p_node);
+                    x = self.root;
+                } else {
+                    // Mirror Case 3
+                    if left_black {
+                        if let Some(mut r) = right_child {
+                            r.as_mut().set_color(Color::Black);
+                        }
+                        w_node.as_mut().set_color(Color::Red);
+                        self.rotate_left(w_node);
+                        w = p_node.as_ref().left;
+                        w_node = w.unwrap();
+                    }
+                    // Mirror Case 4
+                    w_node.as_mut().set_color(p_node.as_ref().color());
+                    p_node.as_mut().set_color(Color::Black);
+                    if let Some(mut l) = w_node.as_ref().left {
+                        l.as_mut().set_color(Color::Black);
+                    }
+                    self.rotate_right(p_node);
+                    x = self.root;
                 }
-                // Mirror Case 4
-                w_node.as_mut().set_color(p_node.as_ref().color());
-                p_node.as_mut().set_color(Color::Black);
-                if let Some(mut l) = w_node.as_ref().left {
-                    l.as_mut().set_color(Color::Black);
-                }
-                self.rotate_right(p_node);
-                x = self.root;
             }
-        }
 
-        if let Some(mut x_node) = x {
-            x_node.as_mut().set_color(Color::Black);
+            if let Some(mut x_node) = x {
+                x_node.as_mut().set_color(Color::Black);
+            }
         }
     }
 
     unsafe fn transplant(&mut self, u: NonNull<RBLink>, v: Option<NonNull<RBLink>>) {
-        let p = u.as_ref().parent();
-        if let Some(mut p_node) = p {
-            if Some(u) == p_node.as_ref().left {
-                p_node.as_mut().left = v;
+        unsafe {
+            let p = u.as_ref().parent();
+            if let Some(mut p_node) = p {
+                if Some(u) == p_node.as_ref().left {
+                    p_node.as_mut().left = v;
+                } else {
+                    p_node.as_mut().right = v;
+                }
             } else {
-                p_node.as_mut().right = v;
+                self.root = v;
             }
-        } else {
-            self.root = v;
-        }
-        if let Some(mut v_node) = v {
-            v_node.as_mut().set_parent(p);
+            if let Some(mut v_node) = v {
+                v_node.as_mut().set_parent(p);
+            }
         }
     }
 

@@ -34,3 +34,19 @@ To build and work with the BlueOS kernel, please check following documentations.
 
 # Technical Documentation
 For more information about the BlueOS kernel, please refer to [the kernel book](https://vivoblueos.github.io/book/).
+
+### Rust toolchain
+
+Project Rust code uses edition 2024 and the [BlueOS toolchain](https://github.com/vivoblueos/toolchain),
+`rustc 1.96.0-dev (894b8c318 2026-10-14)`. Put this installation first on PATH
+before installing GNRT, synchronizing dependencies, generating builds or running tests:
+
+```sh
+export PATH=/opt/sysroot/usr/local/bin:$PATH
+rustc -vV
+gnrt sync --all
+gnrt sync --all --check
+```
+
+Use Miri and its sysroot from the same installation. An upstream nightly with
+a similar version does not provide the BlueOS target and runtime adaptations.

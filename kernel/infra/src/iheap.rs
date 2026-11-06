@@ -275,132 +275,134 @@ where
         mut x: NonNull<MinHeapNode<T, A>>,
         mut y: NonNull<MinHeapNode<T, A>>,
     ) {
-        if x == y {
-            return;
-        }
-
-        let px = x.as_ref().parent;
-        let py = y.as_ref().parent;
-
-        if px == Some(y) {
-            return self.swap_nodes(y, x);
-        }
-
-        let get_left = |n: NonNull<MinHeapNode<T, A>>| {
-            n.as_ref()
-                .link
-                .left()
-                .map(|v| NonNull::from_ref(MinHeapNode::node_of_link(v.as_ref())))
-        };
-        let get_right = |n: NonNull<MinHeapNode<T, A>>| {
-            n.as_ref()
-                .link
-                .right()
-                .map(|v| NonNull::from_ref(MinHeapNode::node_of_link(v.as_ref())))
-        };
-        let mut set_left = |mut p: NonNull<MinHeapNode<T, A>>,
-                            n: Option<NonNull<MinHeapNode<T, A>>>| {
-            p.as_mut()
-                .link
-                .set_left(n.map(|n| NonNull::from_ref(&n.as_ref().link)));
-        };
-        let mut set_right = |mut p: NonNull<MinHeapNode<T, A>>,
-                             n: Option<NonNull<MinHeapNode<T, A>>>| {
-            p.as_mut()
-                .link
-                .set_right(n.map(|n| NonNull::from_ref(&n.as_ref().link)));
-        };
-
-        let lx = get_left(x);
-        let rx = get_right(x);
-
-        let ly = get_left(y);
-        let ry = get_right(y);
-
-        let mut update_parent_child = |old_ptr: NonNull<MinHeapNode<T, A>>,
-                                       new_ptr: NonNull<MinHeapNode<T, A>>,
-                                       parent: Option<NonNull<MinHeapNode<T, A>>>|
-         -> Option<(bool, NonNull<MinHeapNode<T, A>>)> {
-            match parent {
-                None => {
-                    self.root = Some(new_ptr);
-                    None
-                }
-                Some(mut p) => {
-                    let is_left = if get_left(p) == Some(old_ptr) {
-                        set_left(p, Some(new_ptr));
-                        true
-                    } else {
-                        set_right(p, Some(new_ptr));
-                        false
-                    };
-                    Some((is_left, p))
-                }
+        unsafe {
+            if x == y {
+                return;
             }
-        };
 
-        if py == Some(x) {
-            update_parent_child(x, y, px);
-            y.as_mut().parent = px;
-            x.as_mut().parent = Some(y);
+            let px = x.as_ref().parent;
+            let py = y.as_ref().parent;
 
-            if lx == Some(y) {
-                set_left(y, Some(x));
-                set_right(y, rx);
-                if let Some(mut r) = rx {
-                    r.as_mut().parent = Some(y);
+            if px == Some(y) {
+                return self.swap_nodes(y, x);
+            }
+
+            let get_left = |n: NonNull<MinHeapNode<T, A>>| {
+                n.as_ref()
+                    .link
+                    .left()
+                    .map(|v| NonNull::from_ref(MinHeapNode::node_of_link(v.as_ref())))
+            };
+            let get_right = |n: NonNull<MinHeapNode<T, A>>| {
+                n.as_ref()
+                    .link
+                    .right()
+                    .map(|v| NonNull::from_ref(MinHeapNode::node_of_link(v.as_ref())))
+            };
+            let mut set_left =
+                |mut p: NonNull<MinHeapNode<T, A>>, n: Option<NonNull<MinHeapNode<T, A>>>| {
+                    p.as_mut()
+                        .link
+                        .set_left(n.map(|n| NonNull::from_ref(&n.as_ref().link)));
+                };
+            let mut set_right =
+                |mut p: NonNull<MinHeapNode<T, A>>, n: Option<NonNull<MinHeapNode<T, A>>>| {
+                    p.as_mut()
+                        .link
+                        .set_right(n.map(|n| NonNull::from_ref(&n.as_ref().link)));
+                };
+
+            let lx = get_left(x);
+            let rx = get_right(x);
+
+            let ly = get_left(y);
+            let ry = get_right(y);
+
+            let mut update_parent_child =
+                |old_ptr: NonNull<MinHeapNode<T, A>>,
+                 new_ptr: NonNull<MinHeapNode<T, A>>,
+                 parent: Option<NonNull<MinHeapNode<T, A>>>|
+                 -> Option<(bool, NonNull<MinHeapNode<T, A>>)> {
+                    match parent {
+                        None => {
+                            self.root = Some(new_ptr);
+                            None
+                        }
+                        Some(mut p) => {
+                            let is_left = if get_left(p) == Some(old_ptr) {
+                                set_left(p, Some(new_ptr));
+                                true
+                            } else {
+                                set_right(p, Some(new_ptr));
+                                false
+                            };
+                            Some((is_left, p))
+                        }
+                    }
+                };
+
+            if py == Some(x) {
+                update_parent_child(x, y, px);
+                y.as_mut().parent = px;
+                x.as_mut().parent = Some(y);
+
+                if lx == Some(y) {
+                    set_left(y, Some(x));
+                    set_right(y, rx);
+                    if let Some(mut r) = rx {
+                        r.as_mut().parent = Some(y);
+                    }
+                } else {
+                    set_right(y, Some(x));
+                    set_left(y, lx);
+                    if let Some(mut l) = lx {
+                        l.as_mut().parent = Some(y);
+                    }
+                }
+
+                set_left(x, ly);
+                if let Some(mut l) = ly {
+                    l.as_mut().parent = Some(x);
+                }
+                set_right(x, ry);
+                if let Some(mut r) = ry {
+                    r.as_mut().parent = Some(x);
                 }
             } else {
-                set_right(y, Some(x));
-                set_left(y, lx);
-                if let Some(mut l) = lx {
-                    l.as_mut().parent = Some(y);
-                }
-            }
-
-            set_left(x, ly);
-            if let Some(mut l) = ly {
-                l.as_mut().parent = Some(x);
-            }
-            set_right(x, ry);
-            if let Some(mut r) = ry {
-                r.as_mut().parent = Some(x);
-            }
-        } else {
-            let maybe_left = update_parent_child(x, y, px);
-            // Sibling case.
-            match maybe_left {
-                Some((is_left, p)) if px == py => {
+                let maybe_left = update_parent_child(x, y, px);
+                // Sibling case.
+                if let Some((is_left, p)) = maybe_left
+                    && px == py
+                {
                     if is_left {
                         set_right(p, Some(x));
                     } else {
                         set_left(p, Some(x));
                     }
-                }
-                _ => {
+                } else {
                     update_parent_child(y, x, py);
                 }
-            }
 
-            x.as_mut().parent = py;
-            y.as_mut().parent = px;
+                x.as_mut().parent = py;
+                y.as_mut().parent = px;
 
-            set_left(x, ly);
-            if let Some(mut l) = ly {
-                l.as_mut().parent = Some(x);
-            }
-            set_left(y, lx);
-            if let Some(mut l) = lx {
-                l.as_mut().parent = Some(y);
-            }
+                set_left(x, ly);
+                if let Some(mut l) = ly {
+                    l.as_mut().parent = Some(x);
+                }
+                set_left(y, lx);
+                if let Some(mut l) = lx {
+                    l.as_mut().parent = Some(y);
+                }
 
-            set_right(x, ry);
-            if let Some(mut r) = ry {
-                r.as_mut().parent = Some(x);
-            }
-            set_right(y, rx);
-            if let Some(mut r) = rx {
-                r.as_mut().parent = Some(y);
+                set_right(x, ry);
+                if let Some(mut r) = ry {
+                    r.as_mut().parent = Some(x);
+                }
+                set_right(y, rx);
+                if let Some(mut r) = rx {
+                    r.as_mut().parent = Some(y);
+                }
             }
         }
     }

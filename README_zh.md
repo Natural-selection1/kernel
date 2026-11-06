@@ -35,3 +35,18 @@
 
 # 技术书籍
 有关蓝河操作系统内核更多的信息，请参阅[内核开发手册](https://vivoblueos.github.io/book/zh/)。
+
+### Rust 工具链
+
+项目自有 Rust 代码使用 edition 2024，以及 [BlueOS 工具链](https://github.com/vivoblueos/toolchain)
+`rustc 1.96.0-dev (894b8c318 2026-10-14)`。安装 GNRT、同步依赖、生成构建和执行测试之前，
+请将该工具链目录置于 PATH 首位：
+
+```sh
+export PATH=/opt/sysroot/usr/local/bin:$PATH
+rustc -vV
+gnrt sync --all
+gnrt sync --all --check
+```
+
+Miri 及其 sysroot 也必须来自同一套工具链。上游同版本 nightly 不包含 BlueOS 的 target 和运行时适配，不能替代。

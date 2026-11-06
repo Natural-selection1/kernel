@@ -51,11 +51,13 @@ impl<T> SinglyLinkedList<T> {
     /// - `item` must be a valid, non-null pointer
     /// - `item` must point to valid memory that can be written to
     pub unsafe fn push(&mut self, item: NonNull<T>) {
-        // Making sure T is big enough to memory next pointer.
-        debug_assert!(mem::size_of::<T>() >= mem::size_of::<Option<NonNull<T>>>());
-        let item_ptr = item.as_ptr() as *mut Option<NonNull<T>>;
-        *item_ptr = self.head;
-        self.head = Some(item);
+        unsafe {
+            // Making sure T is big enough to memory next pointer.
+            debug_assert!(mem::size_of::<T>() >= mem::size_of::<Option<NonNull<T>>>());
+            let item_ptr = item.as_ptr() as *mut Option<NonNull<T>>;
+            *item_ptr = self.head;
+            self.head = Some(item);
+        }
     }
 
     /// Try to remove the first item in the list
