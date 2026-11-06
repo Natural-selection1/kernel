@@ -140,21 +140,25 @@ impl SchedulerImplementation for BkScheduler {
     }
 
     unsafe fn task_priority(&self, task: ThreadPtr) -> u32 {
-        let thread = &*(task.as_ptr() as *const blueos::thread::Thread);
-        let blueos_prio = thread.priority();
-        // Invert: freertos_prio = MAX - blueos_prio
-        blueos::config::MAX_THREAD_PRIORITY.saturating_sub(blueos_prio)
+        unsafe {
+            let thread = &*(task.as_ptr() as *const blueos::thread::Thread);
+            let blueos_prio = thread.priority();
+            // Invert: freertos_prio = MAX - blueos_prio
+            blueos::config::MAX_THREAD_PRIORITY.saturating_sub(blueos_prio)
+        }
     }
 
     unsafe fn set_task_priority(&self, task: ThreadPtr, priority: u32) {
-        let thread = &*(task.as_ptr() as *const blueos::thread::Thread);
-        let thread = Arc::clone_from(thread);
-        let blueos_prio = blueos::config::MAX_THREAD_PRIORITY
-            .saturating_sub(priority.min(blueos::config::MAX_THREAD_PRIORITY))
-            as ThreadPriority;
+        unsafe {
+            let thread = &*(task.as_ptr() as *const blueos::thread::Thread);
+            let thread = Arc::clone_from(thread);
+            let blueos_prio = blueos::config::MAX_THREAD_PRIORITY
+                .saturating_sub(priority.min(blueos::config::MAX_THREAD_PRIORITY))
+                as ThreadPriority;
 
-        if scheduler::update_ready_thread_priority(&thread, blueos_prio).is_err() {
-            thread.lock().set_priority(blueos_prio);
+            if scheduler::update_ready_thread_priority(&thread, blueos_prio).is_err() {
+                thread.lock().set_priority(blueos_prio);
+            }
         }
     }
 
@@ -188,60 +192,68 @@ impl WaitQueueImplementation for EspWaitQueue {
     }
 
     unsafe fn delete(queue: WaitQueuePtr) {
-        let ptr = queue.as_ptr() as *mut EspWaitQueue;
-        drop(Box::from_raw(ptr));
+        unsafe {
+            let ptr = queue.as_ptr() as *mut EspWaitQueue;
+            drop(Box::from_raw(ptr));
+        }
     }
 
     #[allow(clippy::drop_non_drop)]
     unsafe fn wait_until(queue: WaitQueuePtr, deadline_instant: Option<u64>) {
-        let this = &*(queue.as_ptr() as *const EspWaitQueue);
-        let this_thread = scheduler::current_thread();
-        let deadline = deadline_instant.map(Tick::from_micros).unwrap_or(Tick::MAX);
-        let mut w = this.0.irqsave_lock();
-        with_iou!(|borrowed_wait_entry| {
-            let mut wait_entry = WaitEntry::new(this_thread.clone());
-            borrowed_wait_entry =
-                wait_queue::insert(&mut w, &mut wait_entry, InsertToEnd::MODE).unwrap();
-            let _ = scheduler::suspend_me_until(deadline, Some(w));
-            w = this.0.irqsave_lock();
-            borrowed_wait_entry = w.pop(borrowed_wait_entry).unwrap();
-        });
+        unsafe {
+            let this = &*(queue.as_ptr() as *const EspWaitQueue);
+            let this_thread = scheduler::current_thread();
+            let deadline = deadline_instant.map(Tick::from_micros).unwrap_or(Tick::MAX);
+            let mut w = this.0.irqsave_lock();
+            with_iou!(|borrowed_wait_entry| {
+                let mut wait_entry = WaitEntry::new(this_thread.clone());
+                borrowed_wait_entry =
+                    wait_queue::insert(&mut w, &mut wait_entry, InsertToEnd::MODE).unwrap();
+                let _ = scheduler::suspend_me_until(deadline, Some(w));
+                w = this.0.irqsave_lock();
+                borrowed_wait_entry = w.pop(borrowed_wait_entry).unwrap();
+            });
+        }
     }
 
     unsafe fn notify(queue: WaitQueuePtr) {
-        let this = &*(queue.as_ptr() as *const EspWaitQueue);
-        let w = this.0.irqsave_lock();
-        let mut woke = false;
-        for entry in w.iter() {
-            let t = entry.thread.clone();
-            if scheduler::queue_ready_thread(SUSPENDED, t).is_ok() {
-                woke = true;
-                break;
+        unsafe {
+            let this = &*(queue.as_ptr() as *const EspWaitQueue);
+            let w = this.0.irqsave_lock();
+            let mut woke = false;
+            for entry in w.iter() {
+                let t = entry.thread.clone();
+                if scheduler::queue_ready_thread(SUSPENDED, t).is_ok() {
+                    woke = true;
+                    break;
+                }
             }
-        }
-        drop(w);
-        if woke {
-            scheduler::yield_me_now_or_later();
+            drop(w);
+            if woke {
+                scheduler::yield_me_now_or_later();
+            }
         }
     }
 
     unsafe fn notify_from_isr(queue: WaitQueuePtr, mut higher_prio_task_waken: Option<&mut bool>) {
-        let this = &*(queue.as_ptr() as *const EspWaitQueue);
-        let w = this.0.irqsave_lock();
-        let mut woke = false;
-        for entry in w.iter() {
-            let t = entry.thread.clone();
-            if scheduler::queue_ready_thread(SUSPENDED, t).is_ok() {
-                woke = true;
-                if let Some(hptw) = higher_prio_task_waken.as_mut() {
-                    **hptw = true;
+        unsafe {
+            let this = &*(queue.as_ptr() as *const EspWaitQueue);
+            let w = this.0.irqsave_lock();
+            let mut woke = false;
+            for entry in w.iter() {
+                let t = entry.thread.clone();
+                if scheduler::queue_ready_thread(SUSPENDED, t).is_ok() {
+                    woke = true;
+                    if let Some(hptw) = higher_prio_task_waken.as_mut() {
+                        **hptw = true;
+                    }
+                    break;
                 }
-                break;
             }
-        }
-        drop(w);
-        if woke {
-            scheduler::yield_me_now_or_later();
+            drop(w);
+            if woke {
+                scheduler::yield_me_now_or_later();
+            }
         }
     }
 }
@@ -346,199 +358,217 @@ impl SemaphoreImplementation for BkSemaphore {
     }
 
     unsafe fn delete(semaphore: SemaphorePtr) {
-        let sem = Box::from_raw(semaphore.cast::<Self>().as_ptr());
-        // Delete the wait queue — no lock needed, nobody references this any more.
-        EspWaitQueue::delete(sem.with_irq_safe(|d| d.waiting));
-        drop(sem);
+        unsafe {
+            let sem = Box::from_raw(semaphore.cast::<Self>().as_ptr());
+            // Delete the wait queue — no lock needed, nobody references this any more.
+            EspWaitQueue::delete(sem.with_irq_safe(|d| d.waiting));
+            drop(sem);
+        }
     }
 
     unsafe fn take(semaphore: SemaphorePtr, timeout_us: Option<u32>) -> bool {
-        <Self as SemaphoreImplementation>::take_with_deadline(
-            semaphore,
-            timeout_us.map(|us| Tick::now().as_micros() + us as u64),
-        )
+        unsafe {
+            <Self as SemaphoreImplementation>::take_with_deadline(
+                semaphore,
+                timeout_us.map(|us| Tick::now().as_micros() + us as u64),
+            )
+        }
     }
 
     unsafe fn take_with_deadline(semaphore: SemaphorePtr, _deadline_instant: Option<u64>) -> bool {
-        let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
-        loop {
-            // Quick path: try to decrement current under a short critical section.
-            // If semaphore is available, take it and return immediately.
-            // If we need to block, the wait happens after with_irq_safe restores the
-            // saved IRQ state.
-            let current_thread = scheduler::current_thread();
-            let current_owner = Arc::as_ptr(&current_thread) as usize;
-            let (available, waiting, is_mutex, owner, owner_thread) = sem.with_irq_safe(|data| {
-                let available = match &data.kind {
-                    SemaphoreKind::RecursiveMutex if data.owner == current_owner => {
-                        data.recursion = data.recursion.saturating_add(1);
-                        true
-                    }
-                    SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex if data.current > 0 => {
-                        data.current -= 1;
-                        data.owner = current_owner;
-                        data.owner_thread = Some(current_thread.clone());
-                        data.owner_boosted = false;
-                        data.recursion = 1;
-                        true
-                    }
-                    _ if data.current > 0 => {
-                        data.current -= 1;
-                        true
-                    }
-                    _ => false,
-                };
-                (
-                    available,
-                    data.waiting,
-                    Self::is_mutex_kind(&data.kind),
-                    data.owner,
-                    data.owner_thread.clone(),
-                )
-            });
+        unsafe {
+            let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
+            loop {
+                // Quick path: try to decrement current under a short critical section.
+                // If semaphore is available, take it and return immediately.
+                // If we need to block, the wait happens after with_irq_safe restores the
+                // saved IRQ state.
+                let current_thread = scheduler::current_thread();
+                let current_owner = Arc::as_ptr(&current_thread) as usize;
+                let (available, waiting, is_mutex, owner, owner_thread) =
+                    sem.with_irq_safe(|data| {
+                        let available = match &data.kind {
+                            SemaphoreKind::RecursiveMutex if data.owner == current_owner => {
+                                data.recursion = data.recursion.saturating_add(1);
+                                true
+                            }
+                            SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex
+                                if data.current > 0 =>
+                            {
+                                data.current -= 1;
+                                data.owner = current_owner;
+                                data.owner_thread = Some(current_thread.clone());
+                                data.owner_boosted = false;
+                                data.recursion = 1;
+                                true
+                            }
+                            _ if data.current > 0 => {
+                                data.current -= 1;
+                                true
+                            }
+                            _ => false,
+                        };
+                        (
+                            available,
+                            data.waiting,
+                            Self::is_mutex_kind(&data.kind),
+                            data.owner,
+                            data.owner_thread.clone(),
+                        )
+                    });
 
-            if available {
-                return true;
-            }
+                if available {
+                    return true;
+                }
 
-            if is_mutex && owner != 0 && owner != current_owner {
-                if let Some(owner_thread) = owner_thread.as_ref() {
-                    if Self::promote_owner_for_waiter(owner_thread, &current_thread) {
-                        sem.with_irq_safe(|data| data.owner_boosted = true);
+                if is_mutex && owner != 0 && owner != current_owner {
+                    if let Some(owner_thread) = owner_thread.as_ref() {
+                        if Self::promote_owner_for_waiter(owner_thread, &current_thread) {
+                            sem.with_irq_safe(|data| data.owner_boosted = true);
+                        }
                     }
                 }
-            }
 
-            // Semaphore not available — need to block.
-            // wait_until handles insert + suspend + pop atomically (via with_iou!).
-            // ESP Wi-Fi may call this while its upstream critical section has local
-            // IRQ disabled. BlueOS cannot context-switch with local IRQ disabled, so
-            // bridge the two contracts: save the caller's IRQ state, enable IRQ only
-            // for the blocking wait, then restore the saved state after wait returns.
-            if _deadline_instant.is_some_and(|d| Tick::now().as_micros() >= d) {
-                return false;
+                // Semaphore not available — need to block.
+                // wait_until handles insert + suspend + pop atomically (via with_iou!).
+                // ESP Wi-Fi may call this while its upstream critical section has local
+                // IRQ disabled. BlueOS cannot context-switch with local IRQ disabled, so
+                // bridge the two contracts: save the caller's IRQ state, enable IRQ only
+                // for the blocking wait, then restore the saved state after wait returns.
+                if _deadline_instant.is_some_and(|d| Tick::now().as_micros() >= d) {
+                    return false;
+                }
+                let irq_level = arch::disable_local_irq_save();
+                arch::enable_local_irq();
+                // SAFETY: `waiting` pointer is immutable after new() — it is only
+                // read here and in give().  `waiting` was already captured under the
+                // guard above, so we use the local copy.
+                unsafe {
+                    EspWaitQueue::wait_until(waiting, _deadline_instant);
+                }
+                arch::enable_local_irq_restore(irq_level);
             }
-            let irq_level = arch::disable_local_irq_save();
-            arch::enable_local_irq();
-            // SAFETY: `waiting` pointer is immutable after new() — it is only
-            // read here and in give().  `waiting` was already captured under the
-            // guard above, so we use the local copy.
-            unsafe {
-                EspWaitQueue::wait_until(waiting, _deadline_instant);
-            }
-            arch::enable_local_irq_restore(irq_level);
         }
     }
 
     unsafe fn give(semaphore: SemaphorePtr) -> bool {
-        let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
-        let current_thread = scheduler::current_thread();
-        let current_owner = Arc::as_ptr(&current_thread) as usize;
-        let (ok, released, waiting, owner_thread, owner_boosted) = sem.with_irq_safe(|data| {
-            let mut released_owner_thread = None;
-            let mut released_owner_boosted = false;
-            let (ok, released) = match &data.kind {
-                SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex
-                    if data.owner == current_owner =>
-                {
-                    if matches!(&data.kind, SemaphoreKind::RecursiveMutex) && data.recursion > 1 {
-                        data.recursion -= 1;
-                        (true, false)
-                    } else {
-                        data.recursion = 0;
-                        data.owner = 0;
-                        released_owner_thread = data.owner_thread.take();
-                        released_owner_boosted = data.owner_boosted;
-                        data.owner_boosted = false;
-                        if data.current < data.max {
-                            data.current += 1;
+        unsafe {
+            let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
+            let current_thread = scheduler::current_thread();
+            let current_owner = Arc::as_ptr(&current_thread) as usize;
+            let (ok, released, waiting, owner_thread, owner_boosted) = sem.with_irq_safe(|data| {
+                let mut released_owner_thread = None;
+                let mut released_owner_boosted = false;
+                let (ok, released) = match &data.kind {
+                    SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex
+                        if data.owner == current_owner =>
+                    {
+                        if matches!(&data.kind, SemaphoreKind::RecursiveMutex) && data.recursion > 1
+                        {
+                            data.recursion -= 1;
+                            (true, false)
+                        } else {
+                            data.recursion = 0;
+                            data.owner = 0;
+                            released_owner_thread = data.owner_thread.take();
+                            released_owner_boosted = data.owner_boosted;
+                            data.owner_boosted = false;
+                            if data.current < data.max {
+                                data.current += 1;
+                            }
+                            (true, true)
                         }
+                    }
+                    SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex => (false, false),
+                    _ if data.current < data.max => {
+                        data.current += 1;
                         (true, true)
                     }
+                    _ => (false, false),
+                };
+                (
+                    ok,
+                    released,
+                    data.waiting,
+                    released_owner_thread,
+                    released_owner_boosted,
+                )
+            });
+            if released && owner_boosted {
+                if let Some(owner_thread) = owner_thread.as_ref() {
+                    Self::recover_owner_priority(owner_thread);
                 }
-                SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex => (false, false),
-                _ if data.current < data.max => {
-                    data.current += 1;
-                    (true, true)
-                }
-                _ => (false, false),
-            };
-            (
-                ok,
-                released,
-                data.waiting,
-                released_owner_thread,
-                released_owner_boosted,
-            )
-        });
-        if released && owner_boosted {
-            if let Some(owner_thread) = owner_thread.as_ref() {
-                Self::recover_owner_priority(owner_thread);
             }
+            if released {
+                unsafe { EspWaitQueue::notify(waiting) };
+            }
+            ok
         }
-        if released {
-            unsafe { EspWaitQueue::notify(waiting) };
-        }
-        ok
     }
 
     unsafe fn try_give_from_isr(
         semaphore: SemaphorePtr,
         higher_prio_task_waken: Option<&mut bool>,
     ) -> bool {
-        let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
-        let (ok, waiting) = sem.with_irq_safe(|data| {
-            let ok = match &data.kind {
-                SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex => false,
-                _ if data.current < data.max => {
-                    data.current += 1;
-                    true
-                }
-                _ => false,
-            };
-            (ok, data.waiting)
-        });
-        if ok {
-            unsafe { EspWaitQueue::notify_from_isr(waiting, higher_prio_task_waken) };
+        unsafe {
+            let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
+            let (ok, waiting) = sem.with_irq_safe(|data| {
+                let ok = match &data.kind {
+                    SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex => false,
+                    _ if data.current < data.max => {
+                        data.current += 1;
+                        true
+                    }
+                    _ => false,
+                };
+                (ok, data.waiting)
+            });
+            if ok {
+                unsafe { EspWaitQueue::notify_from_isr(waiting, higher_prio_task_waken) };
+            }
+            ok
         }
-        ok
     }
 
     unsafe fn current_count(semaphore: SemaphorePtr) -> u32 {
-        let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
-        sem.with_irq_safe(|data| data.current)
+        unsafe {
+            let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
+            sem.with_irq_safe(|data| data.current)
+        }
     }
 
     unsafe fn try_take(semaphore: SemaphorePtr) -> bool {
-        let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
-        let current_thread = scheduler::current_thread();
-        let current_owner = Arc::as_ptr(&current_thread) as usize;
-        sem.with_irq_safe(|data| match &data.kind {
-            SemaphoreKind::RecursiveMutex if data.owner == current_owner => {
-                data.recursion = data.recursion.saturating_add(1);
-                true
-            }
-            SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex if data.current > 0 => {
-                data.current -= 1;
-                data.owner = current_owner;
-                data.owner_thread = Some(current_thread.clone());
-                data.owner_boosted = false;
-                data.recursion = 1;
-                true
-            }
-            _ if data.current > 0 => {
-                data.current -= 1;
-                true
-            }
-            _ => false,
-        })
+        unsafe {
+            let sem = &*semaphore.cast::<BkSemaphore>().as_ptr();
+            let current_thread = scheduler::current_thread();
+            let current_owner = Arc::as_ptr(&current_thread) as usize;
+            sem.with_irq_safe(|data| match &data.kind {
+                SemaphoreKind::RecursiveMutex if data.owner == current_owner => {
+                    data.recursion = data.recursion.saturating_add(1);
+                    true
+                }
+                SemaphoreKind::Mutex | SemaphoreKind::RecursiveMutex if data.current > 0 => {
+                    data.current -= 1;
+                    data.owner = current_owner;
+                    data.owner_thread = Some(current_thread.clone());
+                    data.owner_boosted = false;
+                    data.recursion = 1;
+                    true
+                }
+                _ if data.current > 0 => {
+                    data.current -= 1;
+                    true
+                }
+                _ => false,
+            })
+        }
     }
 
     unsafe fn try_take_from_isr(
         semaphore: SemaphorePtr,
         _higher_prio_task_waken: Option<&mut bool>,
     ) -> bool {
-        <Self as SemaphoreImplementation>::try_take(semaphore)
+        unsafe { <Self as SemaphoreImplementation>::try_take(semaphore) }
     }
 }
 
@@ -562,8 +592,7 @@ mod tests {
     static ALLOCATOR: KernelAllocator = KernelAllocator;
 
     #[used]
-    #[cfg_attr(compatible_old_toolchain, link_section = ".bk_app_array")]
-    #[cfg_attr(not(compatible_old_toolchain), unsafe(link_section = ".bk_app_array"))]
+    #[unsafe(link_section = ".bk_app_array")]
     static INIT_TEST: extern "C" fn() = init_test;
 
     #[inline(never)]

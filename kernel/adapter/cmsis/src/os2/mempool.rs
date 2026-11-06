@@ -23,142 +23,142 @@ use cmsis_os2::{
     osStatus_t_osErrorParameter, osStatus_t_osErrorResource, osStatus_t_osOK,
 };
 use core::ffi::c_void;
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn osMemoryPoolNew(
     block_count: u32,
     block_size: u32,
     attr: *const osMemoryPoolAttr_t,
 ) -> osMemoryPoolId_t {
-    if irq::is_in_irq() {
-        return core::ptr::null_mut();
-    }
-    let mut result = core::ptr::null_mut();
-    let attr = if attr.is_null() { None } else { Some(&*attr) };
-    let mut data = None;
-    if let Some(attr) = attr {
-        if !attr.mp_mem.is_null() {
-            if attr.mp_size < block_count * block_size {
-                return core::ptr::null_mut();
-            }
-            data = Some(core::slice::from_raw_parts_mut(
-                attr.mp_mem as *mut u8,
-                attr.mp_size as usize,
-            ));
+    unsafe {
+        if irq::is_in_irq() {
+            return core::ptr::null_mut();
         }
-        if attr.cb_mem.is_null() {
-            result = Box::into_raw(Box::new(MemoryPool::new()));
+        let mut result = core::ptr::null_mut();
+        let attr = if attr.is_null() { None } else { Some(&*attr) };
+        let mut data = None;
+        if let Some(attr) = attr {
+            if !attr.mp_mem.is_null() {
+                if attr.mp_size < block_count * block_size {
+                    return core::ptr::null_mut();
+                }
+                data = Some(core::slice::from_raw_parts_mut(
+                    attr.mp_mem as *mut u8,
+                    attr.mp_size as usize,
+                ));
+            }
+            if attr.cb_mem.is_null() {
+                result = Box::into_raw(Box::new(MemoryPool::new()));
+            } else {
+                if (attr.cb_size as usize) < core::mem::size_of::<MemoryPool>() {
+                    return core::ptr::null_mut();
+                }
+                result = attr.cb_mem as *mut MemoryPool;
+                core::ptr::write_bytes(result, 0, 1);
+            }
         } else {
-            if (attr.cb_size as usize) < core::mem::size_of::<MemoryPool>() {
-                return core::ptr::null_mut();
-            }
-            result = attr.cb_mem as *mut MemoryPool;
-            core::ptr::write_bytes(result, 0, 1);
+            result = Box::into_raw(Box::new(MemoryPool::new()));
         }
-    } else {
-        result = Box::into_raw(Box::new(MemoryPool::new()));
+        debug_assert_ne!(result, core::ptr::null_mut());
+        let inner = &mut *result;
+        inner.init(block_count as usize, block_size as usize, data);
+        result as osMemoryPoolId_t
     }
-    debug_assert_ne!(result, core::ptr::null_mut());
-    let inner = &mut *result;
-    inner.init(block_count as usize, block_size as usize, data);
-    result as osMemoryPoolId_t
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn osMemoryPoolAlloc(
     mp_id: osMemoryPoolId_t,
     timeout: u32,
 ) -> *mut core::ffi::c_void {
-    if irq::is_in_irq() && timeout != 0 {
-        return core::ptr::null_mut();
+    unsafe {
+        if irq::is_in_irq() && timeout != 0 {
+            return core::ptr::null_mut();
+        }
+        if mp_id.is_null() {
+            return core::ptr::null_mut();
+        }
+        let mp = &mut *(mp_id as *mut MemoryPool);
+        mp.get_block_with_timeout(Tick(timeout as usize))
     }
-    if mp_id.is_null() {
-        return core::ptr::null_mut();
-    }
-    let mp = &mut *(mp_id as *mut MemoryPool);
-    mp.get_block_with_timeout(Tick(timeout as usize))
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn osMemoryPoolFree(
     mp_id: osMemoryPoolId_t,
     block: *mut core::ffi::c_void,
 ) -> osStatus_t {
-    if irq::is_in_irq() {
-        return osStatus_t_osErrorISR;
+    unsafe {
+        if irq::is_in_irq() {
+            return osStatus_t_osErrorISR;
+        }
+        if mp_id.is_null() || block.is_null() {
+            return osStatus_t_osErrorParameter;
+        }
+        let mp = &mut *(mp_id as *mut MemoryPool);
+        mp.put_block(block);
+        osStatus_t_osOK
     }
-    if mp_id.is_null() || block.is_null() {
-        return osStatus_t_osErrorParameter;
-    }
-    let mp = &mut *(mp_id as *mut MemoryPool);
-    mp.put_block(block);
-    osStatus_t_osOK
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn osMemoryPoolGetCapacity(mp_id: osMemoryPoolId_t) -> u32 {
-    if mp_id.is_null() {
-        return 0;
+    unsafe {
+        if mp_id.is_null() {
+            return 0;
+        }
+        let mp = &mut *(mp_id as *mut MemoryPool);
+        mp.total_blocks() as u32
     }
-    let mp = &mut *(mp_id as *mut MemoryPool);
-    mp.total_blocks() as u32
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn osMemoryPoolGetBlockSize(mp_id: osMemoryPoolId_t) -> u32 {
-    if mp_id.is_null() {
-        return 0;
+    unsafe {
+        if mp_id.is_null() {
+            return 0;
+        }
+        let mp = &mut *(mp_id as *mut MemoryPool);
+        mp.block_size() as u32
     }
-    let mp = &mut *(mp_id as *mut MemoryPool);
-    mp.block_size() as u32
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn osMemoryPoolGetCount(mp_id: osMemoryPoolId_t) -> u32 {
-    if mp_id.is_null() {
-        return 0;
+    unsafe {
+        if mp_id.is_null() {
+            return 0;
+        }
+        let mp = &mut *(mp_id as *mut MemoryPool);
+        (mp.total_blocks() - mp.free_blocks()) as u32
     }
-    let mp = &mut *(mp_id as *mut MemoryPool);
-    (mp.total_blocks() - mp.free_blocks()) as u32
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn osMemoryPoolGetSpace(mp_id: osMemoryPoolId_t) -> u32 {
-    if irq::is_in_irq() {
-        return 0;
+    unsafe {
+        if irq::is_in_irq() {
+            return 0;
+        }
+        if mp_id.is_null() {
+            return 0;
+        }
+        let mp = &mut *(mp_id as *mut MemoryPool);
+        mp.free_blocks() as u32
     }
-    if mp_id.is_null() {
-        return 0;
-    }
-    let mp = &mut *(mp_id as *mut MemoryPool);
-    mp.free_blocks() as u32
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn osMemoryPoolDelete(mp_id: osMemoryPoolId_t) -> osStatus_t {
-    // FIXME: Check osErrorSafetyClass condition.
-    if irq::is_in_irq() {
-        return osStatus_t_osErrorISR;
+    unsafe {
+        // FIXME: Check osErrorSafetyClass condition.
+        if irq::is_in_irq() {
+            return osStatus_t_osErrorISR;
+        }
+        let ptr = mp_id as *mut MemoryPool;
+        if ptr.is_null() {
+            return osStatus_t_osErrorParameter;
+        }
+        let mp = &mut *ptr;
+        if mp.total_blocks() != mp.free_blocks() {
+            return osStatus_t_osErrorResource;
+        }
+        mp.clear();
+        drop(Box::from_raw(ptr));
+        osStatus_t_osOK
     }
-    let ptr = mp_id as *mut MemoryPool;
-    if ptr.is_null() {
-        return osStatus_t_osErrorParameter;
-    }
-    let mp = &mut *ptr;
-    if mp.total_blocks() != mp.free_blocks() {
-        return osStatus_t_osErrorResource;
-    }
-    mp.clear();
-    drop(Box::from_raw(ptr));
-    osStatus_t_osOK
 }
 
 #[cfg(test)]
