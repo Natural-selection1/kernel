@@ -368,8 +368,10 @@ pub fn cpu_init(vcpu_id: usize) {
 /// Clear all ICH_LR registers to invalidate pending/active virtual interrupts.
 /// Called during guest shutdown to ensure no stale vGIC state leaks to the host.
 pub unsafe fn clear_all_lrs() {
-    for i in 0..MAX_LR {
-        write_lr(i, 0);
+    unsafe {
+        for i in 0..MAX_LR {
+            write_lr(i, 0);
+        }
     }
 }
 
@@ -595,42 +597,46 @@ pub fn inject_fiq(_intid: u32) {
 pub static mut MOCK_LR: [u64; MAX_LR] = [0; MAX_LR];
 
 unsafe fn read_lr(index: usize) -> u64 {
-    #[cfg(test)]
-    {
-        if index < MAX_LR {
-            MOCK_LR[index]
-        } else {
-            0
+    unsafe {
+        #[cfg(test)]
+        {
+            if index < MAX_LR {
+                MOCK_LR[index]
+            } else {
+                0
+            }
         }
-    }
 
-    #[cfg(not(test))]
-    {
-        match index {
-            0 => ICH_LR0_EL2.get(),
-            1 => ICH_LR1_EL2.get(),
-            2 => ICH_LR2_EL2.get(),
-            3 => ICH_LR3_EL2.get(),
-            _ => 0,
+        #[cfg(not(test))]
+        {
+            match index {
+                0 => ICH_LR0_EL2.get(),
+                1 => ICH_LR1_EL2.get(),
+                2 => ICH_LR2_EL2.get(),
+                3 => ICH_LR3_EL2.get(),
+                _ => 0,
+            }
         }
     }
 }
 
 unsafe fn write_lr(index: usize, val: u64) {
-    #[cfg(test)]
-    {
-        if index < MAX_LR {
-            MOCK_LR[index] = val;
+    unsafe {
+        #[cfg(test)]
+        {
+            if index < MAX_LR {
+                MOCK_LR[index] = val;
+            }
         }
-    }
-    #[cfg(not(test))]
-    {
-        match index {
-            0 => ICH_LR0_EL2.set(val),
-            1 => ICH_LR1_EL2.set(val),
-            2 => ICH_LR2_EL2.set(val),
-            3 => ICH_LR3_EL2.set(val),
-            _ => (),
+        #[cfg(not(test))]
+        {
+            match index {
+                0 => ICH_LR0_EL2.set(val),
+                1 => ICH_LR1_EL2.set(val),
+                2 => ICH_LR2_EL2.set(val),
+                3 => ICH_LR3_EL2.set(val),
+                _ => (),
+            }
         }
     }
 }

@@ -142,32 +142,38 @@ const _: [(); 160] = [(); core::mem::size_of::<FramebufferVariableInfo>()];
 unsafe fn load_user_variable_info(
     ptr: *const FramebufferVariableInfo,
 ) -> Result<FramebufferVariableInfo, ErrorKind> {
-    if ptr.is_null() {
-        return Err(ErrorKind::InvalidInput);
+    unsafe {
+        if ptr.is_null() {
+            return Err(ErrorKind::InvalidInput);
+        }
+        Ok(*ptr)
     }
-    Ok(*ptr)
 }
 
 unsafe fn store_user_fixed_info(
     ptr: *mut FramebufferFixedInfo,
     fixed_info: &FramebufferFixedInfo,
 ) -> Result<(), ErrorKind> {
-    if ptr.is_null() {
-        return Err(ErrorKind::InvalidInput);
+    unsafe {
+        if ptr.is_null() {
+            return Err(ErrorKind::InvalidInput);
+        }
+        *ptr = *fixed_info;
+        Ok(())
     }
-    *ptr = *fixed_info;
-    Ok(())
 }
 
 unsafe fn store_user_variable_info(
     ptr: *mut FramebufferVariableInfo,
     variable_info: &FramebufferVariableInfo,
 ) -> Result<(), ErrorKind> {
-    if ptr.is_null() {
-        return Err(ErrorKind::InvalidInput);
+    unsafe {
+        if ptr.is_null() {
+            return Err(ErrorKind::InvalidInput);
+        }
+        *ptr = *variable_info;
+        Ok(())
     }
-    *ptr = *variable_info;
-    Ok(())
 }
 
 /// Driver-facing framebuffer operations.

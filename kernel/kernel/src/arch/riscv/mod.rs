@@ -571,9 +571,7 @@ pub(crate) extern "C" fn current_cpu_id() -> usize {
     };
     id
 }
-
-#[cfg_attr(compatible_old_toolchain, naked)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(naked))]
+#[unsafe(naked)]
 pub(crate) extern "C" fn switch_stack(
     to_sp: usize,
     cont: extern "C" fn(sp: usize, old_sp: usize),

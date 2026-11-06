@@ -41,9 +41,7 @@ use esp_wifi_sys_esp32c6 as esp_wifi_sys;
 // #define ESP_EVENT_DEFINE_BASE(id) esp_event_base_t id = #id
 #[unsafe(no_mangle)]
 static mut __ESP_RADIO_WIFI_EVENT: esp_event_base_t = c"WIFI_EVENT".as_ptr();
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub(crate) unsafe extern "C" fn sleep(seconds: c_uint) -> c_uint {
     let target = Tick::after(Tick::from_millis(seconds as u64 * 1000));
     crate::scheduler::suspend_me_until::<()>(target, None);
@@ -59,13 +57,15 @@ pub unsafe extern "C" fn esp_event_post(
     event_data_size: usize,
     ticks_to_wait: u32,
 ) -> i32 {
-    event_post(
-        event_base,
-        event_id,
-        event_data,
-        event_data_size,
-        ticks_to_wait,
-    )
+    unsafe {
+        event_post(
+            event_base,
+            event_id,
+            event_data,
+            event_data_size,
+            ticks_to_wait,
+        )
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -80,9 +80,7 @@ pub unsafe extern "C" fn gettimeofday(tv: *mut timeval, _tz: *mut ()) -> i32 {
 
     0
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn esp_fill_random(dst: *mut u8, len: u32) {
     unsafe {
         let dst = core::slice::from_raw_parts_mut(dst, len as usize);
@@ -260,40 +258,42 @@ pub unsafe extern "C" fn set_intr(cpu_no: i32, intr_source: u32, intr_num: u32, 
 pub unsafe extern "C" fn clear_intr(intr_source: u32, intr_num: u32) {}
 
 pub unsafe extern "C" fn set_isr(n: i32, f: *mut c_void, arg: *mut c_void) {
-    // [diag] Confirm whether libnet80211 calls this callback + the mie value at call time
-    // (check whether the WiFi line1 enable bit is already set).
-    let mie_before: usize;
-    core::arch::asm!(
-        "csrr {mie}, mie",
-        mie = out(reg) mie_before,
-        options(nostack, preserves_flags),
-    );
-    log::info!("[diag] set_isr(n={n}, f={f:p}, arg={arg:p}) mie_before=0x{mie_before:x}");
-    match n {
-        0 | 1 => ISR_INTERRUPT_1.set(f, arg),
-        _ => panic!("set_isr - unsupported interrupt number {}", n),
-    }
+    unsafe {
+        // [diag] Confirm whether libnet80211 calls this callback + the mie value at call time
+        // (check whether the WiFi line1 enable bit is already set).
+        let mie_before: usize;
+        core::arch::asm!(
+            "csrr {mie}, mie",
+            mie = out(reg) mie_before,
+            options(nostack, preserves_flags),
+        );
+        log::info!("[diag] set_isr(n={n}, f={f:p}, arg={arg:p}) mie_before=0x{mie_before:x}");
+        match n {
+            0 | 1 => ISR_INTERRUPT_1.set(f, arg),
+            _ => panic!("set_isr - unsupported interrupt number {}", n),
+        }
 
-    // After registering the ISR, enable the two WiFi interrupt sources
-    // (WIFI_PWR source=2, WIFI_MAC source=0, both aggregated into CPU intr 1;
-    // see the WIFI_PWR/MAC_INTERRUPT constant definitions above).
-    #[cfg(soc_esp32c3)]
-    {
-        get_device!(intc).enable_irq(WIFI_PWR_INTERRUPT);
-        get_device!(intc).enable_irq(WIFI_MAC_INTERRUPT);
-    }
-    #[cfg(soc_esp32c6)]
-    {
-        // C6 has no intc device; WiFi source routing is done by libnet80211 calling
-        // set_intr first (see above), here we only add the CPU intr line enable (1<<1),
-        // same semantics as ints_on but avoiding dependence on libnet80211's later
-        // ints_on timing — ready immediately at set_isr time.
-        // Note: the WIFI_PWR/MAC_INTERRUPT constants (source=2/0, irq=1) are still
-        // kept on C6 to record the mapping; their irq_no=1 is the line for
-        // ISR_INTERRUPT_1.
-        const PLIC_MX_ENABLE: usize = 0x2000_1000;
-        let en = core::ptr::read_volatile(PLIC_MX_ENABLE as *const u32);
-        core::ptr::write_volatile(PLIC_MX_ENABLE as *mut u32, en | (1u32 << 1));
+        // After registering the ISR, enable the two WiFi interrupt sources
+        // (WIFI_PWR source=2, WIFI_MAC source=0, both aggregated into CPU intr 1;
+        // see the WIFI_PWR/MAC_INTERRUPT constant definitions above).
+        #[cfg(soc_esp32c3)]
+        {
+            get_device!(intc).enable_irq(WIFI_PWR_INTERRUPT);
+            get_device!(intc).enable_irq(WIFI_MAC_INTERRUPT);
+        }
+        #[cfg(soc_esp32c6)]
+        {
+            // C6 has no intc device; WiFi source routing is done by libnet80211 calling
+            // set_intr first (see above), here we only add the CPU intr line enable (1<<1),
+            // same semantics as ints_on but avoiding dependence on libnet80211's later
+            // ints_on timing — ready immediately at set_isr time.
+            // Note: the WIFI_PWR/MAC_INTERRUPT constants (source=2/0, irq=1) are still
+            // kept on C6 to record the mapping; their irq_no=1 is the line for
+            // ISR_INTERRUPT_1.
+            const PLIC_MX_ENABLE: usize = 0x2000_1000;
+            let en = core::ptr::read_volatile(PLIC_MX_ENABLE as *const u32);
+            core::ptr::write_volatile(PLIC_MX_ENABLE as *mut u32, en | (1u32 << 1));
+        }
     }
 }
 
@@ -305,32 +305,36 @@ pub unsafe extern "C" fn set_isr(n: i32, f: *mut c_void, arg: *mut c_void) {
 //   C6 = PLIC_MXINT_ENABLE_REG              @ 0x20001000 (PLIC_MX domain, RISC-V PLIC)
 // Source esp-idf: components/soc/esp32c6/register/soc/reg_base.h:7 + plic_reg.h:20.
 pub unsafe extern "C" fn ints_on(mask: u32) {
-    #[cfg(soc_esp32c3)]
-    const INT_ENABLE_REG: usize = 0x600C2104;
-    #[cfg(soc_esp32c6)]
-    const INT_ENABLE_REG: usize = 0x20001000;
-    // [diag] Confirm the CPU interrupt bit mask the driver enables + mie before the call.
-    // mask = 1 << cpu_intr_num; WiFi expects mask=0x2 (line1); if not 0x2, the driver
-    // routed WiFi to a line other than line1, which does not match set_isr's
-    // ISR_INTERRUPT_1 (line1) → never reaches the trap.
-    let mie_before: usize;
-    core::arch::asm!(
-        "csrr {mie}, mie",
-        mie = out(reg) mie_before,
-        options(nostack, preserves_flags),
-    );
-    log::info!("[diag] ints_on(mask=0x{mask:x}) mie_before=0x{mie_before:x}");
-    let tmp = core::ptr::read_volatile(INT_ENABLE_REG as *const u32);
-    core::ptr::write_volatile(INT_ENABLE_REG as *mut u32, tmp | mask);
+    unsafe {
+        #[cfg(soc_esp32c3)]
+        const INT_ENABLE_REG: usize = 0x600C2104;
+        #[cfg(soc_esp32c6)]
+        const INT_ENABLE_REG: usize = 0x20001000;
+        // [diag] Confirm the CPU interrupt bit mask the driver enables + mie before the call.
+        // mask = 1 << cpu_intr_num; WiFi expects mask=0x2 (line1); if not 0x2, the driver
+        // routed WiFi to a line other than line1, which does not match set_isr's
+        // ISR_INTERRUPT_1 (line1) → never reaches the trap.
+        let mie_before: usize;
+        core::arch::asm!(
+            "csrr {mie}, mie",
+            mie = out(reg) mie_before,
+            options(nostack, preserves_flags),
+        );
+        log::info!("[diag] ints_on(mask=0x{mask:x}) mie_before=0x{mie_before:x}");
+        let tmp = core::ptr::read_volatile(INT_ENABLE_REG as *const u32);
+        core::ptr::write_volatile(INT_ENABLE_REG as *mut u32, tmp | mask);
+    }
 }
 
 pub unsafe extern "C" fn ints_off(mask: u32) {
-    #[cfg(soc_esp32c3)]
-    const INT_ENABLE_REG: usize = 0x600C2104;
-    #[cfg(soc_esp32c6)]
-    const INT_ENABLE_REG: usize = 0x20001000;
-    let tmp = core::ptr::read_volatile(INT_ENABLE_REG as *const u32);
-    core::ptr::write_volatile(INT_ENABLE_REG as *mut u32, tmp & !mask);
+    unsafe {
+        #[cfg(soc_esp32c3)]
+        const INT_ENABLE_REG: usize = 0x600C2104;
+        #[cfg(soc_esp32c6)]
+        const INT_ENABLE_REG: usize = 0x20001000;
+        let tmp = core::ptr::read_volatile(INT_ENABLE_REG as *const u32);
+        core::ptr::write_volatile(INT_ENABLE_REG as *mut u32, tmp & !mask);
+    }
 }
 
 pub unsafe extern "C" fn is_from_isr() -> bool {
@@ -338,7 +342,7 @@ pub unsafe extern "C" fn is_from_isr() -> bool {
 }
 
 pub unsafe extern "C" fn spin_lock_create() -> *mut c_void {
-    semphr_create(1, 1)
+    unsafe { semphr_create(1, 1) }
 }
 
 pub unsafe extern "C" fn wifi_int_disable(_wifi_int_mux: *mut c_void) -> u32 {
@@ -354,7 +358,9 @@ pub unsafe extern "C" fn task_yield_from_isr() {
 }
 
 pub unsafe extern "C" fn spin_lock_delete(lock: *mut c_void) {
-    semphr_delete(lock);
+    unsafe {
+        semphr_delete(lock);
+    }
 }
 
 pub unsafe extern "C" fn semphr_create(max: u32, init: u32) -> *mut c_void {
@@ -366,36 +372,42 @@ pub unsafe extern "C" fn semphr_create(max: u32, init: u32) -> *mut c_void {
 }
 
 pub unsafe extern "C" fn semphr_delete(semphr: *mut c_void) {
-    if !semphr.is_null() {
-        let ptr = SemaphorePtr::new(semphr.cast()).expect("invalid semaphore pointer");
-        let handle = SemaphoreHandle::from_ptr(ptr);
-        core::mem::drop(handle);
+    unsafe {
+        if !semphr.is_null() {
+            let ptr = SemaphorePtr::new(semphr.cast()).expect("invalid semaphore pointer");
+            let handle = SemaphoreHandle::from_ptr(ptr);
+            core::mem::drop(handle);
+        }
     }
 }
 
 pub unsafe extern "C" fn semphr_take(semphr: *mut c_void, block_time_tick: u32) -> i32 {
-    if !semphr.is_null() {
-        let ptr = SemaphorePtr::new(semphr.cast()).expect("invalid semaphore pointer");
-        let handle = SemaphoreHandle::ref_from_ptr(&ptr);
-        let timeout = if block_time_tick == OSI_FUNCS_TIME_BLOCKING {
-            None
-        } else {
-            Some(block_time_tick)
-        };
+    unsafe {
+        if !semphr.is_null() {
+            let ptr = SemaphorePtr::new(semphr.cast()).expect("invalid semaphore pointer");
+            let handle = SemaphoreHandle::ref_from_ptr(&ptr);
+            let timeout = if block_time_tick == OSI_FUNCS_TIME_BLOCKING {
+                None
+            } else {
+                Some(block_time_tick)
+            };
 
-        handle.take(timeout) as i32
-    } else {
-        0
+            handle.take(timeout) as i32
+        } else {
+            0
+        }
     }
 }
 
 pub unsafe extern "C" fn semphr_give(semphr: *mut c_void) -> i32 {
-    if !semphr.is_null() {
-        let ptr = SemaphorePtr::new(semphr.cast()).expect("invalid semaphore pointer");
-        let handle = SemaphoreHandle::ref_from_ptr(&ptr);
-        handle.give() as i32
-    } else {
-        0
+    unsafe {
+        if !semphr.is_null() {
+            let ptr = SemaphorePtr::new(semphr.cast()).expect("invalid semaphore pointer");
+            let handle = SemaphoreHandle::ref_from_ptr(&ptr);
+            handle.give() as i32
+        } else {
+            0
+        }
     }
 }
 
@@ -422,30 +434,36 @@ pub unsafe extern "C" fn recursive_mutex_create() -> *mut c_void {
 }
 
 pub unsafe extern "C" fn mutex_delete(mutex: *mut c_void) {
-    if !mutex.is_null() {
-        let ptr = SemaphorePtr::new(mutex.cast()).expect("invalid mutex pointer");
-        let handle = SemaphoreHandle::from_ptr(ptr);
-        core::mem::drop(handle);
+    unsafe {
+        if !mutex.is_null() {
+            let ptr = SemaphorePtr::new(mutex.cast()).expect("invalid mutex pointer");
+            let handle = SemaphoreHandle::from_ptr(ptr);
+            core::mem::drop(handle);
+        }
     }
 }
 
 pub unsafe extern "C" fn mutex_lock(mutex: *mut c_void) -> i32 {
-    if !mutex.is_null() {
-        let ptr = SemaphorePtr::new(mutex.cast()).expect("invalid mutex pointer");
-        let handle = SemaphoreHandle::ref_from_ptr(&ptr);
-        handle.take(None) as i32
-    } else {
-        0
+    unsafe {
+        if !mutex.is_null() {
+            let ptr = SemaphorePtr::new(mutex.cast()).expect("invalid mutex pointer");
+            let handle = SemaphoreHandle::ref_from_ptr(&ptr);
+            handle.take(None) as i32
+        } else {
+            0
+        }
     }
 }
 
 pub unsafe extern "C" fn mutex_unlock(mutex: *mut c_void) -> i32 {
-    if !mutex.is_null() {
-        let ptr = SemaphorePtr::new(mutex.cast()).expect("invalid mutex pointer");
-        let handle = SemaphoreHandle::ref_from_ptr(&ptr);
-        handle.give() as i32
-    } else {
-        0
+    unsafe {
+        if !mutex.is_null() {
+            let ptr = SemaphorePtr::new(mutex.cast()).expect("invalid mutex pointer");
+            let handle = SemaphoreHandle::ref_from_ptr(&ptr);
+            handle.give() as i32
+        } else {
+            0
+        }
     }
 }
 
@@ -469,7 +487,7 @@ pub unsafe extern "C" fn queue_send(
     item: *mut c_void,
     block_time_tick: u32,
 ) -> i32 {
-    queue_send_to_back(queue, item, block_time_tick)
+    unsafe { queue_send_to_back(queue, item, block_time_tick) }
 }
 
 pub unsafe extern "C" fn queue_send_from_isr(
@@ -477,14 +495,16 @@ pub unsafe extern "C" fn queue_send_from_isr(
     item: *mut c_void,
     hptw: *mut c_void,
 ) -> i32 {
-    if !queue.is_null() {
-        let ptr = QueuePtr::new(queue.cast()).expect("invalid queue pointer");
-        let handle = unsafe { QueueHandle::ref_from_ptr(&ptr) };
-        let ret =
-            handle.try_send_to_back_from_isr(item.cast(), (hptw as *mut bool).as_mut()) as i32;
-        ret
-    } else {
-        0
+    unsafe {
+        if !queue.is_null() {
+            let ptr = QueuePtr::new(queue.cast()).expect("invalid queue pointer");
+            let handle = unsafe { QueueHandle::ref_from_ptr(&ptr) };
+            let ret =
+                handle.try_send_to_back_from_isr(item.cast(), (hptw as *mut bool).as_mut()) as i32;
+            ret
+        } else {
+            0
+        }
     }
 }
 
@@ -493,19 +513,21 @@ pub unsafe extern "C" fn queue_send_to_back(
     item: *mut c_void,
     block_time_tick: u32,
 ) -> i32 {
-    if !queue.is_null() {
-        let ptr = QueuePtr::new(queue.cast()).expect("invalid queue pointer");
-        let handle = unsafe { QueueHandle::ref_from_ptr(&ptr) };
-        let timeout = if block_time_tick == OSI_FUNCS_TIME_BLOCKING {
-            None
-        } else {
-            Some(block_time_tick)
-        };
+    unsafe {
+        if !queue.is_null() {
+            let ptr = QueuePtr::new(queue.cast()).expect("invalid queue pointer");
+            let handle = unsafe { QueueHandle::ref_from_ptr(&ptr) };
+            let timeout = if block_time_tick == OSI_FUNCS_TIME_BLOCKING {
+                None
+            } else {
+                Some(block_time_tick)
+            };
 
-        let ret = handle.send_to_back(item.cast(), timeout) as i32;
-        ret
-    } else {
-        0
+            let ret = handle.send_to_back(item.cast(), timeout) as i32;
+            ret
+        } else {
+            0
+        }
     }
 }
 
@@ -514,18 +536,20 @@ pub unsafe extern "C" fn queue_send_to_front(
     item: *mut c_void,
     block_time_tick: u32,
 ) -> i32 {
-    if !queue.is_null() {
-        let ptr = QueuePtr::new(queue.cast()).expect("invalid queue pointer");
-        let handle = unsafe { QueueHandle::ref_from_ptr(&ptr) };
-        let timeout = if block_time_tick == OSI_FUNCS_TIME_BLOCKING {
-            None
-        } else {
-            Some(block_time_tick)
-        };
+    unsafe {
+        if !queue.is_null() {
+            let ptr = QueuePtr::new(queue.cast()).expect("invalid queue pointer");
+            let handle = unsafe { QueueHandle::ref_from_ptr(&ptr) };
+            let timeout = if block_time_tick == OSI_FUNCS_TIME_BLOCKING {
+                None
+            } else {
+                Some(block_time_tick)
+            };
 
-        handle.send_to_front(item.cast(), timeout) as i32
-    } else {
-        0
+            handle.send_to_front(item.cast(), timeout) as i32
+        } else {
+            0
+        }
     }
 }
 
@@ -534,19 +558,21 @@ pub unsafe extern "C" fn queue_recv(
     item: *mut c_void,
     block_time_tick: u32,
 ) -> i32 {
-    if !queue.is_null() {
-        let ptr = QueuePtr::new(queue.cast()).expect("invalid queue pointer");
-        let handle = unsafe { QueueHandle::ref_from_ptr(&ptr) };
-        let timeout = if block_time_tick == OSI_FUNCS_TIME_BLOCKING {
-            None
-        } else {
-            Some(block_time_tick)
-        };
+    unsafe {
+        if !queue.is_null() {
+            let ptr = QueuePtr::new(queue.cast()).expect("invalid queue pointer");
+            let handle = unsafe { QueueHandle::ref_from_ptr(&ptr) };
+            let timeout = if block_time_tick == OSI_FUNCS_TIME_BLOCKING {
+                None
+            } else {
+                Some(block_time_tick)
+            };
 
-        let ret = handle.receive(item.cast(), timeout) as i32;
-        ret
-    } else {
-        0
+            let ret = handle.receive(item.cast(), timeout) as i32;
+            ret
+        } else {
+            0
+        }
     }
 }
 
@@ -615,21 +641,23 @@ pub unsafe extern "C" fn task_create_pinned_to_core(
     task_handle: *mut c_void,
     core_id: u32,
 ) -> i32 {
-    let task_name = "unused";
+    unsafe {
+        let task_name = "unused";
 
-    let task_func = core::mem::transmute::<*mut c_void, extern "C" fn(*mut c_void)>(task_func);
+        let task_func = core::mem::transmute::<*mut c_void, extern "C" fn(*mut c_void)>(task_func);
 
-    let task = esp_radio_rtos_driver::task_create(
-        task_name,
-        task_func,
-        param,
-        prio,
-        if core_id < 2 { Some(core_id) } else { None },
-        stack_depth as usize,
-    );
-    *(task_handle as *mut usize) = task.as_ptr() as usize;
+        let task = esp_radio_rtos_driver::task_create(
+            task_name,
+            task_func,
+            param,
+            prio,
+            if core_id < 2 { Some(core_id) } else { None },
+            stack_depth as usize,
+        );
+        *(task_handle as *mut usize) = task.as_ptr() as usize;
 
-    1
+        1
+    }
 }
 
 pub unsafe extern "C" fn task_create(
@@ -640,25 +668,29 @@ pub unsafe extern "C" fn task_create(
     prio: u32,
     task_handle: *mut c_void,
 ) -> i32 {
-    let task_name = "unused";
+    unsafe {
+        let task_name = "unused";
 
-    let task_func = core::mem::transmute::<*mut c_void, extern "C" fn(*mut c_void)>(task_func);
+        let task_func = core::mem::transmute::<*mut c_void, extern "C" fn(*mut c_void)>(task_func);
 
-    let task = esp_radio_rtos_driver::task_create(
-        task_name,
-        task_func,
-        param,
-        prio,
-        None,
-        stack_depth as usize,
-    );
-    *(task_handle as *mut usize) = task.as_ptr() as usize;
+        let task = esp_radio_rtos_driver::task_create(
+            task_name,
+            task_func,
+            param,
+            prio,
+            None,
+            stack_depth as usize,
+        );
+        *(task_handle as *mut usize) = task.as_ptr() as usize;
 
-    1
+        1
+    }
 }
 
 pub unsafe extern "C" fn task_delete(task_handle: *mut c_void) {
-    esp_radio_rtos_driver::schedule_task_deletion(NonNull::new(task_handle.cast::<()>()));
+    unsafe {
+        esp_radio_rtos_driver::schedule_task_deletion(NonNull::new(task_handle.cast::<()>()));
+    }
 }
 
 pub unsafe extern "C" fn task_delay(tick: u32) {
@@ -681,8 +713,7 @@ pub unsafe extern "C" fn task_get_max_priority() -> i32 {
 
 /// Rust-side log output function called from C bridge (log_bridge.c).
 /// Receives the fully formatted message string and prints via kernel log.
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn blueos_wifi_log_output(
     level: c_uint,
     tag: *const c_char,
@@ -717,7 +748,7 @@ pub unsafe extern "C" fn blueos_wifi_log_output(
     }
 }
 
-extern "C" {
+unsafe extern "C" {
     /// C bridge for _log_writev — formats va_list via vsnprintf and calls
     /// blueos_wifi_log_output. Defined in log_bridge.c.
     fn wifi_log_writev_bridge(
@@ -737,7 +768,7 @@ pub unsafe extern "C" fn log_writev(
     format: *const c_char,
     args: *mut c_void,
 ) {
-    wifi_log_writev_bridge(level, tag, format, args)
+    unsafe { wifi_log_writev_bridge(level, tag, format, args) }
 }
 
 pub unsafe extern "C" fn log_write(
@@ -789,9 +820,7 @@ pub unsafe extern "C" fn event_post(
     }
     0
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn get_free_internal_heap_size() -> usize {
     let memory_info = crate::allocator::memory_info();
     (memory_info.total - memory_info.used) as usize
@@ -899,29 +928,35 @@ pub unsafe extern "C" fn read_mac(mac_out: *mut u8, type_: u32) -> i32 {
 }
 
 pub unsafe extern "C" fn ets_timer_arm(timer: *mut c_void, tmout: u32, repeat: bool) {
-    ets_timer_arm_us(timer, tmout.saturating_mul(1000), repeat);
+    unsafe {
+        ets_timer_arm_us(timer, tmout.saturating_mul(1000), repeat);
+    }
 }
 
 pub unsafe extern "C" fn ets_timer_disarm(timer: *mut c_void) {
-    let ets_timer = timer as *mut ets_timer;
-    let ets_timer = ets_timer.as_mut().expect("ets_timer is null");
+    unsafe {
+        let ets_timer = timer as *mut ets_timer;
+        let ets_timer = ets_timer.as_mut().expect("ets_timer is null");
 
-    if let Some(timer) = TimerPtr::new(ets_timer.priv_.cast()) {
-        let timer = unsafe { TimerHandle::ref_from_ptr(&timer) };
+        if let Some(timer) = TimerPtr::new(ets_timer.priv_.cast()) {
+            let timer = unsafe { TimerHandle::ref_from_ptr(&timer) };
 
-        timer.disarm();
+            timer.disarm();
+        }
     }
 }
 
 pub unsafe extern "C" fn ets_timer_done(ptimer: *mut c_void) {
-    let ets_timer = ptimer as *mut ets_timer;
-    let ets_timer = ets_timer.as_mut().expect("ets_timer is null");
+    unsafe {
+        let ets_timer = ptimer as *mut ets_timer;
+        let ets_timer = ets_timer.as_mut().expect("ets_timer is null");
 
-    if let Some(timer) = TimerPtr::new(ets_timer.priv_.cast()) {
-        let timer = unsafe { TimerHandle::from_ptr(timer) };
+        if let Some(timer) = TimerPtr::new(ets_timer.priv_.cast()) {
+            let timer = unsafe { TimerHandle::from_ptr(timer) };
 
-        core::mem::drop(timer);
-        ets_timer.priv_ = core::ptr::null_mut();
+            core::mem::drop(timer);
+            ets_timer.priv_ = core::ptr::null_mut();
+        }
     }
 }
 
@@ -930,36 +965,40 @@ pub unsafe extern "C" fn ets_timer_setfn(
     pfunction: *mut c_void,
     parg: *mut c_void,
 ) {
-    // This function is expected to create timers. For the simplicity of the preempt API, we
-    // will not update existing timers, but create new ones.
-    ets_timer_done(ptimer);
+    unsafe {
+        // This function is expected to create timers. For the simplicity of the preempt API, we
+        // will not update existing timers, but create new ones.
+        ets_timer_done(ptimer);
 
-    let ets_timer = ptimer as *mut ets_timer;
-    let ets_timer = ets_timer.as_mut().expect("ets_timer is null");
-    let timer = unsafe {
-        TimerHandle::new(
-            core::mem::transmute::<*mut c_void, unsafe extern "C" fn(*mut c_void)>(pfunction),
-            parg,
-        )
+        let ets_timer = ptimer as *mut ets_timer;
+        let ets_timer = ets_timer.as_mut().expect("ets_timer is null");
+        let timer = unsafe {
+            TimerHandle::new(
+                core::mem::transmute::<*mut c_void, unsafe extern "C" fn(*mut c_void)>(pfunction),
+                parg,
+            )
+        }
+        .leak()
+        .cast()
+        .as_ptr();
+
+        ets_timer.next = core::ptr::null_mut();
+        ets_timer.period = 0;
+        ets_timer.func = None;
+        ets_timer.priv_ = timer;
     }
-    .leak()
-    .cast()
-    .as_ptr();
-
-    ets_timer.next = core::ptr::null_mut();
-    ets_timer.period = 0;
-    ets_timer.func = None;
-    ets_timer.priv_ = timer;
 }
 
 pub unsafe extern "C" fn ets_timer_arm_us(ptimer: *mut c_void, us: u32, repeat: bool) {
-    let ets_timer = ptimer as *mut ets_timer;
-    let ets_timer = ets_timer.as_mut().expect("ets_timer is null");
+    unsafe {
+        let ets_timer = ptimer as *mut ets_timer;
+        let ets_timer = ets_timer.as_mut().expect("ets_timer is null");
 
-    let timer = TimerPtr::new(ets_timer.priv_.cast()).expect("timer is null");
-    let timer = TimerHandle::ref_from_ptr(&timer);
+        let timer = TimerPtr::new(ets_timer.priv_.cast()).expect("timer is null");
+        let timer = TimerHandle::ref_from_ptr(&timer);
 
-    timer.arm(us as u64, repeat);
+        timer.arm(us as u64, repeat);
+    }
 }
 
 // WiFi MAC reset: set the reset bit to 1 then clear to 0 (pulse); the protocol is
@@ -969,23 +1008,25 @@ pub unsafe extern "C" fn ets_timer_arm_us(ptimer: *mut c_void, us: u32, repeat: 
 //   C6: MODEM_SYSCON_MODEM_RST_CONF_REG @ 0x600A9810, bit RST_WIFIMAC = BIT(10)
 //       (MODEM_SYSCON domain, esp-idf modem_syscon_reg.h:190,199-202; C6 has no SYSTEM-domain WiFi reset)
 pub unsafe extern "C" fn wifi_reset_mac() {
-    #[cfg(soc_esp32c3)]
-    {
-        const WIFI_RST_EN: *mut u32 = 0x6002_6018 as *mut u32;
-        const MAC_RST: u32 = 1 << 2;
-        let value = core::ptr::read_volatile(WIFI_RST_EN);
-        core::ptr::write_volatile(WIFI_RST_EN, value | MAC_RST);
-        let value = core::ptr::read_volatile(WIFI_RST_EN);
-        core::ptr::write_volatile(WIFI_RST_EN, value & !MAC_RST);
-    }
-    #[cfg(soc_esp32c6)]
-    {
-        const MODEM_RST_CONF: *mut u32 = 0x600A_9810 as *mut u32;
-        const RST_WIFIMAC: u32 = 1 << 10;
-        let value = core::ptr::read_volatile(MODEM_RST_CONF);
-        core::ptr::write_volatile(MODEM_RST_CONF, value | RST_WIFIMAC);
-        let value = core::ptr::read_volatile(MODEM_RST_CONF);
-        core::ptr::write_volatile(MODEM_RST_CONF, value & !RST_WIFIMAC);
+    unsafe {
+        #[cfg(soc_esp32c3)]
+        {
+            const WIFI_RST_EN: *mut u32 = 0x6002_6018 as *mut u32;
+            const MAC_RST: u32 = 1 << 2;
+            let value = core::ptr::read_volatile(WIFI_RST_EN);
+            core::ptr::write_volatile(WIFI_RST_EN, value | MAC_RST);
+            let value = core::ptr::read_volatile(WIFI_RST_EN);
+            core::ptr::write_volatile(WIFI_RST_EN, value & !MAC_RST);
+        }
+        #[cfg(soc_esp32c6)]
+        {
+            const MODEM_RST_CONF: *mut u32 = 0x600A_9810 as *mut u32;
+            const RST_WIFIMAC: u32 = 1 << 10;
+            let value = core::ptr::read_volatile(MODEM_RST_CONF);
+            core::ptr::write_volatile(MODEM_RST_CONF, value | RST_WIFIMAC);
+            let value = core::ptr::read_volatile(MODEM_RST_CONF);
+            core::ptr::write_volatile(MODEM_RST_CONF, value & !RST_WIFIMAC);
+        }
     }
 }
 
@@ -1094,9 +1135,11 @@ pub unsafe extern "C" fn nvs_erase_key(_handle: u32, _key: *const core::ffi::c_c
 }
 
 pub unsafe extern "C" fn get_random(buf: *mut u8, len: usize) -> i32 {
-    let slice = core::slice::from_raw_parts_mut(buf, len);
-    random_internal(slice);
-    0
+    unsafe {
+        let slice = core::slice::from_raw_parts_mut(buf, len);
+        random_internal(slice);
+        0
+    }
 }
 
 pub unsafe extern "C" fn get_time(_t: *mut c_void) -> i32 {
@@ -1114,65 +1157,61 @@ pub unsafe extern "C" fn slowclk_cal_get() -> u32 {
 pub unsafe extern "C" fn log_timestamp() -> u32 {
     crate::time::Tick::now().as_millis() as u32
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn malloc_internal(size: usize) -> *mut c_void {
     crate::allocator::malloc(size) as *mut c_void
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn free_internal(ptr: *mut c_void) {
     crate::allocator::free(ptr as *mut u8);
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn realloc_internal(ptr: *mut c_void, size: usize) -> *mut c_void {
     crate::allocator::realloc(ptr as *mut u8, size) as *mut c_void
 }
-
-#[cfg_attr(compatible_old_toolchain, no_mangle)]
-#[cfg_attr(not(compatible_old_toolchain), unsafe(no_mangle))]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn calloc_internal(n: usize, size: usize) -> *mut c_void {
     crate::allocator::calloc(n, size) as *mut c_void
 }
 
 pub unsafe extern "C" fn zalloc_internal(size: usize) -> *mut c_void {
-    calloc_internal(size, 1)
+    unsafe { calloc_internal(size, 1) }
 }
 
 pub unsafe extern "C" fn wifi_malloc(size: usize) -> *mut c_void {
-    malloc_internal(size)
+    unsafe { malloc_internal(size) }
 }
 
 pub unsafe extern "C" fn wifi_realloc(ptr: *mut c_void, size: usize) -> *mut c_void {
-    realloc_internal(ptr, size)
+    unsafe { realloc_internal(ptr, size) }
 }
 
 pub unsafe extern "C" fn wifi_calloc(n: usize, size: usize) -> *mut c_void {
-    calloc_internal(n, size)
+    unsafe { calloc_internal(n, size) }
 }
 
 pub unsafe extern "C" fn wifi_zalloc(size: usize) -> *mut c_void {
-    wifi_calloc(size, 1)
+    unsafe { wifi_calloc(size, 1) }
 }
 
 pub unsafe extern "C" fn wifi_create_queue(queue_len: i32, item_size: i32) -> *mut c_void {
-    let queue = queue_create(queue_len as u32, item_size as u32);
+    unsafe {
+        let queue = queue_create(queue_len as u32, item_size as u32);
 
-    let queue_ptr: *mut *mut c_void = Box::leak(Box::new(queue));
+        let queue_ptr: *mut *mut c_void = Box::leak(Box::new(queue));
 
-    queue_ptr.cast()
+        queue_ptr.cast()
+    }
 }
 
 pub unsafe extern "C" fn wifi_delete_queue(queue: *mut c_void) {
-    let queue_ptr: *mut *mut c_void = queue.cast();
+    unsafe {
+        let queue_ptr: *mut *mut c_void = queue.cast();
 
-    let boxed = unsafe { Box::from_raw(queue_ptr) };
+        let boxed = unsafe { Box::from_raw(queue_ptr) };
 
-    queue_delete(*boxed)
+        queue_delete(*boxed)
+    }
 }
 
 pub unsafe extern "C" fn coex_init() -> i32 {
@@ -1259,7 +1298,7 @@ pub unsafe extern "C" fn coex_schm_get_phase_by_idx(_arg1: i32) -> *mut c_void {
 }
 
 pub unsafe extern "C" fn calloc_internal_wrapper(n: usize, size: usize) -> *mut c_void {
-    calloc_internal(n, size)
+    unsafe { calloc_internal(n, size) }
 }
 
 pub unsafe extern "C" fn coex_schm_register_cb_wrapper(

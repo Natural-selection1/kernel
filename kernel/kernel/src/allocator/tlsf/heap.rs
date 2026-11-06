@@ -35,11 +35,13 @@ impl Heap {
 
     // Initializes the heap
     pub unsafe fn init(&self, start_addr: usize, size: usize) {
-        let block: &[u8] = core::slice::from_raw_parts(start_addr as *const u8, size);
-        let mut heap = self.heap.irqsave_lock();
-        #[cfg(debugging_allocator)]
-        debug_assert!(!heap.is_inited());
-        heap.insert_free_block_ptr(block.into());
+        unsafe {
+            let block: &[u8] = core::slice::from_raw_parts(start_addr as *const u8, size);
+            let mut heap = self.heap.irqsave_lock();
+            #[cfg(debugging_allocator)]
+            debug_assert!(!heap.is_inited());
+            heap.insert_free_block_ptr(block.into());
+        }
     }
 
     // try to allocate memory with the given layout
@@ -52,21 +54,25 @@ impl Heap {
 
     // deallocate the memory pointed by ptr with the given layout
     pub unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        let mut heap = self.heap.irqsave_lock();
-        #[cfg(debugging_allocator)]
-        debug_assert!(heap.is_inited());
-        #[cfg(debugging_allocator)]
-        debug_assert!(heap.is_valid_ptr(ptr));
-        heap.deallocate(NonNull::new_unchecked(ptr), layout.align());
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            #[cfg(debugging_allocator)]
+            debug_assert!(heap.is_inited());
+            #[cfg(debugging_allocator)]
+            debug_assert!(heap.is_valid_ptr(ptr));
+            heap.deallocate(NonNull::new_unchecked(ptr), layout.align());
+        }
     }
 
     pub unsafe fn deallocate_unknown_align(&self, ptr: *mut u8) {
-        let mut heap = self.heap.irqsave_lock();
-        #[cfg(debugging_allocator)]
-        debug_assert!(heap.is_inited());
-        #[cfg(debugging_allocator)]
-        debug_assert!(heap.is_valid_ptr(ptr));
-        heap.deallocate_unknown_align(NonNull::new_unchecked(ptr));
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            #[cfg(debugging_allocator)]
+            debug_assert!(heap.is_inited());
+            #[cfg(debugging_allocator)]
+            debug_assert!(heap.is_valid_ptr(ptr));
+            heap.deallocate_unknown_align(NonNull::new_unchecked(ptr));
+        }
     }
 
     // reallocate memory with the given size and layout
@@ -76,11 +82,13 @@ impl Heap {
         layout: Layout,
         new_size: usize,
     ) -> Option<NonNull<u8>> {
-        let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
-        let mut heap = self.heap.irqsave_lock();
-        #[cfg(debugging_allocator)]
-        debug_assert!(heap.is_inited());
-        heap.reallocate(NonNull::new_unchecked(ptr), &new_layout)
+        unsafe {
+            let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
+            let mut heap = self.heap.irqsave_lock();
+            #[cfg(debugging_allocator)]
+            debug_assert!(heap.is_inited());
+            heap.reallocate(NonNull::new_unchecked(ptr), &new_layout)
+        }
     }
 
     // reallocate memory with the given size but with out align
@@ -89,10 +97,12 @@ impl Heap {
         ptr: *mut u8,
         new_size: usize,
     ) -> Option<NonNull<u8>> {
-        let mut heap = self.heap.irqsave_lock();
-        #[cfg(debugging_allocator)]
-        debug_assert!(heap.is_inited());
-        heap.reallocate_unknown_align(NonNull::new_unchecked(ptr), new_size)
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            #[cfg(debugging_allocator)]
+            debug_assert!(heap.is_inited());
+            heap.reallocate_unknown_align(NonNull::new_unchecked(ptr), new_size)
+        }
     }
 
     // Retrieves various statistics about the current state of the heap's memory usage.

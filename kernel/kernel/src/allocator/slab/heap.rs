@@ -57,8 +57,10 @@ impl<
     // Initializes the heap
     // Safety: the memory start address and size must be valid.
     pub unsafe fn init(&self, start_addr: usize, size: usize) {
-        let mut heap = self.heap.irqsave_lock();
-        heap.init(start_addr, size);
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            heap.init(start_addr, size);
+        }
     }
 
     // try to allocate memory with the given layout
@@ -70,15 +72,19 @@ impl<
     // deallocate the memory pointed by ptr with the given layout
     // Safety: the ptr must be a valid pointer.
     pub unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        let mut heap = self.heap.irqsave_lock();
-        heap.deallocate(NonNull::new_unchecked(ptr), &layout);
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            heap.deallocate(NonNull::new_unchecked(ptr), &layout);
+        }
     }
 
     // deallocate the memory pointed by ptr with out align
     // Safety: the ptr must be a valid pointer.
     pub unsafe fn deallocate_unknown_align(&self, ptr: *mut u8) {
-        let mut heap = self.heap.irqsave_lock();
-        heap.deallocate_unknown_align(NonNull::new_unchecked(ptr));
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            heap.deallocate_unknown_align(NonNull::new_unchecked(ptr));
+        }
     }
 
     // reallocate memory with the given size and layout
@@ -89,9 +95,11 @@ impl<
         layout: Layout,
         new_size: usize,
     ) -> Option<NonNull<u8>> {
-        let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
-        let mut heap = self.heap.irqsave_lock();
-        heap.reallocate(NonNull::new_unchecked(ptr), &new_layout)
+        unsafe {
+            let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
+            let mut heap = self.heap.irqsave_lock();
+            heap.reallocate(NonNull::new_unchecked(ptr), &new_layout)
+        }
     }
 
     // reallocate memory with the given size but with out align
@@ -101,8 +109,10 @@ impl<
         ptr: *mut u8,
         new_size: usize,
     ) -> Option<NonNull<u8>> {
-        let mut heap = self.heap.irqsave_lock();
-        heap.reallocate_unknown_align(NonNull::new_unchecked(ptr), new_size)
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            heap.reallocate_unknown_align(NonNull::new_unchecked(ptr), new_size)
+        }
     }
 
     // Retrieves various statistics about the current state of the heap's memory usage.
@@ -178,8 +188,10 @@ impl DynamicSlabHeap {
     /// # Safety
     /// `start_addr..start_addr+size` must be valid, exclusively owned, writable memory.
     pub unsafe fn init(&self, start_addr: usize, size: usize) {
-        let mut heap = self.heap.irqsave_lock();
-        heap.init(start_addr, size);
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            heap.init(start_addr, size);
+        }
     }
 
     pub fn alloc(&self, layout: Layout) -> Option<NonNull<u8>> {
@@ -190,15 +202,19 @@ impl DynamicSlabHeap {
     /// # Safety
     /// `ptr` must have been returned by `alloc` on this heap.
     pub unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        let mut heap = self.heap.irqsave_lock();
-        heap.deallocate(NonNull::new_unchecked(ptr), &layout);
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            heap.deallocate(NonNull::new_unchecked(ptr), &layout);
+        }
     }
 
     /// # Safety
     /// `ptr` must have been returned by `alloc` on this heap.
     pub unsafe fn deallocate_unknown_align(&self, ptr: *mut u8) {
-        let mut heap = self.heap.irqsave_lock();
-        heap.deallocate_unknown_align(NonNull::new_unchecked(ptr));
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            heap.deallocate_unknown_align(NonNull::new_unchecked(ptr));
+        }
     }
 
     /// # Safety
@@ -209,9 +225,11 @@ impl DynamicSlabHeap {
         layout: Layout,
         new_size: usize,
     ) -> Option<NonNull<u8>> {
-        let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
-        let mut heap = self.heap.irqsave_lock();
-        heap.reallocate(NonNull::new_unchecked(ptr), &new_layout)
+        unsafe {
+            let new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
+            let mut heap = self.heap.irqsave_lock();
+            heap.reallocate(NonNull::new_unchecked(ptr), &new_layout)
+        }
     }
 
     /// # Safety
@@ -221,8 +239,10 @@ impl DynamicSlabHeap {
         ptr: *mut u8,
         new_size: usize,
     ) -> Option<NonNull<u8>> {
-        let mut heap = self.heap.irqsave_lock();
-        heap.reallocate_unknown_align(NonNull::new_unchecked(ptr), new_size)
+        unsafe {
+            let mut heap = self.heap.irqsave_lock();
+            heap.reallocate_unknown_align(NonNull::new_unchecked(ptr), new_size)
+        }
     }
 
     pub fn memory_info(&self) -> allocator_crate::MemoryInfo {

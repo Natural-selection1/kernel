@@ -87,65 +87,70 @@ unsafe impl GlobalAlloc for KernelAllocator {
 
     // TODO: support slab releasing pages back to buddy memory pool
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        #[cfg(allocator_buddy)]
-        {
-            use buddy::order_of_size;
-            let size = layout.size().max(layout.align());
-            if size > BUDDY_THRESHOLD {
-                let order = order_of_size(size);
-                let phys_addr = kernel_virt_to_phys(VirtualAddress::new(ptr as usize)).into_raw();
-                BUDDY_ALLOC.free_pages_phys_addr(phys_addr, order);
-                return;
+        unsafe {
+            #[cfg(allocator_buddy)]
+            {
+                use buddy::order_of_size;
+                let size = layout.size().max(layout.align());
+                if size > BUDDY_THRESHOLD {
+                    let order = order_of_size(size);
+                    let phys_addr =
+                        kernel_virt_to_phys(VirtualAddress::new(ptr as usize)).into_raw();
+                    BUDDY_ALLOC.free_pages_phys_addr(phys_addr, order);
+                    return;
+                }
             }
+            HEAP.dealloc(ptr, layout);
         }
-        HEAP.dealloc(ptr, layout);
     }
 
     // TODO: support slab reallocating pages from buddy as memory pool
     unsafe fn realloc(&self, ptr: *mut u8, old_layout: Layout, new_size: usize) -> *mut u8 {
-        #[cfg(allocator_buddy)]
-        {
-            let old_route_size = old_layout.size().max(old_layout.align());
-            let new_route_size = new_size.max(old_layout.align());
-            let old_is_buddy = old_route_size > BUDDY_THRESHOLD;
-            let new_is_buddy = new_route_size > BUDDY_THRESHOLD;
-
-            // Both sides stay on the small-object heap: try an in-place realloc.
-            if !old_is_buddy && !new_is_buddy {
-                return HEAP
-                    .realloc(ptr, old_layout, new_size)
-                    .map_or(ptr::null_mut(), |ptr| ptr.as_ptr());
-            }
-            // Both sides stay in the buddy pool: reuse the block when the
-            // order (and thus the page count) is unchanged.
-            if old_is_buddy
-                && new_is_buddy
-                && buddy::order_of_size(old_route_size) == buddy::order_of_size(new_route_size)
+        unsafe {
+            #[cfg(allocator_buddy)]
             {
-                return ptr;
-            }
-            // Route changed, or buddy order changed: allocate a fresh block
-            // via the routed `alloc`, copy the data over, then release the
-            // old block via the routed `dealloc`. `self.alloc`/`self.dealloc`
-            // dispatch on the size threshold, so this covers every
-            // combination without special-casing slab vs. buddy.
+                let old_route_size = old_layout.size().max(old_layout.align());
+                let new_route_size = new_size.max(old_layout.align());
+                let old_is_buddy = old_route_size > BUDDY_THRESHOLD;
+                let new_is_buddy = new_route_size > BUDDY_THRESHOLD;
 
-            let Ok(new_layout) = Layout::from_size_align(new_size, old_layout.align()) else {
-                return ptr::null_mut();
-            };
-            let new_ptr = self.alloc(new_layout);
-            if new_ptr.is_null() {
-                return ptr::null_mut();
-            }
-            ptr::copy_nonoverlapping(ptr, new_ptr, old_layout.size().min(new_size));
-            self.dealloc(ptr, old_layout);
-            new_ptr
-        }
+                // Both sides stay on the small-object heap: try an in-place realloc.
+                if !old_is_buddy && !new_is_buddy {
+                    return HEAP
+                        .realloc(ptr, old_layout, new_size)
+                        .map_or(ptr::null_mut(), |ptr| ptr.as_ptr());
+                }
+                // Both sides stay in the buddy pool: reuse the block when the
+                // order (and thus the page count) is unchanged.
+                if old_is_buddy
+                    && new_is_buddy
+                    && buddy::order_of_size(old_route_size) == buddy::order_of_size(new_route_size)
+                {
+                    return ptr;
+                }
+                // Route changed, or buddy order changed: allocate a fresh block
+                // via the routed `alloc`, copy the data over, then release the
+                // old block via the routed `dealloc`. `self.alloc`/`self.dealloc`
+                // dispatch on the size threshold, so this covers every
+                // combination without special-casing slab vs. buddy.
 
-        #[cfg(not(allocator_buddy))]
-        {
-            HEAP.realloc(ptr, old_layout, new_size)
-                .map_or(ptr::null_mut(), |ptr| ptr.as_ptr())
+                let Ok(new_layout) = Layout::from_size_align(new_size, old_layout.align()) else {
+                    return ptr::null_mut();
+                };
+                let new_ptr = self.alloc(new_layout);
+                if new_ptr.is_null() {
+                    return ptr::null_mut();
+                }
+                ptr::copy_nonoverlapping(ptr, new_ptr, old_layout.size().min(new_size));
+                self.dealloc(ptr, old_layout);
+                new_ptr
+            }
+
+            #[cfg(not(allocator_buddy))]
+            {
+                HEAP.realloc(ptr, old_layout, new_size)
+                    .map_or(ptr::null_mut(), |ptr| ptr.as_ptr())
+            }
         }
     }
 }

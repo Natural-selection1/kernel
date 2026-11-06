@@ -274,11 +274,13 @@ impl SocketAddress {
         ptr: *const libc::sockaddr,
         len: libc::socklen_t,
     ) -> Option<&'a Self> {
-        if ptr.is_null() || (len as usize) < core::mem::size_of::<libc::sockaddr>() {
-            return None;
-        }
+        unsafe {
+            if ptr.is_null() || (len as usize) < core::mem::size_of::<libc::sockaddr>() {
+                return None;
+            }
 
-        Some(&*(ptr as *const Self))
+            Some(&*(ptr as *const Self))
+        }
     }
 
     pub fn create_ip_endpoint(&self) -> Option<IpEndpoint> {
@@ -301,11 +303,13 @@ impl SocketAddressV4 {
         ptr: *const libc::sockaddr_in,
         len: libc::socklen_t,
     ) -> Option<&'a Self> {
-        if ptr.is_null() || (len as usize) < core::mem::size_of::<libc::sockaddr_in>() {
-            return None;
-        }
+        unsafe {
+            if ptr.is_null() || (len as usize) < core::mem::size_of::<libc::sockaddr_in>() {
+                return None;
+            }
 
-        Some(&*(ptr as *const Self))
+            Some(&*(ptr as *const Self))
+        }
     }
 
     pub fn create_ip_endpoint(&self) -> IpEndpoint {
@@ -349,14 +353,16 @@ pub struct Timeval {
 
 impl Timeval {
     pub unsafe fn from_ptr(ptr: *const c_void, len: libc::socklen_t) -> Option<Self> {
-        if ptr.is_null() || len != core::mem::size_of::<TimevalAbi>() as libc::socklen_t {
-            return None;
+        unsafe {
+            if ptr.is_null() || len != core::mem::size_of::<TimevalAbi>() as libc::socklen_t {
+                return None;
+            }
+            let timeval = ptr.cast::<TimevalAbi>().read_unaligned();
+            Self::validated(Self {
+                tv_sec: from_timeval_abi_field(timeval.tv_sec),
+                tv_usec: from_timeval_abi_field(timeval.tv_usec),
+            })
         }
-        let timeval = ptr.cast::<TimevalAbi>().read_unaligned();
-        Self::validated(Self {
-            tv_sec: from_timeval_abi_field(timeval.tv_sec),
-            tv_usec: from_timeval_abi_field(timeval.tv_usec),
-        })
     }
 
     pub unsafe fn write_to_ptr(
@@ -364,15 +370,17 @@ impl Timeval {
         ptr: *mut c_void,
         len: libc::socklen_t,
     ) -> Option<libc::socklen_t> {
-        if ptr.is_null() || len != core::mem::size_of::<TimevalAbi>() as libc::socklen_t {
-            return None;
+        unsafe {
+            if ptr.is_null() || len != core::mem::size_of::<TimevalAbi>() as libc::socklen_t {
+                return None;
+            }
+            let timeval = TimevalAbi {
+                tv_sec: to_timeval_abi_field(self.tv_sec)?,
+                tv_usec: to_timeval_abi_field(self.tv_usec)?,
+            };
+            ptr.cast::<TimevalAbi>().write_unaligned(timeval);
+            Some(core::mem::size_of::<TimevalAbi>() as libc::socklen_t)
         }
-        let timeval = TimevalAbi {
-            tv_sec: to_timeval_abi_field(self.tv_sec)?,
-            tv_usec: to_timeval_abi_field(self.tv_usec)?,
-        };
-        ptr.cast::<TimevalAbi>().write_unaligned(timeval);
-        Some(core::mem::size_of::<TimevalAbi>() as libc::socklen_t)
     }
 
     fn validated(timeval: Self) -> Option<Self> {
@@ -460,18 +468,22 @@ impl core::fmt::Debug for SocketMsghdr {
 
 impl SocketMsghdr {
     pub unsafe fn from_ptr<'a>(ptr: *const libc::msghdr) -> Option<&'a Self> {
-        if ptr.is_null() {
-            None
-        } else {
-            Some(&*(ptr as *const Self))
+        unsafe {
+            if ptr.is_null() {
+                None
+            } else {
+                Some(&*(ptr as *const Self))
+            }
         }
     }
 
     pub unsafe fn from_ptr_mut<'a>(ptr: *mut libc::msghdr) -> Option<&'a mut Self> {
-        if ptr.is_null() {
-            None
-        } else {
-            Some(&mut *(ptr as *mut SocketMsghdr))
+        unsafe {
+            if ptr.is_null() {
+                None
+            } else {
+                Some(&mut *(ptr as *mut SocketMsghdr))
+            }
         }
     }
 

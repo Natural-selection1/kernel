@@ -176,29 +176,31 @@ impl BuddyHeap {
     /// the allocator for the rest of the boot. This method must be called once,
     /// before the heap is accessed from any other execution context.
     pub(in crate::allocator) unsafe fn init(&self, phys_start: usize, phys_end: usize) {
-        let buddy_layout =
-            get_buddy_layout(phys_start, phys_end, core::ptr::addr_of_mut!(_end) as usize)
-                .expect("invalid kernel buddy metadata layout");
-        let metadata_ptr = NonNull::new(buddy_layout.metadata_virt_start as *mut u8)
-            .expect("buddy metadata pointer must not be null");
-        let mut allocator = self.allocator.irqsave_lock();
-        allocator
-            .init(
-                metadata_ptr,
-                buddy_layout.metadata_len,
-                buddy_layout.total_pages,
-                buddy_layout.manageable_start_pfn..buddy_layout.total_pages,
-            )
-            .expect("failed to initialize raw buddy allocator");
-        // SAFETY: the caller guarantees one-time initialization before any
-        // concurrent access, and this is the snapshot's only post-construction
-        // write.
         unsafe {
-            *self.translation.get() = BuddyTranslation {
-                phys_base: phys_start,
-                total_pages: buddy_layout.total_pages,
-                initialized: true,
-            };
+            let buddy_layout =
+                get_buddy_layout(phys_start, phys_end, core::ptr::addr_of_mut!(_end) as usize)
+                    .expect("invalid kernel buddy metadata layout");
+            let metadata_ptr = NonNull::new(buddy_layout.metadata_virt_start as *mut u8)
+                .expect("buddy metadata pointer must not be null");
+            let mut allocator = self.allocator.irqsave_lock();
+            allocator
+                .init(
+                    metadata_ptr,
+                    buddy_layout.metadata_len,
+                    buddy_layout.total_pages,
+                    buddy_layout.manageable_start_pfn..buddy_layout.total_pages,
+                )
+                .expect("failed to initialize raw buddy allocator");
+            // SAFETY: the caller guarantees one-time initialization before any
+            // concurrent access, and this is the snapshot's only post-construction
+            // write.
+            unsafe {
+                *self.translation.get() = BuddyTranslation {
+                    phys_base: phys_start,
+                    total_pages: buddy_layout.total_pages,
+                    initialized: true,
+                };
+            }
         }
     }
 
@@ -234,10 +236,12 @@ impl BuddyHeap {
     /// `phys_addr` must be the address of a live block from this heap, `order`
     /// must match its allocation order, and the block must be released once.
     pub(in crate::allocator) unsafe fn free_pages_phys_addr(&self, phys_addr: usize, order: usize) {
-        let pfn = self
-            .phys_to_pfn(phys_addr)
-            .expect("invalid physical address passed to buddy free");
-        self.allocator.irqsave_lock().free_pages_pfn(pfn, order);
+        unsafe {
+            let pfn = self
+                .phys_to_pfn(phys_addr)
+                .expect("invalid physical address passed to buddy free");
+            self.allocator.irqsave_lock().free_pages_pfn(pfn, order);
+        }
     }
 
     /// Release pages by PFN.
@@ -248,7 +252,9 @@ impl BuddyHeap {
     /// `order` must match its allocation order, and the block must be released
     /// exactly once.
     pub(in crate::allocator) unsafe fn free_pages_pfn(&self, pfn: usize, order: usize) {
-        self.allocator.irqsave_lock().free_pages_pfn(pfn, order);
+        unsafe {
+            self.allocator.irqsave_lock().free_pages_pfn(pfn, order);
+        }
     }
 
     pub(in crate::allocator) fn phys_to_pfn(&self, phys_addr: usize) -> Option<usize> {
@@ -285,20 +291,22 @@ impl BuddyHeap {
         metadata: NonNull<u8>,
         metadata_len: usize,
     ) -> Result<(), BuddyInitError> {
-        let mut allocator = self.allocator.irqsave_lock();
-        allocator.init(
-            metadata,
-            metadata_len,
-            total_pages,
-            manageable_start_pfn..total_pages,
-        )?;
-        // SAFETY: test callers initialize a fresh heap before sharing or using
-        // it, and never mutate its translation snapshot afterwards.
-        *self.translation.get() = BuddyTranslation {
-            phys_base,
-            total_pages,
-            initialized: true,
-        };
-        Ok(())
+        unsafe {
+            let mut allocator = self.allocator.irqsave_lock();
+            allocator.init(
+                metadata,
+                metadata_len,
+                total_pages,
+                manageable_start_pfn..total_pages,
+            )?;
+            // SAFETY: test callers initialize a fresh heap before sharing or using
+            // it, and never mutate its translation snapshot afterwards.
+            *self.translation.get() = BuddyTranslation {
+                phys_base,
+                total_pages,
+                initialized: true,
+            };
+            Ok(())
+        }
     }
 }
