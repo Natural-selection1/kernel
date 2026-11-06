@@ -302,47 +302,51 @@ impl Rcu {
 }
 
 unsafe fn enable_fpu() {
-    const SCB_CPACR_PTR: *mut u32 = 0xE000_ED88 as *mut u32;
-    const SCB_CPACR_FULL_ACCESS: u32 = 0b11;
-    let mut temp = SCB_CPACR_PTR.read_volatile();
-    temp |= SCB_CPACR_FULL_ACCESS << (4 * 2);
-    temp |= 0x00F00000;
-    SCB_CPACR_PTR.write_volatile(temp);
-    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+    unsafe {
+        const SCB_CPACR_PTR: *mut u32 = 0xE000_ED88 as *mut u32;
+        const SCB_CPACR_FULL_ACCESS: u32 = 0b11;
+        let mut temp = SCB_CPACR_PTR.read_volatile();
+        temp |= SCB_CPACR_FULL_ACCESS << (4 * 2);
+        temp |= 0x00F00000;
+        SCB_CPACR_PTR.write_volatile(temp);
+        core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+    }
 }
 
 pub unsafe fn init_soc() {
-    enable_fpu();
-
-    let rcu = Rcu::new();
-    if rcu.get_system_clk_source() == ClkSource::Pll {
-        rcu.set_ahb_prescaling(AhbPrescaling::Div4);
-    }
-    for i in 0..0x100 {
-        continue;
-    }
-    rcu.select_system_clk_source(ClkSource::Pll);
-    for i in 0..1000 {
-        continue;
-    }
-    rcu.clear_rcu_part(RcuPart::Ckm);
-    rcu.clear_rcu_part(RcuPart::Hxtal);
-    rcu.clear_rcu_part(RcuPart::Pll);
-
-    rcu.disable_rcu_int();
-
-    rcu.reset_cfg();
-
-    rcu.reset_hxtalbps();
-
-    rcu.set_system_clk_180m_irc8m();
-
     unsafe {
-        (*gd32e5::gd32e507::Rcu::ptr())
-            .apb2en()
-            .modify(|_, w| w.usart0en().set_bit());
-        (*gd32e5::gd32e507::Rcu::ptr())
-            .apb2en()
-            .modify(|_, w| w.paen().set_bit());
+        enable_fpu();
+
+        let rcu = Rcu::new();
+        if rcu.get_system_clk_source() == ClkSource::Pll {
+            rcu.set_ahb_prescaling(AhbPrescaling::Div4);
+        }
+        for i in 0..0x100 {
+            continue;
+        }
+        rcu.select_system_clk_source(ClkSource::Pll);
+        for i in 0..1000 {
+            continue;
+        }
+        rcu.clear_rcu_part(RcuPart::Ckm);
+        rcu.clear_rcu_part(RcuPart::Hxtal);
+        rcu.clear_rcu_part(RcuPart::Pll);
+
+        rcu.disable_rcu_int();
+
+        rcu.reset_cfg();
+
+        rcu.reset_hxtalbps();
+
+        rcu.set_system_clk_180m_irc8m();
+
+        unsafe {
+            (*gd32e5::gd32e507::Rcu::ptr())
+                .apb2en()
+                .modify(|_, w| w.usart0en().set_bit());
+            (*gd32e5::gd32e507::Rcu::ptr())
+                .apb2en()
+                .modify(|_, w| w.paen().set_bit());
+        }
     }
 }
