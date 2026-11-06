@@ -75,3 +75,32 @@ run_host("run_infra_unittest") {
   testonly = true
   runner = ":infra_unittest"
 }
+
+# Audit all tests independently so the first UB does not hide later failures.
+# Both targets deliberately fail when any case fails; reports remain on disk.
+group("check_infra_miri_audit") {
+  testonly = true
+  deps = [
+    ":infra_miri_audit_stacked",
+    ":infra_miri_audit_tree",
+  ]
+}
+
+foreach(model,
+        [
+          "stacked",
+          "tree",
+        ]) {
+  miri_test("infra_miri_audit_${model}") {
+    crate = "src/lib.rs"
+    deps = shared_deps
+    inputs = [
+      "//build/scripts/miri/run_miri.py",
+      "//build/scripts/miri/isolated_tests.py",
+    ]
+    rustenv = [ "BLUEOS_MIRI_ISOLATE_TESTS=1" ]
+    if (model == "tree") {
+      extra_miri_flags = [ "-Zmiri-tree-borrows" ]
+    }
+  }
+}

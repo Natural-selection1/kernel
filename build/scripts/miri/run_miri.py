@@ -22,6 +22,8 @@ import shutil
 import subprocess
 import sys
 
+from isolated_tests import run_suite
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -57,7 +59,9 @@ def main():
         return fail("--stamp is required in test mode")
 
     command = [args.miri, "--sysroot", args.sysroot, *args.rustc_args]
-    if args.mode == "test":
+    isolated = (args.mode == "test"
+                and os.environ.get("BLUEOS_MIRI_ISOLATE_TESTS") == "1")
+    if args.mode == "test" and not isolated:
         command.extend(("--", "--nocapture"))
 
     env = os.environ.copy()
@@ -68,8 +72,16 @@ def main():
 
     print(f"Executing command: {shlex.join(command)}", flush=True)
     try:
-        result = subprocess.run(command, env=env, check=False)
-    except OSError as error:
+        if isolated:
+            code = run_suite(
+                command, Path(args.stamp + ".cases"), env,
+                timeout=int(env.get("BLUEOS_MIRI_CASE_TIMEOUT", "60")),
+                test_filter=env.get("BLUEOS_MIRI_TEST_FILTER", ""),
+            )
+            result = subprocess.CompletedProcess(command, code)
+        else:
+            result = subprocess.run(command, env=env, check=False)
+    except (OSError, ValueError) as error:
         return fail(str(error))
     if result.returncode != 0:
         return result.returncode
