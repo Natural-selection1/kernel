@@ -46,7 +46,6 @@ group("check_kernel_probe") {
 
 _shared_deps = [
   "//external/rust:bitflags",
-  "//external/rust:cfg-if",
   "//external/rust:const-default",
   "//external/rust:embedded-hal",
   "//external/rust:embedded-hal-bus",

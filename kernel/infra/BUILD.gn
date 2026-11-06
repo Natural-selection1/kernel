@@ -34,7 +34,6 @@ group("check_infra_by_clippy") {
 }
 
 shared_deps = [
-  "//external/rust:cfg-if",
   "//external/rust:memchr",
   "//external/rust:spin",
 ]
