@@ -42,3 +42,6 @@ pub use tinyarc::sorted_list;
 pub mod iheap;
 pub mod nolock;
 pub mod tinyrwlock;
+
+#[cfg(all(test, miri))]
+mod miri_contract_tests;
