@@ -133,7 +133,9 @@ def check_format(files: Iterable[str],
     for file_name in groups.get("rust", []):
         result = _run((
             "rustfmt",
-            "--edition=2021",
+            "--edition=2021"
+            if PurePosixPath(file_name).is_relative_to("libs/libc") else
+            "--edition=2024",
             "--check",
             "--unstable-features",
             "--skip-children",

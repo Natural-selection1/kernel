@@ -85,16 +85,21 @@ def check_files_format(repo: str, files: List[str]) -> List[Tuple[str, str]]:
         python_files = [f for f in files if f.endswith(".py")]
     gn_files = [f for f in files if f.endswith((".gn", ".gni"))]
 
-    # Check Rust formatting
-    if rust_files:
+    # Keep the upstream libc fork on its own edition.
+    for rust_file in rust_files:
+        file_path = (Path(repo) / rust_file).resolve()
+        kernel_root = Path(__file__).resolve().parents[2]
+        edition = "2021" if file_path.is_relative_to(kernel_root /
+                                                     "libs/libc") else "2024"
         try:
             subprocess.run([
                 "rustfmt",
-                "--edition=2021",
+                f"--edition={edition}",
                 "--check",
                 "--unstable-features",
                 "--skip-children",
-            ] + rust_files,
+                rust_file,
+            ],
                            check=True,
                            capture_output=True,
                            text=True,

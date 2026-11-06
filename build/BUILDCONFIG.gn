@@ -41,7 +41,6 @@ declare_args() {
 }
 
 # Global toolchain capability flags, visible in every scope.
-import("//build/rustc_version.gni")
 
 # Define boolean flags for convenience.
 coverage = "${build_type}" == "coverage"
