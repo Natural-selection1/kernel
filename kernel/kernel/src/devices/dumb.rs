@@ -20,14 +20,14 @@ use crate::{
         },
         Device,
     },
-    sync::SpinLock,
+    sync::RwSpinLock,
 };
 use alloc::sync::Arc;
 use embedded_io::{ErrorType, Read, ReadReady, Write, WriteReady};
 use spin::Once;
 pub(crate) struct DumbUart;
 
-pub(crate) static DUMB_UART0: SpinLock<DumbUart> = SpinLock::new(DumbUart);
+pub(crate) static DUMB_UART0: RwSpinLock<DumbUart> = RwSpinLock::new(DumbUart);
 
 unsafe impl Send for DumbUart {}
 unsafe impl Sync for DumbUart {}
@@ -102,7 +102,7 @@ static DUMB_SERIAL0: Once<Arc<dyn Device>> = Once::new();
 
 pub(crate) fn get_serial0() -> &'static Arc<dyn Device> {
     DUMB_SERIAL0.call_once(|| {
-        let uart = Arc::new(SpinLock::new(DumbUart));
+        let uart = Arc::new(RwSpinLock::new(DumbUart));
         Arc::new(Serial::new(0, Termios::default(), uart))
     })
 }

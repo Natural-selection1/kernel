@@ -377,7 +377,7 @@ mod tests {
         }
     }
 
-    // MockSpiDevice is accessed exclusively under SpinLock in tests, so sharing
+    // MockSpiDevice is accessed exclusively under RwSpinLock in tests, so sharing
     // the UnsafeCell across threads is sound.
     unsafe impl Send for MockSpiDevice {}
     unsafe impl Sync for MockSpiDevice {}
@@ -398,7 +398,7 @@ mod tests {
     impl embedded_hal::spi::SpiDevice<u8> for MockSpiDevice {
         fn transaction(&mut self, operations: &mut [Operation<'_, u8>]) -> Result<(), Self::Error> {
             let shared = self.shared.get();
-            // SAFETY: MockSpiDevice is always wrapped in SpinLock which guarantees
+            // SAFETY: MockSpiDevice is always wrapped in RwSpinLock which guarantees
             // exclusive access. No concurrent access possible.
             let shared = unsafe { &mut *shared };
             shared.transaction_count += 1;

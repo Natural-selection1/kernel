@@ -17,7 +17,7 @@ use crate::{
     boards::ClockImpl,
     config::MAX_THREAD_PRIORITY,
     scheduler, static_arc,
-    sync::{atomic_wait, atomic_wake, SpinLock},
+    sync::{atomic_wait, atomic_wake, RwSpinLock},
     thread,
     thread::{Entry, SystemThreadStorage, ThreadKind, ThreadNode},
     time::{
@@ -36,7 +36,7 @@ use core::{
 };
 
 static_arc! {
-    HW_TIMERS(SpinLock<TimerManager>, SpinLock::new(TimerManager::new())),
+    HW_TIMERS(RwSpinLock<TimerManager>, RwSpinLock::new(TimerManager::new())),
 }
 #[cfg(soft_timer)]
 static mut SW_TIMER_WORKER: SoftTimerWorker = SoftTimerWorker::new();
@@ -44,11 +44,11 @@ static mut SW_TIMER_WORKER: SoftTimerWorker = SoftTimerWorker::new();
 // FIXME: The shared timer queue and expiration barrier make one hart's timer
 // interrupt depend on another hart's callback duration. Retrying on contention
 // prevents a lost local clock, but per-CPU timer queues are the better fix.
-static EXPIRE_BARRIER: SpinLock<()> = SpinLock::new(());
+static EXPIRE_BARRIER: RwSpinLock<()> = RwSpinLock::new(());
 
 struct SoftTimerWorker {
     waker: AtomicUsize,
-    timers: SpinLock<TimerManager>,
+    timers: RwSpinLock<TimerManager>,
     storage: SystemThreadStorage,
     thread: MaybeUninit<ThreadNode>,
 }
@@ -57,7 +57,7 @@ impl SoftTimerWorker {
     pub const fn new() -> Self {
         Self {
             waker: AtomicUsize::new(0),
-            timers: SpinLock::new(TimerManager::new()),
+            timers: RwSpinLock::new(TimerManager::new()),
             storage: SystemThreadStorage::new(ThreadKind::SoftTimer),
             thread: MaybeUninit::zeroed(),
         }
@@ -415,7 +415,7 @@ fn update_clock_interrupt() -> Tick {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{sync::SpinLock, types::Arc, with_iou};
+    use crate::{sync::RwSpinLock, types::Arc, with_iou};
     use alloc::vec::Vec;
     use blueos_test_macro::test;
     use core::sync::atomic::{AtomicUsize, Ordering};
@@ -697,7 +697,7 @@ mod tests {
     }
 
     fn create_callback_for_ordering(
-        order: &Arc<SpinLock<Vec<Arc<Timer>>>>,
+        order: &Arc<RwSpinLock<Vec<Arc<Timer>>>>,
         tm: &Arc<Timer>,
     ) -> TimerCallback {
         let closure = {
@@ -713,7 +713,7 @@ mod tests {
     #[test]
     fn test_timer_ordering() {
         // Test that timers are properly ordered by timeout.
-        let order = Arc::new(SpinLock::new(Vec::new()));
+        let order = Arc::new(RwSpinLock::new(Vec::new()));
 
         let mut timer1 = Arc::new(Timer::new());
         {
@@ -889,7 +889,7 @@ mod tests {
         // B uses the arithmetic model: first fire = base_deadline (+ period*0).
         // So a.base = now+10 (fires now+10); b.base = now+12, snaps to nearest grid
         // point now+10 (|12-10|=2 <= TOL), fires now+10 -> coalesces with a.
-        let ticks: Arc<SpinLock<Vec<Tick>>> = Arc::new(SpinLock::new(Vec::new()));
+        let ticks: Arc<RwSpinLock<Vec<Tick>>> = Arc::new(RwSpinLock::new(Vec::new()));
         let now = Tick::now();
         with_iou!(|iou_a, iou_b| {
             let mut a = Timer::new();
@@ -947,7 +947,7 @@ mod tests {
         //
         // B arithmetic model: a.base = now+13 (fires now+13); b.base = now+8 (fires now+8).
         // 13%8 != 0 and 8%13 != 0 -> decide_align returns None -> b keeps its base.
-        let ticks: Arc<SpinLock<Vec<Tick>>> = Arc::new(SpinLock::new(Vec::new()));
+        let ticks: Arc<RwSpinLock<Vec<Tick>>> = Arc::new(RwSpinLock::new(Vec::new()));
         let now = Tick::now();
         with_iou!(|iou_a, iou_b| {
             let mut a = Timer::new();
@@ -1007,8 +1007,8 @@ mod tests {
         // b: base=now+42 (2 off grid point now+40, <= TOL=2 -> snaps to now+40),
         //    period=40, total=1 -> fires now+40, same tick as a's 2nd fire.
         // Unaligned, b would fire at now+42 (offset%20==2), failing the assert below.
-        let a_ticks: Arc<SpinLock<Vec<Tick>>> = Arc::new(SpinLock::new(Vec::new()));
-        let b_ticks: Arc<SpinLock<Vec<Tick>>> = Arc::new(SpinLock::new(Vec::new()));
+        let a_ticks: Arc<RwSpinLock<Vec<Tick>>> = Arc::new(RwSpinLock::new(Vec::new()));
+        let b_ticks: Arc<RwSpinLock<Vec<Tick>>> = Arc::new(RwSpinLock::new(Vec::new()));
         let now = Tick::now();
         with_iou!(|iou_a, iou_b| {
             let mut a = Timer::new();

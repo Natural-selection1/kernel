@@ -27,7 +27,7 @@ use crate::{
             ESP_FLASH_SECTOR_SIZE,
         },
     },
-    sync::SpinLock,
+    sync::RwSpinLock,
 };
 use alloc::{string::String, sync::Arc};
 use embedded_io::ErrorKind;
@@ -154,7 +154,7 @@ enum Esp32FlashState {
 pub struct Esp32FlashDevice {
     name: String,
     region: InternalFlashRegion,
-    state: SpinLock<Esp32FlashState>,
+    state: RwSpinLock<Esp32FlashState>,
 }
 
 impl Esp32FlashDevice {
@@ -162,7 +162,7 @@ impl Esp32FlashDevice {
         Self {
             name: String::from(name),
             region,
-            state: SpinLock::new(Esp32FlashState::Idle),
+            state: RwSpinLock::new(Esp32FlashState::Idle),
         }
     }
 

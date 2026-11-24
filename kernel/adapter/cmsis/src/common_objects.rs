@@ -19,7 +19,7 @@ use blueos::sync::event_flags::EventFlagsMode;
 use blueos::{
     error::Error,
     scheduler::{self, InsertModeTrait},
-    sync::{mqueue::SendMode, SpinLockGuard},
+    sync::{mqueue::SendMode, RwSpinLockGuard},
     thread,
     time::Tick,
     types::{Arc, ThreadPriority, Uint},

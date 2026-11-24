@@ -26,7 +26,7 @@ use crate::{
         DeviceManager,
     },
     logger, scheduler,
-    sync::SpinLock,
+    sync::RwSpinLock,
     thread, time,
 };
 use alloc::string::String;

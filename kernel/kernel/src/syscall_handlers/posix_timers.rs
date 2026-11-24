@@ -33,14 +33,14 @@ pub(crate) const CLOCK_PROCESS_CPUTIME_ID: clockid_t = 2;
 pub(crate) const CLOCK_THREAD_CPUTIME_ID: clockid_t = 3;
 
 // Global realtime offset.
-use crate::sync::spinlock::SpinLock;
+use crate::sync::rwspinlock::RwSpinLock;
 #[cfg(target_has_atomic = "64")]
 use core::sync::atomic::{AtomicI64, Ordering};
 
 #[cfg(target_has_atomic = "64")]
 static REALTIME_OFFSET_NS: AtomicI64 = AtomicI64::new(0);
 #[cfg(not(target_has_atomic = "64"))]
-static REALTIME_OFFSET_NS: SpinLock<i64> = SpinLock::new(0);
+static REALTIME_OFFSET_NS: RwSpinLock<i64> = RwSpinLock::new(0);
 
 fn duration_to_ns_saturated(d: Duration) -> i64 {
     let nanos = d.as_nanos();

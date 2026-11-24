@@ -280,8 +280,8 @@ mod tests {
     }
 
     #[test]
-    fn test_spinlock() {
-        let lock = sync::spinlock::SpinLock::new(0);
+    fn test_rwspinlock() {
+        let lock = sync::rwspinlock::RwSpinLock::new(0);
         let mut w = lock.irqsave_lock();
         *w = 1;
         drop(w);
@@ -295,8 +295,8 @@ mod tests {
     }
 
     #[test]
-    fn test_spinlock_loop() {
-        let lock = sync::spinlock::SpinLock::new(0);
+    fn test_rwspinlock_loop() {
+        let lock = sync::rwspinlock::RwSpinLock::new(0);
         loop {
             let mut w = lock.irqsave_lock();
             *w += 1;

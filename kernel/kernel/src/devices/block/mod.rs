@@ -14,7 +14,7 @@
 
 use crate::{
     devices::{Device, DeviceClass, DeviceId, DeviceManager},
-    sync::SpinLock,
+    sync::RwSpinLock,
 };
 use alloc::{string::String, sync::Arc, vec};
 use core::cmp::min;
@@ -143,13 +143,13 @@ pub fn init_virtio_block(
 ) -> Result<(), ErrorKind> {
     let block = Block::<BlockError<virtio_drivers::Error>, SECTOR_SIZE>::new(
         VIRTUAL_STORAGE_NAME,
-        Arc::new(SpinLock::new(driver)),
+        Arc::new(RwSpinLock::new(driver)),
     )?;
     DeviceManager::get().register_device(String::from(VIRTUAL_STORAGE_NAME), Arc::new(block))
 }
 
 pub struct Block<E: embedded_io::Error, const SECTOR_SIZE: usize> {
-    driver: Arc<SpinLock<dyn BlockDriverOps<Error = E>>>,
+    driver: Arc<RwSpinLock<dyn BlockDriverOps<Error = E>>>,
     name: String,
     total_size: u64, // in bytes
 }
@@ -157,7 +157,7 @@ pub struct Block<E: embedded_io::Error, const SECTOR_SIZE: usize> {
 impl<E: embedded_io::Error, const SECTOR_SIZE: usize> Block<E, SECTOR_SIZE> {
     pub fn new(
         name: &str,
-        driver: Arc<SpinLock<dyn BlockDriverOps<Error = E>>>,
+        driver: Arc<RwSpinLock<dyn BlockDriverOps<Error = E>>>,
     ) -> Result<Self, ErrorKind> {
         let total_size = driver
             .lock()
@@ -330,7 +330,7 @@ mod block_tests {
 
     #[test]
     fn test_block_new_rejects_total_size_overflow() {
-        let driver = Arc::new(SpinLock::new(CapacityDriver(u64::MAX)));
+        let driver = Arc::new(RwSpinLock::new(CapacityDriver(u64::MAX)));
         let result = Block::<TestError, 2>::new("overflow", driver);
         assert_eq!(result.err(), Some(ErrorKind::InvalidInput));
     }

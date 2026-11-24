@@ -15,7 +15,7 @@
 use super::InsertMode;
 use crate::{
     scheduler,
-    sync::SpinLockGuard,
+    sync::RwSpinLockGuard,
     thread::{Thread, ThreadNode, SUSPENDED},
     types::{impl_simple_intrusive_adapter, Arc, Ilist, IlistHead, IouIlistHeadMut},
 };

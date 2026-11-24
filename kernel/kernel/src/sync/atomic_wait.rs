@@ -19,7 +19,7 @@ use crate::{
     scheduler,
     scheduler::{wait_queue, InsertMode, WaitEntry, WaitQueue},
     static_arc, support,
-    sync::SpinLock,
+    sync::RwSpinLock,
     thread,
     thread::{Thread, ThreadNode},
     time::Tick,
@@ -46,7 +46,7 @@ type EntryListHead = UniqueListHead<AtomicWaitEntry, Sync, SyncEntry>;
 pub struct SyncEntry;
 
 impl const StaticListOwner<AtomicWaitEntry, Sync> for SyncEntry {
-    fn get() -> &'static Arc<SpinLock<Head>> {
+    fn get() -> &'static Arc<RwSpinLock<Head>> {
         &SYNC_ENTRIES
     }
 }
@@ -55,7 +55,7 @@ impl const StaticListOwner<AtomicWaitEntry, Sync> for SyncEntry {
 pub struct AtomicWaitEntry {
     sync_node: EntryListHead,
     addr: usize,
-    pending: SpinLock<WaitQueue>,
+    pending: RwSpinLock<WaitQueue>,
 }
 
 impl AtomicWaitEntry {
@@ -71,13 +71,13 @@ impl AtomicWaitEntry {
         Self {
             sync_node: EntryListHead::new(),
             addr,
-            pending: SpinLock::new(WaitQueue::new()),
+            pending: RwSpinLock::new(WaitQueue::new()),
         }
     }
 }
 
 static_arc! {
-    SYNC_ENTRIES(SpinLock<Head>, SpinLock::new(Head::new())),
+    SYNC_ENTRIES(RwSpinLock<Head>, RwSpinLock::new(Head::new())),
 }
 
 pub fn atomic_wait(atom: &AtomicUsize, val: usize, timeout: Tick) -> Result<(), Error> {

@@ -24,7 +24,7 @@ use crate::{
         Device, DeviceClass, DeviceData, DeviceId, DeviceManager,
     },
     drivers::{DriverModule, InitDriver, Result as DriverResult},
-    sync::{KernelDelay, SpinLock},
+    sync::{KernelDelay, RwSpinLock},
 };
 use alloc::{string::String, sync::Arc};
 
@@ -50,13 +50,13 @@ pub const FT6336U_REPORT_SIZE: usize = 12;
 const FT6336U_REPORT_VERSION: u8 = 1;
 
 pub struct Ft6336uDevice<T: blueos_hal::i2c::I2c<I2cConfig, ()>> {
-    touch: SpinLock<FT6336U<BusWrapper<BlockI2c<T>>>>,
+    touch: RwSpinLock<FT6336U<BusWrapper<BlockI2c<T>>>>,
 }
 
 impl<T: blueos_hal::i2c::I2c<I2cConfig, ()>> Ft6336uDevice<T> {
     fn new(touch: FT6336U<BusWrapper<BlockI2c<T>>>) -> Self {
         Self {
-            touch: SpinLock::new(touch),
+            touch: RwSpinLock::new(touch),
         }
     }
 

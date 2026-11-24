@@ -25,7 +25,7 @@ use crate::{
         Device, DeviceClass, DeviceData, DeviceId, DeviceManager,
     },
     drivers::{DriverModule, InitDriver},
-    sync::{KernelDelay, SpinLock},
+    sync::{KernelDelay, RwSpinLock},
 };
 use alloc::{string::String, sync::Arc};
 
@@ -70,13 +70,13 @@ pub struct Bme280Config {
 }
 
 pub struct Bme280Device<T: blueos_hal::i2c::I2c<I2cConfig, ()>> {
-    sensor: SpinLock<BME280<BusWrapper<BlockI2c<T>>>>,
+    sensor: RwSpinLock<BME280<BusWrapper<BlockI2c<T>>>>,
 }
 
 impl<T: blueos_hal::i2c::I2c<I2cConfig, ()>> Bme280Device<T> {
     fn new(sensor: BME280<BusWrapper<BlockI2c<T>>>) -> Self {
         Self {
-            sensor: SpinLock::new(sensor),
+            sensor: RwSpinLock::new(sensor),
         }
     }
 

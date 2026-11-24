@@ -16,7 +16,7 @@
 // Copyright 2021 yvt
 // SPDX-LICENSE: MIT
 
-// `heap` module (SpinLock wrappers) is kept in kernel/kernel/src/allocator/tlsf/heap.rs
+// `heap` module (RwSpinLock wrappers) is kept in kernel/kernel/src/allocator/tlsf/heap.rs
 // `int` module is in tlsf_int.rs
 
 use crate::{

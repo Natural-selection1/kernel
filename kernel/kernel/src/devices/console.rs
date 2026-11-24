@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::{Device, DeviceManager};
-use crate::sync::SpinLock;
+use crate::sync::RwSpinLock;
 use alloc::{string::String, sync::Arc};
 use embedded_io::ErrorKind;
 use spin::Once;

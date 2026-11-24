@@ -38,7 +38,7 @@ use crate::{
         DROM_VADDR_BASE, DROM_VADDR_END, IROM_VADDR_BASE, LOADABLE_REGION_BASE,
         LOADABLE_REGION_END, LOADABLE_REGION_SIZE,
     },
-    sync::SpinLock,
+    sync::RwSpinLock,
 };
 // 64 KB. Hardware constrains vaddr%PAGE == paddr%PAGE.
 pub use crate::boards::FLASH_MMU_PAGE_SIZE;
@@ -94,7 +94,7 @@ impl MmapState {
     }
 }
 
-static MMAP_STATE: SpinLock<MmapState> = SpinLock::new(MmapState::new());
+static MMAP_STATE: RwSpinLock<MmapState> = RwSpinLock::new(MmapState::new());
 
 #[inline(always)]
 fn instruction_fence() {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::{
-    boards::get_device, net::link::esp32_wlan::event::WifiEvent, sync::SpinLock, time, time::Tick,
+    boards::get_device, net::link::esp32_wlan::event::WifiEvent, sync::RwSpinLock, time, time::Tick,
 };
 use alloc::boxed::Box;
 use blueos_driver::interrupt_controller::Interrupt;
@@ -102,7 +102,7 @@ pub(super) fn random_internal(data: &mut [u8]) {
     use blueos_driver::rng::esp32c3_rng::Esp32c3Rng as Esp32Rng;
     #[cfg(soc_esp32c6)]
     use blueos_driver::rng::esp32c6_rng::Esp32c6Rng as Esp32Rng;
-    static RNG: SpinLock<Esp32Rng> = SpinLock::new(Esp32Rng::new());
+    static RNG: RwSpinLock<Esp32Rng> = RwSpinLock::new(Esp32Rng::new());
 
     let wait_timer_cycles = 16_000_000 * 32 / 80_000_000;
     let until_tick = time::Tick::after(time::Tick(wait_timer_cycles));
@@ -833,7 +833,7 @@ const SYSTEM_WIFI_CLK_WIFI_BT_COMMON_M: u32 = 0x78078F;
 #[cfg(soc_esp32c3)]
 static PHY_CLK_REF: AtomicU32 = AtomicU32::new(0);
 #[cfg(soc_esp32c3)]
-static PHY_CLK_LOCK: SpinLock<()> = SpinLock::new(());
+static PHY_CLK_LOCK: RwSpinLock<()> = RwSpinLock::new(());
 #[cfg(soc_esp32c3)]
 const WIFI_CLK_EN_REG_ADDRESS: usize = 0x60026014;
 

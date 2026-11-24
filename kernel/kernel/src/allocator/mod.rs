@@ -22,7 +22,7 @@ use core::{alloc::GlobalAlloc, ptr};
 use crate::mm::{kernel_phys_to_virt, PhysicalAddress};
 
 // Raw heap implementations are in the allocator_crate.
-// This module only contains SpinLock wrappers and the GlobalAlloc impl.
+// This module only contains RwSpinLock wrappers and the GlobalAlloc impl.
 
 #[cfg(allocator_buddy)]
 mod buddy;

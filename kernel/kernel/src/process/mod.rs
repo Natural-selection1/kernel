@@ -17,7 +17,7 @@ use crate::vfs::fd_manager::FdManager;
 use crate::{
     error::Error,
     scheduler,
-    sync::SpinLock,
+    sync::RwSpinLock,
     thread::{Thread, ThreadList, ThreadNode},
 };
 use alloc::{
@@ -39,13 +39,13 @@ pub fn current_process() -> Option<Arc<Process>> {
 }
 
 pub struct ProcessTable {
-    table: SpinLock<BTreeMap<Pid, Arc<Process>>>,
+    table: RwSpinLock<BTreeMap<Pid, Arc<Process>>>,
 }
 
 impl ProcessTable {
     pub const fn new() -> Self {
         Self {
-            table: SpinLock::new(BTreeMap::new()),
+            table: RwSpinLock::new(BTreeMap::new()),
         }
     }
 
@@ -228,12 +228,12 @@ pub struct Process {
     // Parent/child topology. Read with `irqsave_read()`, mutate with
     // `irqsave_write()`. Never hold two processes' topology locks at once
     // (see `ProcessManager::create_process`/`destroy_process`).
-    topology: SpinLock<ProcessTopology>,
+    topology: RwSpinLock<ProcessTopology>,
     // The threads owned by this process.
-    threads: SpinLock<ThreadList>,
+    threads: RwSpinLock<ThreadList>,
     // This process's open-file table.
     #[cfg(enable_vfs)]
-    fd_manager: SpinLock<FdManager>,
+    fd_manager: RwSpinLock<FdManager>,
 }
 
 // SAFETY: `Process` would otherwise be `!Send` only because `threads` holds a
@@ -242,7 +242,7 @@ pub struct Process {
 // *moved* as a Rust value: once created it is pinned behind an `Arc` whose
 // storage is never moved or dropped, and every field that can be touched
 // concurrently (`topology`, `threads`, `fd_manager`) is already guarded by a
-// `SpinLock` whose irqsave read/write guards serialize access. The remaining
+// `RwSpinLock` whose irqsave read/write guards serialize access. The remaining
 // field (`pid`) is plain `Send + Sync`. So it is sound to move the owning
 // `Arc<Process>` between threads and to share `&Process` across cores — which
 // the scheduler already relies on for the root process. This unlocks
@@ -255,15 +255,15 @@ impl Process {
     pub fn new(pid: Pid, parent: Weak<Process>) -> Result<Arc<Self>, crate::error::Error> {
         let arc = Arc::new(Self {
             pid,
-            topology: SpinLock::new(ProcessTopology {
+            topology: RwSpinLock::new(ProcessTopology {
                 parent,
                 children: BTreeMap::new(),
                 state: ProcessState::Alive,
             }),
-            threads: SpinLock::new(ThreadList::new()),
+            threads: RwSpinLock::new(ThreadList::new()),
 
             #[cfg(enable_vfs)]
-            fd_manager: SpinLock::new(FdManager::new()),
+            fd_manager: RwSpinLock::new(FdManager::new()),
         });
         // SAFETY: `arc` is the sole strong ref and is not yet observable by any
         // other thread, so this `&mut Process` aliases no live reference.
@@ -353,7 +353,7 @@ impl Process {
 
     /// This process's open-file table. Only present when VFS is enabled.
     #[cfg(enable_vfs)]
-    pub fn fd_manager(&self) -> &SpinLock<FdManager> {
+    pub fn fd_manager(&self) -> &RwSpinLock<FdManager> {
         &self.fd_manager
     }
 

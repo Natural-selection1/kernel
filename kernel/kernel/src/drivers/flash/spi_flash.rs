@@ -29,7 +29,7 @@ use crate::{
         DeviceManager,
     },
     drivers::flash::spi_flash_cmd::{FlashError, SpiFlashCmd},
-    sync::SpinLock,
+    sync::RwSpinLock,
 };
 #[cfg(all(use_embedded_hal_v1, spi_core))]
 use crate::{
@@ -292,7 +292,7 @@ where
 
     let block = Block::<BlockError<FlashBlockError>, { FLASH_SECTOR_SIZE as usize }>::new(
         name,
-        Arc::new(SpinLock::new(block_driver)),
+        Arc::new(RwSpinLock::new(block_driver)),
     )?;
 
     DeviceManager::get()
@@ -347,7 +347,7 @@ where
         let block_driver = SpiFlashBlockDriver::new(flash_cmd, capacity_bytes);
         let block = Block::<BlockError<FlashBlockError>, { FLASH_SECTOR_SIZE as usize }>::new(
             self.name,
-            Arc::new(SpinLock::new(block_driver)),
+            Arc::new(RwSpinLock::new(block_driver)),
         )
         .map_err(|_| crate::error::code::EOVERFLOW)?;
 

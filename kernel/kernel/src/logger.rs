@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{arch, kprintln, scheduler, sync::SpinLock, thread::Thread, time};
+use crate::{arch, kprintln, scheduler, sync::RwSpinLock, thread::Thread, time};
 use log::{LevelFilter, Metadata, Record};
 
-static LOGGER_MUTEX: SpinLock<()> = SpinLock::new(());
+static LOGGER_MUTEX: RwSpinLock<()> = RwSpinLock::new(());
 
 struct Logger;
 

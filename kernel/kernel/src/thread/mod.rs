@@ -26,7 +26,7 @@ use crate::{
     support::{Region, RegionalObjectBuilder, Storage},
     sync::{
         mutex::{MutexList, MutexListIterator},
-        ISpinLock, Mutex, SpinLock, SpinLockGuard, SpinLockWriteGuard,
+        ISpinLock, Mutex, RwSpinLock, RwSpinLockGuard, RwSpinLockWriteGuard,
     },
     thread::builder::GlobalQueue,
     time::Tick,
@@ -248,7 +248,7 @@ pub struct Thread {
     // - Iterate over acquired mutexes
     // - Lock mutex's spinlock
     // - Check mutex's pending queue
-    acquired_mutexes: SpinLock<MutexList>,
+    acquired_mutexes: RwSpinLock<MutexList>,
     signal_context: Option<Box<SignalContext>>,
     // A weak reference to the process this thread belongs to. Kernel/system
     // threads that are not owned by any process carry a dangling `Weak`
@@ -311,7 +311,7 @@ impl Thread {
 
     // FIXME: rustc miscompiles it if not inlined.
     #[inline]
-    pub fn lock(&self) -> SpinLockGuard<'_, Self> {
+    pub fn lock(&self) -> RwSpinLockGuard<'_, Self> {
         self.lock.irqsave_lock()
     }
 
@@ -458,7 +458,7 @@ impl Thread {
     }
 
     #[inline]
-    pub fn acquired_mutexes_mut(&self) -> SpinLockWriteGuard<'_, MutexList> {
+    pub fn acquired_mutexes_mut(&self) -> RwSpinLockWriteGuard<'_, MutexList> {
         self.acquired_mutexes.irqsave_write()
     }
 
@@ -498,7 +498,7 @@ impl Thread {
             event_flags_mask: 0,
             alien_ptr: None,
             pending_on_mutex: ArcCas::new(None),
-            acquired_mutexes: SpinLock::new(MutexList::new()),
+            acquired_mutexes: RwSpinLock::new(MutexList::new()),
             signal_context: None,
             process: Weak::new(),
             process_node: ThreadListNode::new(),

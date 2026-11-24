@@ -26,7 +26,7 @@
 // consistency, instead it utilizes a local approach, while keeping the above
 // invariance, to achieve a not bad result.
 
-use super::{SpinLock, SpinLockGuard};
+use super::{RwSpinLock, RwSpinLockGuard};
 use crate::{
     irq,
     scheduler::{self, wait_queue, InsertMode, OffsetOfWait, WaitEntry, WaitQueue},
@@ -55,8 +55,8 @@ const CHAIN_LENGTH_LIMIT: usize = 4;
 
 #[derive(Debug)]
 pub struct Mutex {
-    // We let the Spinlock protect the whole Mutex. Sort threads by priority.
-    pending: SpinLock<WaitQueue>,
+    // We let the RwSpinLock protect the whole Mutex. Sort threads by priority.
+    pending: RwSpinLock<WaitQueue>,
     nesting_count: Cell<Uint>,
     // FIXME: Can we reduce atomic ops by replacing it with Option<Cell<ThreadNode>>?
     owner: ArcCas<Thread>,
@@ -66,7 +66,7 @@ pub struct Mutex {
 impl Mutex {
     pub const fn new() -> Self {
         Self {
-            pending: SpinLock::new(WaitQueue::new()),
+            pending: RwSpinLock::new(WaitQueue::new()),
             nesting_count: Cell::new(0),
             owner: ArcCas::new(None),
             mutex_node: MutexNode::new(),
@@ -77,7 +77,7 @@ impl Mutex {
         self.pending.irqsave_lock().init()
     }
 
-    pub fn waitqueue_guard(&self) -> SpinLockGuard<'_, WaitQueue> {
+    pub fn waitqueue_guard(&self) -> RwSpinLockGuard<'_, WaitQueue> {
         self.pending.irqsave_lock()
     }
 
@@ -199,10 +199,10 @@ impl Mutex {
     fn inner_pend_for<'a>(
         ticks: Tick,
         this_mutex: &'a Arc<Self>,
-        mut this_lock: SpinLockGuard<'a, WaitQueue>,
+        mut this_lock: RwSpinLockGuard<'a, WaitQueue>,
         this_thread: &'a ThreadNode,
         owner_thread: &ThreadNode,
-    ) -> (bool, SpinLockGuard<'a, WaitQueue>) {
+    ) -> (bool, RwSpinLockGuard<'a, WaitQueue>) {
         // Publish the wait edge before propagating priority. A concurrent donor
         // either sees this edge and follows it, or promotes us before we acquire
         // our thread lock below, so this walk observes the inherited priority.
@@ -309,7 +309,7 @@ impl Mutex {
         _target_prio: ThreadPriority,
         who: &ThreadNode,
         mutex: &Arc<Self>,
-        mutex_lock: &mut SpinLockGuard<'_, WaitQueue>,
+        mutex_lock: &mut RwSpinLockGuard<'_, WaitQueue>,
     ) -> bool {
         let Some(pending_on_mutex) = who.pending_on_mutex() else {
             return false;

@@ -25,7 +25,7 @@ The following types in `kernel/` already have type-level `#[must_use]` attribute
 | --- | --- | --- |
 | `DisableInterruptGuard`, `PlainDisableInterruptGuard` | [support.rs](../../../kernel/kernel/src/support.rs) | The former restores the saved local interrupt state in `Drop`; the latter re-enables local interrupts in `Drop`. |
 | `PreemptGuard` | [thread/mod.rs](../../../kernel/kernel/src/thread/mod.rs) | Calls `enable_preempt()` on its thread in `Drop`. |
-| `SpinLockGuard`, `SpinLockReadGuard` | [sync/spinlock.rs](../../../kernel/kernel/src/sync/spinlock.rs) | Hold the underlying lock guard and an optional interrupt guard. Cleanup occurs through their fields when dropped. |
+| `RwSpinLockGuard`, `RwSpinLockReadGuard` | [sync/rwspinlock.rs](../../../kernel/kernel/src/sync/rwspinlock.rs) | Hold the underlying lock guard and an optional interrupt guard. Cleanup occurs through their fields when dropped. |
 | `RwLockReadGuard`, `RwLockWriteGuard`, `RwLockUpgradableGuard` | [tinyrwlock.rs](../../../kernel/infra/src/tinyrwlock.rs) | Update the reader count or clear lock state in `Drop`. |
 | `__BlueOSTestDoneGuard` | [test_harness/src/lib.rs](../../../kernel/test_harness/src/lib.rs) | Generated inside a `quote!` block with `#[must_use]`; increments the completion counter and wakes waiters in `Drop`. |
 
