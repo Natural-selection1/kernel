@@ -16,7 +16,7 @@ use crate::{
     error::Error,
     sync::{
         mqueue::{MessageQueue, SendMode},
-        SpinLock,
+        RwSpinLock,
     },
     syscall_handlers::mq_attr,
     time,
@@ -66,7 +66,7 @@ impl MQRegistry {
     }
 }
 
-static REG: SpinLock<MQRegistry> = SpinLock::new(MQRegistry::new());
+static REG: RwSpinLock<MQRegistry> = RwSpinLock::new(MQRegistry::new());
 
 fn get_mq(fd: c_int) -> Option<Arc<MQ>> {
     let reg = REG.lock();
@@ -106,7 +106,7 @@ pub fn mq_open(name: *const c_char, oflag: c_int, _mode: mode_t, attr: *const mq
     let excl = (oflag & libc::O_EXCL) != 0;
     let nonblock = (oflag & libc::O_NONBLOCK) != 0;
 
-    let mut reg: crate::sync::SpinLockGuard<'_, MQRegistry> = REG.lock();
+    let mut reg: crate::sync::RwSpinLockGuard<'_, MQRegistry> = REG.lock();
 
     if let Some(existing) = reg.by_name.get(&raw_name).cloned() {
         if create && excl {

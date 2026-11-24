@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::{SpinLock, SpinLockGuard};
+use super::{RwSpinLock, RwSpinLockGuard};
 use crate::{
     error::code,
     irq, scheduler,
@@ -28,15 +28,15 @@ use core::{cell::Cell, ops::DerefMut};
 #[derive(Debug)]
 pub struct Semaphore {
     counter: Cell<Uint>,
-    // We let the Spinlock protect the whole semaphore.
-    pending: SpinLock<WaitQueue>,
+    // We let the RwSpinLock protect the whole semaphore.
+    pending: RwSpinLock<WaitQueue>,
 }
 
 impl Semaphore {
     pub const fn new() -> Self {
         Self {
             counter: Cell::new(1),
-            pending: SpinLock::new(WaitQueue::new()),
+            pending: RwSpinLock::new(WaitQueue::new()),
         }
     }
 
@@ -193,7 +193,7 @@ impl Semaphore {
 
     #[cold]
     #[inline(never)]
-    fn wake_waiter(w: SpinLockGuard<'_, WaitQueue>) {
+    fn wake_waiter(w: RwSpinLockGuard<'_, WaitQueue>) {
         let mut woken = false;
         for next in w.iter() {
             let t = next.thread.clone();

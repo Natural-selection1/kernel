@@ -23,7 +23,7 @@ use arch_crate as arch;
 use blueos::{
     scheduler,
     scheduler::{wait_queue, wait_queue::WaitEntry, InsertToEnd},
-    sync::SpinLock,
+    sync::RwSpinLock,
     thread::{Entry, Stack, ThreadNode, SUSPENDED},
     time::Tick,
     types::{Arc, ThreadPriority},
@@ -177,11 +177,11 @@ impl SchedulerImplementation for BkScheduler {
 /// The kernel's `WaitQueue` (`Ilist<WaitEntry, OffsetOfWait>`) is an intrusive linked list.
 /// The queue is shared by task and ISR wake paths, so all intrusive-list access
 /// must use the same IRQ-safe lock.
-struct EspWaitQueue(SpinLock<wait_queue::WaitQueue>);
+struct EspWaitQueue(RwSpinLock<wait_queue::WaitQueue>);
 
 impl WaitQueueImplementation for EspWaitQueue {
     fn create() -> WaitQueuePtr {
-        let wq = Box::new(EspWaitQueue(SpinLock::new(wait_queue::WaitQueue::new())));
+        let wq = Box::new(EspWaitQueue(RwSpinLock::new(wait_queue::WaitQueue::new())));
         wq.0.irqsave_lock().init();
         let ptr = Box::into_raw(wq);
         NonNull::new(ptr as *mut ()).unwrap()

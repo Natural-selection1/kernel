@@ -22,7 +22,7 @@ use crate::{
     scheduler::WaitQueue,
     static_arc,
     support::ArcBufferingQueue,
-    sync::{atomic_wait, SpinLock, SpinLockGuard},
+    sync::{atomic_wait, RwSpinLock, RwSpinLockGuard},
     thread::{self, Entry, SystemThreadStorage, ThreadKind, ThreadNode},
     time::Tick,
     types::{impl_simple_intrusive_adapter, Arc, IlistHead},
@@ -40,7 +40,7 @@ impl_simple_intrusive_adapter!(TaskletNode, Tasklet, node);
 
 pub struct Tasklet {
     node: IlistHead<Tasklet, TaskletNode>,
-    inner: SpinLock<TaskletInner>,
+    inner: RwSpinLock<TaskletInner>,
     state: AtomicUsize,
 }
 
@@ -53,7 +53,7 @@ impl Tasklet {
     fn new(future: Pin<Box<dyn Future<Output = ()>>>) -> Self {
         Self {
             node: IlistHead::new(),
-            inner: SpinLock::new(TaskletInner {
+            inner: RwSpinLock::new(TaskletInner {
                 future: Some(future),
                 blocked: None,
             }),
@@ -61,7 +61,7 @@ impl Tasklet {
         }
     }
 
-    fn lock_inner(&self) -> SpinLockGuard<'_, TaskletInner> {
+    fn lock_inner(&self) -> RwSpinLockGuard<'_, TaskletInner> {
         self.inner.irqsave_lock()
     }
 }

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::sync::SpinLock;
+use crate::sync::RwSpinLock;
 use alloc::boxed::Box;
 use blueos_infra::tinyarc::TinyArc;
 
-pub struct BusWrapper<B: BusInterface>(pub(crate) TinyArc<SpinLock<B>>);
+pub struct BusWrapper<B: BusInterface>(pub(crate) TinyArc<RwSpinLock<B>>);
 
 impl<B: BusInterface> Clone for BusWrapper<B> {
     fn clone(&self) -> Self {
@@ -25,8 +25,8 @@ impl<B: BusInterface> Clone for BusWrapper<B> {
 }
 
 pub struct Bus<B: BusInterface> {
-    devices: SpinLock<super::DeviceList>,
-    // FIXME: SpinLock is not a efficient way to protect bus interface
+    devices: RwSpinLock<super::DeviceList>,
+    // FIXME: RwSpinLock is not a efficient way to protect bus interface
     pub intf: BusWrapper<B>,
 }
 
@@ -38,8 +38,8 @@ pub trait BusInterface: Sized {}
 impl<B: BusInterface> Bus<B> {
     pub fn new(intf: B) -> Self {
         Self {
-            devices: SpinLock::new(super::DeviceList::new()),
-            intf: BusWrapper(TinyArc::new(SpinLock::new(intf))),
+            devices: RwSpinLock::new(super::DeviceList::new()),
+            intf: BusWrapper(TinyArc::new(RwSpinLock::new(intf))),
         }
     }
 

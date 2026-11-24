@@ -24,7 +24,7 @@ use crate::{
     kearly_println,
     scheduler::{self, is_schedule_ready, yield_me},
     support::DisableInterruptGuard,
-    sync::{atomic_wait, atomic_wake, SpinLock},
+    sync::{atomic_wait, atomic_wake, RwSpinLock},
     time::{self, Tick},
 };
 use blueos_driver::uart::{InterruptType, UartConfig, UartCtrlStatus};
@@ -48,7 +48,7 @@ pub struct Serial {
     tx_futex: AtomicUsize,
     rx_futex: AtomicUsize,
     owner_cnts: Cell<i32>,
-    critical_section_guard: SpinLock<()>,
+    critical_section_guard: RwSpinLock<()>,
 }
 
 /// Safety:
@@ -77,7 +77,7 @@ pub static TTY_SERIAL: Serial = Serial {
     tx_futex: AtomicUsize::new(0),
     rx_futex: AtomicUsize::new(0),
     owner_cnts: Cell::new(0),
-    critical_section_guard: SpinLock::new(()),
+    critical_section_guard: RwSpinLock::new(()),
 };
 
 impl Serial {
@@ -111,7 +111,7 @@ impl Serial {
             Ok(bytes.len())
         } else {
             let mut nbytes = 0;
-            let _spinlock = self.tx_lock.write();
+            let _guard = self.tx_lock.write();
             self.dev.disable_interrupt(InterruptType::Tx);
             'e: for &b in bytes {
                 #[cfg(smp)]

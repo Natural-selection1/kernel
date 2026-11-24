@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::sync::spinlock::SpinLock;
+use crate::sync::rwspinlock::RwSpinLock;
 use allocator_crate::{
     tlsf::{Tlsf, TlsfHeap},
     MemoryInfo,
@@ -22,14 +22,14 @@ use core::{alloc::Layout, ptr::NonNull};
 
 /// A two-Level segregated fit heap.
 pub struct Heap {
-    heap: SpinLock<TlsfHeap>,
+    heap: RwSpinLock<TlsfHeap>,
 }
 
 impl Heap {
     // Create a new UNINITIALIZED heap allocator
     pub const fn new() -> Self {
         Heap {
-            heap: SpinLock::new(ConstDefault::DEFAULT),
+            heap: RwSpinLock::new(ConstDefault::DEFAULT),
         }
     }
 

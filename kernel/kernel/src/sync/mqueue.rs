@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-use super::{SpinLock, SpinLockGuard};
+use super::{RwSpinLock, RwSpinLockGuard};
 use crate::{
     allocator,
     error::{code, Error},
@@ -53,9 +53,9 @@ pub struct MessageQueue {
     node_count: u32,
     accessible_count: [AtomicU32; 2],
     // pend_queues contain a receiver pending queue and a sender pending queue
-    pend_queues: [SpinLock<WaitQueue>; 2],
+    pend_queues: [RwSpinLock<WaitQueue>; 2],
     // Serializes access to the message buffer.
-    queue_buffer: SpinLock<BoxedRingBuffer>,
+    queue_buffer: RwSpinLock<BoxedRingBuffer>,
     // ACTIVE on construction/init; DEACTIVE during reset()/delete() teardown.
     // Checked at the top of the send/recv pend loops to return EBADF.
     state: AtomicU8,
@@ -86,8 +86,8 @@ impl MessageQueue {
             node_size: node_align_size + core::mem::size_of::<usize>(),
             node_count,
             accessible_count: [AtomicU32::new(node_count), AtomicU32::new(0)],
-            pend_queues: [const { SpinLock::new(WaitQueue::new()) }; 2],
-            queue_buffer: SpinLock::new(if buf.is_null() {
+            pend_queues: [const { RwSpinLock::new(WaitQueue::new()) }; 2],
+            queue_buffer: RwSpinLock::new(if buf.is_null() {
                 BoxedRingBuffer::new(total_size)
             } else {
                 BoxedRingBuffer::new_with_mem(total_size, buf)
@@ -118,7 +118,7 @@ impl MessageQueue {
     }
 
     #[inline]
-    fn lock_buffer(&self) -> SpinLockGuard<'_, BoxedRingBuffer> {
+    fn lock_buffer(&self) -> RwSpinLockGuard<'_, BoxedRingBuffer> {
         self.queue_buffer.irqsave_lock()
     }
 
@@ -157,7 +157,7 @@ impl MessageQueue {
         self.accessible_count[RECV_TYPE].fetch_sub(1, Ordering::Relaxed);
     }
 
-    fn wakeup_pend_receiver(w: &mut SpinLockGuard<'_, WaitQueue>) -> bool {
+    fn wakeup_pend_receiver(w: &mut RwSpinLockGuard<'_, WaitQueue>) -> bool {
         for next in w.iter() {
             let t = next.thread.clone();
             if scheduler::queue_ready_thread(thread::SUSPENDED, t).is_ok() {

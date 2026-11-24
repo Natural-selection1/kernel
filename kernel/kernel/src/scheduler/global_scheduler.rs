@@ -15,21 +15,21 @@
 use crate::{
     arch,
     config::MAX_THREAD_PRIORITY,
-    sync::spinlock::{SpinLock, SpinLockGuard},
+    sync::rwspinlock::{RwSpinLock, RwSpinLockGuard},
     thread,
     thread::{Thread, ThreadNode},
     types::{ArcList, ThreadPriority, Uint},
 };
 use core::mem::MaybeUninit;
 
-static mut READY_TABLE: MaybeUninit<SpinLock<ReadyTable>> = MaybeUninit::zeroed();
+static mut READY_TABLE: MaybeUninit<RwSpinLock<ReadyTable>> = MaybeUninit::zeroed();
 type ReadyQueue = ArcList<Thread, thread::OffsetOfSchedNode>;
 type ReadyTableBitFields = u32;
 
 #[allow(clippy::assertions_on_constants)]
 pub(super) fn init() {
     debug_assert!(ReadyTableBitFields::BITS >= ThreadPriority::BITS);
-    unsafe { READY_TABLE.write(SpinLock::new(ReadyTable::new())) };
+    unsafe { READY_TABLE.write(RwSpinLock::new(ReadyTable::new())) };
     let mut w = unsafe { READY_TABLE.assume_init_ref().irqsave_lock() };
     for i in 0..(MAX_THREAD_PRIORITY + 1) as usize {
         w.tables[i].init();
@@ -69,7 +69,7 @@ impl ReadyTable {
 }
 
 #[inline]
-fn inner_next_thread(mut tbl: SpinLockGuard<'_, ReadyTable>, index: usize) -> Option<ThreadNode> {
+fn inner_next_thread(mut tbl: RwSpinLockGuard<'_, ReadyTable>, index: usize) -> Option<ThreadNode> {
     let q = &mut tbl.tables[index];
     let next = q.pop_front()?;
     debug_assert_eq!(next.state(), thread::READY);
@@ -163,7 +163,7 @@ where
 }
 
 #[inline]
-fn queue_ready_thread_inner(tbl: &mut SpinLockGuard<'_, ReadyTable>, t: &ThreadNode) -> bool {
+fn queue_ready_thread_inner(tbl: &mut RwSpinLockGuard<'_, ReadyTable>, t: &ThreadNode) -> bool {
     let priority = t.priority();
     debug_assert!(priority <= MAX_THREAD_PRIORITY);
     let q = &mut tbl.tables[priority as usize];
@@ -216,7 +216,7 @@ pub fn queue_ready_thread(old_state: Uint, t: ThreadNode) -> Result<(), Uint> {
 }
 
 fn remove_from_ready_queue_inner(
-    tbl: &mut SpinLockGuard<'_, ReadyTable>,
+    tbl: &mut RwSpinLockGuard<'_, ReadyTable>,
     t: &ThreadNode,
     old_priority: ThreadPriority,
 ) -> bool {

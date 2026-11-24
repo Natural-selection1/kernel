@@ -19,7 +19,7 @@ use crate::{
     arch::Context,
     config, debug, scheduler, static_arc,
     support::Storage,
-    sync::spinlock::{SpinLock, SpinLockGuard},
+    sync::rwspinlock::{RwSpinLock, RwSpinLockGuard},
     thread, trace,
     types::{
         Arc, ArcInner, ArcList, ArcListIterator, AtomicIlistHead as ListHead, StaticListOwner, Uint,
@@ -37,11 +37,11 @@ type Head = ListHead<Thread, OffsetOfGlobal>;
 type ThreadList = ArcList<Thread, OffsetOfGlobal>;
 
 static_arc! {
-    GLOBAL_QUEUE(SpinLock<Head>, SpinLock::new(Head::new())),
+    GLOBAL_QUEUE(RwSpinLock<Head>, RwSpinLock::new(Head::new())),
 }
 
 pub struct GlobalQueueVisitor<'a> {
-    lock: SpinLockGuard<'a, Head>,
+    lock: RwSpinLockGuard<'a, Head>,
     it: ArcListIterator<'a, Thread, OffsetOfGlobal>,
 }
 
@@ -49,7 +49,7 @@ pub struct GlobalQueueVisitor<'a> {
 pub(crate) struct GlobalQueue;
 
 impl const StaticListOwner<Thread, OffsetOfGlobal> for GlobalQueue {
-    fn get() -> &'static Arc<SpinLock<Head>> {
+    fn get() -> &'static Arc<RwSpinLock<Head>> {
         &GLOBAL_QUEUE
     }
 }

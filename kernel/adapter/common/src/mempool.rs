@@ -17,7 +17,7 @@ use blueos::{
     allocator, irq, scheduler,
     scheduler::InsertToEnd,
     support::Storage,
-    sync::{Semaphore, SpinLock},
+    sync::{RwSpinLock, Semaphore},
     time::Tick,
     types::{Arc, Uint},
 };
@@ -114,14 +114,14 @@ impl Block {
 #[derive(Debug)]
 pub struct MemoryPool {
     sema: Semaphore,
-    inner: SpinLock<MemoryPoolInner>,
+    inner: RwSpinLock<MemoryPoolInner>,
 }
 
 impl MemoryPool {
     pub fn new() -> Self {
         Self {
             sema: Semaphore::new(),
-            inner: SpinLock::new(MemoryPoolInner::new()),
+            inner: RwSpinLock::new(MemoryPoolInner::new()),
         }
     }
 

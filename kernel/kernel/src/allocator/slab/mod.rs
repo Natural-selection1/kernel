@@ -13,6 +13,6 @@
 // limitations under the License.
 
 // Raw SLAB implementation is in allocator_crate.
-// This module only re-exports the SpinLock-wrapped heap.
+// This module only re-exports the RwSpinLock-wrapped heap.
 
 pub mod heap;

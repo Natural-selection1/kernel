@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::sync::SpinLock;
+use crate::sync::RwSpinLock;
 use allocator_crate::{llff::Heap, MemoryInfo};
 use core::{alloc::Layout, ptr::NonNull};
 
 pub struct LlffHeap {
-    heap: SpinLock<Heap>,
+    heap: RwSpinLock<Heap>,
 }
 
 impl LlffHeap {
     pub const fn new() -> Self {
         Self {
-            heap: SpinLock::new(Heap::empty()),
+            heap: RwSpinLock::new(Heap::empty()),
         }
     }
 

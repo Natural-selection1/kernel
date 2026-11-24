@@ -14,7 +14,7 @@
 
 extern crate alloc;
 
-use crate::{arch::current_cpu_id, sync::SpinLock};
+use crate::{arch::current_cpu_id, sync::RwSpinLock};
 use alloc::boxed::Box;
 pub use arm_gic::Trigger as IrqTrigger;
 use arm_gic::{gicv3::*, IntId};
@@ -38,7 +38,7 @@ const SPI_START: u32 = 32;
 const SPECIAL_START: u32 = 1020;
 const SPECIAL_END: u32 = 1024;
 
-static GIC: Once<SpinLock<GicV3>> = Once::new();
+static GIC: Once<RwSpinLock<GicV3>> = Once::new();
 
 #[derive(Debug, Copy, Clone, Eq, Ord, PartialOrd, PartialEq)]
 #[repr(transparent)]
@@ -80,7 +80,7 @@ pub unsafe fn init(gicd: u64, gicr: u64, num_cores: usize, is_v4: bool) {
                 is_v4,
             )
         };
-        SpinLock::new(gic)
+        RwSpinLock::new(gic)
     });
 }
 
@@ -90,7 +90,7 @@ pub fn cpu_init() {
     set_priority_mask(0xff);
 }
 
-fn get_gic() -> &'static SpinLock<GicV3<'static>> {
+fn get_gic() -> &'static RwSpinLock<GicV3<'static>> {
     GIC.get().unwrap()
 }
 
@@ -117,7 +117,7 @@ pub struct IrqManager {
     pub contexts: [Option<IrqContext>; INTERRUPT_TABLE_LEN],
 }
 
-pub static IRQ_MANAGER: SpinLock<IrqManager> = SpinLock::new(IrqManager::new());
+pub static IRQ_MANAGER: RwSpinLock<IrqManager> = RwSpinLock::new(IrqManager::new());
 
 impl IrqManager {
     const fn new() -> Self {

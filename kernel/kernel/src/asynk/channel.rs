@@ -35,7 +35,7 @@
 use crate::{
     sync::{
         atomic_wait::{self, atomic_wait, atomic_wake},
-        SpinLock,
+        RwSpinLock,
     },
     time::Tick,
 };
@@ -104,9 +104,9 @@ pub(crate) struct ChanInner<T, const N: usize> {
     /// version stamp for waker comparison.
     notify: AtomicUsize,
     /// Waker stored by the sender when the buffer is full.
-    send_waker: SpinLock<Option<Waker>>,
+    send_waker: RwSpinLock<Option<Waker>>,
     /// Waker stored by the receiver when the buffer is empty.
-    recv_waker: SpinLock<Option<Waker>>,
+    recv_waker: RwSpinLock<Option<Waker>>,
     /// Set to `true` when either half is dropped and wants to unblock
     /// the other.
     disconnected: AtomicUsize,
@@ -149,8 +149,8 @@ impl<T, const N: usize> ChanInner<T, N> {
             head: AtomicUsize::new(0),
             tail: AtomicUsize::new(0),
             notify: AtomicUsize::new(0),
-            send_waker: SpinLock::new(None),
-            recv_waker: SpinLock::new(None),
+            send_waker: RwSpinLock::new(None),
+            recv_waker: RwSpinLock::new(None),
             disconnected: AtomicUsize::new(0),
         }
     }

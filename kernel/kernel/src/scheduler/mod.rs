@@ -18,7 +18,7 @@ use crate::{
     arch::{self, Context},
     signal,
     support::DisableInterruptGuard,
-    sync::SpinLockGuard,
+    sync::RwSpinLockGuard,
     thread,
     thread::{Entry, GlobalQueueVisitor, Thread, ThreadNode},
     time,
@@ -343,7 +343,7 @@ pub fn relinquish_me() {
     inner_yield(next);
 }
 
-pub fn suspend_me_for<T>(mut timeout: Tick, wq: Option<SpinLockGuard<'_, T>>) -> bool {
+pub fn suspend_me_for<T>(mut timeout: Tick, wq: Option<RwSpinLockGuard<'_, T>>) -> bool {
     if timeout != Tick::MAX {
         timeout = Tick::after(timeout);
     }
@@ -354,7 +354,7 @@ pub fn suspend_me_for<T>(mut timeout: Tick, wq: Option<SpinLockGuard<'_, T>>) ->
 // exception, we have to implement waking up the thread via signal. Currently,
 // the timer is detached when the thread is re-scheduled, we have to implement
 // detaching from a waitqueue uniformly.
-pub fn suspend_me_until<T>(deadline: Tick, wq: Option<SpinLockGuard<'_, T>>) -> bool {
+pub fn suspend_me_until<T>(deadline: Tick, wq: Option<RwSpinLockGuard<'_, T>>) -> bool {
     if unlikely(!is_schedule_ready()) {
         return false;
     }
@@ -426,7 +426,7 @@ pub fn yield_me_now_or_later() {
     }
 }
 
-pub fn wake_up_all(mut w: SpinLockGuard<'_, WaitQueue>) -> usize {
+pub fn wake_up_all(mut w: RwSpinLockGuard<'_, WaitQueue>) -> usize {
     #[cfg(debugging_scheduler)]
     crate::trace!("[TH:0x{:x}] is waking up all threads", current_thread_id());
     let woken = wait_queue::wake_up_all(&mut w);
@@ -438,7 +438,7 @@ pub fn wake_up_all(mut w: SpinLockGuard<'_, WaitQueue>) -> usize {
 }
 
 // wake_up_all, but injects `err` into each woken waiter. Same post-wake yield.
-pub fn wake_up_all_with_error(mut w: SpinLockGuard<'_, WaitQueue>, err: i32) -> usize {
+pub fn wake_up_all_with_error(mut w: RwSpinLockGuard<'_, WaitQueue>, err: i32) -> usize {
     #[cfg(debugging_scheduler)]
     crate::trace!(
         "[TH:0x{:x}] is waking up all threads with error {}",

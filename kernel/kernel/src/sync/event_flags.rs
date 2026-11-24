@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use super::SpinLock;
+use super::RwSpinLock;
 use crate::{
     error::{code, Error},
     irq, scheduler,
@@ -37,8 +37,8 @@ bitflags! {
 
 #[derive(Debug)]
 pub struct EventFlags {
-    // We let the Spinlock protect the whole EventFlags.
-    pending: SpinLock<WaitQueue>,
+    // We let the RwSpinLock protect the whole EventFlags.
+    pending: RwSpinLock<WaitQueue>,
     flags: Cell<u32>,
 }
 
@@ -52,7 +52,7 @@ impl EventFlags {
     pub const fn new() -> Self {
         Self {
             flags: Cell::new(0),
-            pending: SpinLock::new(WaitQueue::new()),
+            pending: RwSpinLock::new(WaitQueue::new()),
         }
     }
 

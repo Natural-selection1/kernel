@@ -29,7 +29,7 @@ use blueos_infra::{
 };
 use core::{alloc::Layout, mem, ptr, ptr::NonNull};
 
-// `heap` module (SpinLock wrappers) is kept in kernel/kernel/src/allocator/slab/heap.rs
+// `heap` module (RwSpinLock wrappers) is kept in kernel/kernel/src/allocator/slab/heap.rs
 
 const MIN_SLAB_SHIFT: usize = 3;
 const MAX_SLAB_SHIFT: usize = 10;

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::sync::spinlock::SpinLock;
+use crate::sync::rwspinlock::RwSpinLock;
 use allocator_crate::{slab::SlabHeap as Slab, MemoryInfo};
 use core::{alloc::Layout, ptr::NonNull};
 
@@ -29,7 +29,7 @@ pub struct SlabHeap<
     const S512: usize,
     const S1024: usize,
 > {
-    heap: SpinLock<Slab<S8, S16, S32, S64, S96, S128, S192, S256, S512, S1024>>,
+    heap: RwSpinLock<Slab<S8, S16, S32, S64, S96, S128, S192, S256, S512, S1024>>,
 }
 
 impl<
@@ -48,7 +48,7 @@ impl<
     // Create a new UNINITIALIZED heap allocator
     pub const fn new() -> Self {
         SlabHeap {
-            heap: SpinLock::new(
+            heap: RwSpinLock::new(
                 Slab::<S8, S16, S32, S64, S96, S128, S192, S256, S512, S1024>::new(),
             ),
         }
@@ -156,7 +156,7 @@ impl<
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DynamicSlabHeap — SpinLock wrapper (mirrors SlabHeap pattern above)
+// DynamicSlabHeap — RwSpinLock wrapper (mirrors SlabHeap pattern above)
 // ═══════════════════════════════════════════════════════════════════════════
 
 #[cfg(allocator = "slab_dynamic")]
@@ -218,7 +218,7 @@ type DynHeap = RawDynHeap;
 
 #[cfg(allocator = "slab_dynamic")]
 pub struct DynamicSlabHeap {
-    heap: SpinLock<DynHeap>,
+    heap: RwSpinLock<DynHeap>,
 }
 
 #[cfg(allocator = "slab_dynamic")]
@@ -230,7 +230,7 @@ impl DynamicSlabHeap {
         let heap = RawDynHeap::new();
 
         DynamicSlabHeap {
-            heap: SpinLock::new(heap),
+            heap: RwSpinLock::new(heap),
         }
     }
 

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::VCPU_MANAGER;
-use crate::sync::SpinLock;
+use crate::sync::RwSpinLock;
 use aarch64_cpu::{
     asm::barrier::{isb, SY},
     registers::{
@@ -111,19 +111,19 @@ impl VgicRedistributor {
 }
 
 pub struct Vgic {
-    pub dist: SpinLock<VgicDistributor>,
-    pub redists: [SpinLock<VgicRedistributor>; MAX_VCPUS],
+    pub dist: RwSpinLock<VgicDistributor>,
+    pub redists: [RwSpinLock<VgicRedistributor>; MAX_VCPUS],
 }
 
 impl Vgic {
     pub fn new() -> Self {
         Self {
-            dist: SpinLock::new(VgicDistributor::new()),
+            dist: RwSpinLock::new(VgicDistributor::new()),
             redists: [
-                SpinLock::new(VgicRedistributor::new()),
-                SpinLock::new(VgicRedistributor::new()),
-                SpinLock::new(VgicRedistributor::new()),
-                SpinLock::new(VgicRedistributor::new()),
+                RwSpinLock::new(VgicRedistributor::new()),
+                RwSpinLock::new(VgicRedistributor::new()),
+                RwSpinLock::new(VgicRedistributor::new()),
+                RwSpinLock::new(VgicRedistributor::new()),
             ],
         }
     }

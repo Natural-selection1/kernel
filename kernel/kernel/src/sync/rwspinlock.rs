@@ -24,20 +24,20 @@ use core::{
 };
 
 #[derive(Debug)]
-pub struct SpinLock<T: ?Sized> {
+pub struct RwSpinLock<T: ?Sized> {
     #[cfg(smp)]
     lock: RwLock<T>,
     #[cfg(not(smp))]
     lock: NoLock<T>,
 }
 
-pub type SpinLockWriteGuard<'a, T> = SpinLockGuard<'a, T>;
+pub type RwSpinLockWriteGuard<'a, T> = RwSpinLockGuard<'a, T>;
 
 // See https://doc.rust-lang.org/reference/destructors.html#r-destructors.operation for dropping orders.
 #[derive(Debug)]
 #[repr(C)]
 #[must_use]
-pub struct SpinLockGuard<'a, T: ?Sized> {
+pub struct RwSpinLockGuard<'a, T: ?Sized> {
     #[cfg(smp)]
     lock_guard: RwLockWriteGuard<'a, T>,
     #[cfg(not(smp))]
@@ -45,14 +45,14 @@ pub struct SpinLockGuard<'a, T: ?Sized> {
     irq_guard: Option<DisableInterruptGuard>,
 }
 
-impl<T: ?Sized> SpinLockGuard<'_, T> {
+impl<T: ?Sized> RwSpinLockGuard<'_, T> {
     #[inline]
-    pub fn take_irq_guard<S>(&mut self, other: &mut SpinLockGuard<'_, S>) {
+    pub fn take_irq_guard<S>(&mut self, other: &mut RwSpinLockGuard<'_, S>) {
         self.irq_guard = other.irq_guard.take();
     }
 }
 
-impl<'a, T: 'a + ?Sized> Deref for SpinLockGuard<'a, T> {
+impl<'a, T: 'a + ?Sized> Deref for RwSpinLockGuard<'a, T> {
     type Target = T;
     #[inline]
     fn deref(&self) -> &T {
@@ -60,7 +60,7 @@ impl<'a, T: 'a + ?Sized> Deref for SpinLockGuard<'a, T> {
     }
 }
 
-impl<'a, T: 'a + ?Sized> DerefMut for SpinLockGuard<'a, T> {
+impl<'a, T: 'a + ?Sized> DerefMut for RwSpinLockGuard<'a, T> {
     #[inline]
     fn deref_mut(&mut self) -> &mut T {
         self.lock_guard.deref_mut()
@@ -70,7 +70,7 @@ impl<'a, T: 'a + ?Sized> DerefMut for SpinLockGuard<'a, T> {
 #[derive(Debug)]
 #[repr(C)]
 #[must_use]
-pub struct SpinLockReadGuard<'a, T: ?Sized> {
+pub struct RwSpinLockReadGuard<'a, T: ?Sized> {
     #[cfg(smp)]
     lock_guard: RwLockReadGuard<'a, T>,
     #[cfg(not(smp))]
@@ -78,14 +78,14 @@ pub struct SpinLockReadGuard<'a, T: ?Sized> {
     irq_guard: Option<DisableInterruptGuard>,
 }
 
-impl<T: ?Sized> SpinLockReadGuard<'_, T> {
+impl<T: ?Sized> RwSpinLockReadGuard<'_, T> {
     #[inline]
-    pub fn take_irq_guard<S>(&mut self, other: &mut SpinLockReadGuard<'_, S>) {
+    pub fn take_irq_guard<S>(&mut self, other: &mut RwSpinLockReadGuard<'_, S>) {
         self.irq_guard = other.irq_guard.take();
     }
 }
 
-impl<'a, T: 'a + ?Sized> Deref for SpinLockReadGuard<'a, T> {
+impl<'a, T: 'a + ?Sized> Deref for RwSpinLockReadGuard<'a, T> {
     type Target = T;
     #[inline]
     fn deref(&self) -> &T {
@@ -93,7 +93,7 @@ impl<'a, T: 'a + ?Sized> Deref for SpinLockReadGuard<'a, T> {
     }
 }
 
-impl<T> SpinLock<T> {
+impl<T> RwSpinLock<T> {
     pub const fn new(val: T) -> Self {
         Self {
             #[cfg(smp)]
@@ -104,8 +104,8 @@ impl<T> SpinLock<T> {
     }
 }
 
-impl<T: ?Sized> SpinLock<T> {
-    pub fn try_irqsave_lock(&self) -> Option<SpinLockGuard<'_, T>> {
+impl<T: ?Sized> RwSpinLock<T> {
+    pub fn try_irqsave_lock(&self) -> Option<RwSpinLockGuard<'_, T>> {
         let irq_guard = DisableInterruptGuard::new();
         compiler_fence(Ordering::SeqCst);
         let mut guard = self.try_lock()?;
@@ -114,7 +114,7 @@ impl<T: ?Sized> SpinLock<T> {
         Some(guard)
     }
 
-    pub fn irqsave_lock(&self) -> SpinLockGuard<'_, T> {
+    pub fn irqsave_lock(&self) -> RwSpinLockGuard<'_, T> {
         let irq_guard = DisableInterruptGuard::new();
         loop {
             let Some(mut l) = self.try_lock() else {
@@ -127,15 +127,15 @@ impl<T: ?Sized> SpinLock<T> {
         }
     }
 
-    pub fn try_lock(&self) -> Option<SpinLockGuard<'_, T>> {
+    pub fn try_lock(&self) -> Option<RwSpinLockGuard<'_, T>> {
         let lock_guard = self.lock.try_write()?;
-        Some(SpinLockGuard {
+        Some(RwSpinLockGuard {
             irq_guard: None,
             lock_guard,
         })
     }
 
-    pub fn lock(&self) -> SpinLockGuard<'_, T> {
+    pub fn lock(&self) -> RwSpinLockGuard<'_, T> {
         loop {
             let Some(l) = self.try_lock() else {
                 core::hint::spin_loop();
@@ -146,34 +146,34 @@ impl<T: ?Sized> SpinLock<T> {
     }
 
     #[inline]
-    pub fn write(&self) -> SpinLockWriteGuard<'_, T> {
+    pub fn write(&self) -> RwSpinLockWriteGuard<'_, T> {
         self.lock()
     }
 
     #[inline]
-    pub fn try_write(&self) -> Option<SpinLockWriteGuard<'_, T>> {
+    pub fn try_write(&self) -> Option<RwSpinLockWriteGuard<'_, T>> {
         self.try_lock()
     }
 
-    pub fn try_irqsave_write(&self) -> Option<SpinLockWriteGuard<'_, T>> {
+    pub fn try_irqsave_write(&self) -> Option<RwSpinLockWriteGuard<'_, T>> {
         self.try_irqsave_lock()
     }
 
-    pub fn irqsave_write(&self) -> SpinLockWriteGuard<'_, T> {
+    pub fn irqsave_write(&self) -> RwSpinLockWriteGuard<'_, T> {
         self.irqsave_lock()
     }
 
     #[inline]
-    pub fn try_read(&self) -> Option<SpinLockReadGuard<'_, T>> {
+    pub fn try_read(&self) -> Option<RwSpinLockReadGuard<'_, T>> {
         let lock_guard = self.lock.try_read()?;
-        Some(SpinLockReadGuard {
+        Some(RwSpinLockReadGuard {
             irq_guard: None,
             lock_guard,
         })
     }
 
     #[inline]
-    pub fn read(&self) -> SpinLockReadGuard<'_, T> {
+    pub fn read(&self) -> RwSpinLockReadGuard<'_, T> {
         loop {
             let Some(l) = self.try_read() else {
                 core::hint::spin_loop();
@@ -183,7 +183,7 @@ impl<T: ?Sized> SpinLock<T> {
         }
     }
 
-    pub fn try_irqsave_read(&self) -> Option<SpinLockReadGuard<'_, T>> {
+    pub fn try_irqsave_read(&self) -> Option<RwSpinLockReadGuard<'_, T>> {
         let irq_guard = DisableInterruptGuard::new();
         compiler_fence(Ordering::SeqCst);
         let mut guard = self.try_read()?;
@@ -192,7 +192,7 @@ impl<T: ?Sized> SpinLock<T> {
         Some(guard)
     }
 
-    pub fn irqsave_read(&self) -> SpinLockReadGuard<'_, T> {
+    pub fn irqsave_read(&self) -> RwSpinLockReadGuard<'_, T> {
         loop {
             let Some(l) = self.try_irqsave_read() else {
                 core::hint::spin_loop();
@@ -211,7 +211,7 @@ impl<T: ?Sized> SpinLock<T> {
     }
 }
 
-impl<'a, T: 'a + ?Sized> SpinLockGuard<'a, T> {
+impl<'a, T: 'a + ?Sized> RwSpinLockGuard<'a, T> {
     pub fn forget_irq(&mut self) {
         if self.irq_guard.is_none() {
             return;
@@ -220,8 +220,8 @@ impl<'a, T: 'a + ?Sized> SpinLockGuard<'a, T> {
     }
 }
 
-unsafe impl<T: ?Sized + Send> Send for SpinLock<T> {}
-unsafe impl<T: ?Sized + Sync> Sync for SpinLock<T> {}
+unsafe impl<T: ?Sized + Send> Send for RwSpinLock<T> {}
+unsafe impl<T: ?Sized + Sync> Sync for RwSpinLock<T> {}
 
 #[derive(Default, Debug)]
 struct ISpinLockOffset<T: Sized, A: const IntrusiveAdapter<T>>(PhantomData<T>, PhantomData<A>);
@@ -254,10 +254,10 @@ impl<T: Sized, A: const IntrusiveAdapter<T>> ISpinLock<T, A> {
     }
 
     #[inline]
-    pub fn irqsave_lock(&self) -> SpinLockGuard<'_, T> {
+    pub fn irqsave_lock(&self) -> RwSpinLockGuard<'_, T> {
         let irq_guard = DisableInterruptGuard::new();
         compiler_fence(Ordering::SeqCst);
-        SpinLockGuard {
+        RwSpinLockGuard {
             lock_guard: self.lock.write(),
             irq_guard: Some(irq_guard),
         }

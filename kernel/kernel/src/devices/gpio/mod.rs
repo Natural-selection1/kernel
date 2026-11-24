@@ -16,7 +16,7 @@ use core::cell::Cell;
 
 use crate::{
     devices::{Device, DeviceClass, DeviceId, DeviceManager},
-    sync::SpinLock,
+    sync::RwSpinLock,
 };
 use alloc::{string::String, sync::Arc};
 use embedded_io::ErrorKind;
@@ -65,12 +65,12 @@ impl<T: blueos_hal::gpio::OutputPin> GeneralGpio<T> {
 struct GeneralGpioDevice<T: blueos_hal::gpio::OutputPin> {
     name: String,
     id: DeviceId,
-    inner: SpinLock<&'static T>,
+    inner: RwSpinLock<&'static T>,
     level: Cell<Option<Level>>,
 }
 
 /// Safety: `GeneralGpioDevice` is safe to share between threads
-/// because it uses a `SpinLock` to protect access to the
+/// because it uses a `RwSpinLock` to protect access to the
 /// underlying GPIO pin, ensuring that only one thread can modify
 /// the pin state at a time. The `level` field is a `Cell`,
 /// which allows for interior mutability, but since it
@@ -84,7 +84,7 @@ impl<T: blueos_hal::gpio::OutputPin> GeneralGpioDevice<T> {
         Self {
             name,
             id,
-            inner: SpinLock::new(gpio.inner),
+            inner: RwSpinLock::new(gpio.inner),
             level: Cell::new(gpio.level),
         }
     }

@@ -14,7 +14,7 @@
 
 use crate::{
     mm::{kernel_virt_to_phys, VirtualAddress},
-    sync::spinlock::SpinLock,
+    sync::rwspinlock::RwSpinLock,
 };
 use allocator_crate::buddy::{
     BuddyAllocator, BuddyInitError, BuddyMemoryInfo, PAGE_SHIFT, PAGE_SIZE,
@@ -149,14 +149,14 @@ impl BuddyTranslation {
 
 /// Kernel synchronization and physical-address wrapper for the raw buddy.
 pub(in crate::allocator) struct BuddyHeap {
-    allocator: SpinLock<BuddyAllocator>,
+    allocator: RwSpinLock<BuddyAllocator>,
     translation: UnsafeCell<BuddyTranslation>,
 }
 
 impl BuddyHeap {
     pub(in crate::allocator) const fn new() -> Self {
         Self {
-            allocator: SpinLock::new(BuddyAllocator::new()),
+            allocator: RwSpinLock::new(BuddyAllocator::new()),
             translation: UnsafeCell::new(BuddyTranslation::new()),
         }
     }

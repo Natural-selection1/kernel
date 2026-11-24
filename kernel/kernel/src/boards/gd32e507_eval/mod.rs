@@ -16,7 +16,7 @@ mod config;
 
 use crate::{
     arch, arch::irq::IrqNumber, boot, boot::INIT_BSS_DONE, devices::clock::systick, irq::IrqTrace,
-    sync::SpinLock, time,
+    sync::RwSpinLock, time,
 };
 use alloc::sync::Arc;
 use blueos_driver::{pinctrl::gd32_afio::*, uart::gd32e5x_uart::Gd32e5xUartIsr};
