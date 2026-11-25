@@ -23,6 +23,7 @@ use arch_crate as arch;
 use blueos::{
     scheduler,
     scheduler::{wait_queue, wait_queue::WaitEntry, InsertToEnd},
+    support::DisableInterruptGuard,
     sync::RwSpinLock,
     thread::{Entry, Stack, ThreadNode, SUSPENDED},
     time::Tick,
@@ -293,10 +294,8 @@ impl BkSemaphore {
 
     /// Enter a short critical section, run `f`, then restore the full saved IRQ state.
     fn with_irq_safe<R>(&self, f: impl FnOnce(&mut SemaphoreBkData) -> R) -> R {
-        let irq_level = arch::disable_local_irq_save();
-        let r = f(unsafe { &mut *self.data.get() });
-        arch::enable_local_irq_restore(irq_level);
-        r
+        let _irq = DisableInterruptGuard::new();
+        f(unsafe { &mut *self.data.get() })
     }
 
     fn is_mutex_kind(kind: &SemaphoreKind) -> bool {
@@ -421,14 +420,14 @@ impl SemaphoreImplementation for BkSemaphore {
                 return false;
             }
             let irq_level = arch::disable_local_irq_save();
-            arch::enable_local_irq();
+            unsafe { arch::enable_local_irq() };
             // SAFETY: `waiting` pointer is immutable after new() — it is only
             // read here and in give().  `waiting` was already captured under the
             // guard above, so we use the local copy.
             unsafe {
                 EspWaitQueue::wait_until(waiting, _deadline_instant);
             }
-            arch::enable_local_irq_restore(irq_level);
+            unsafe { arch::enable_local_irq_restore(irq_level) };
         }
     }
 
