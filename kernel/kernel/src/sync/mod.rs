@@ -17,6 +17,7 @@ pub use atomic_wait::{atomic_wait, atomic_wake};
 pub mod delay;
 pub use delay::KernelDelay;
 pub(crate) mod local_context;
+pub use local_context::execution_guard_held;
 pub mod mqueue;
 pub mod mutex;
 pub mod posix_mqueue;

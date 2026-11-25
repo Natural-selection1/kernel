@@ -212,6 +212,10 @@ impl<T: ?Sized> RwSpinLock<T> {
 }
 
 impl<'a, T: 'a + ?Sized> RwSpinLockGuard<'a, T> {
+    pub(crate) fn owns_irq_mask(&self) -> bool {
+        self.irq_guard.is_some()
+    }
+
     pub fn forget_irq(&mut self) {
         if self.irq_guard.is_none() {
             return;

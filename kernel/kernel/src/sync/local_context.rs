@@ -239,3 +239,26 @@ pub(crate) fn assert_can_switch() {
         "cannot switch while an execution lease is held"
     );
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use blueos_test_macro::test;
+
+    #[test]
+    fn test_cpu_local_guard_counts() {
+        assert!(arch::local_irq_enabled());
+        let irq = DisableInterruptGuard::new();
+        let preempt = PreemptDisabled::new_with(&irq);
+        let inner = DisableInterruptGuard::new();
+        drop(irq);
+        assert!(!arch::local_irq_enabled());
+        assert!(defer_if_held());
+        drop(inner);
+        assert!(arch::local_irq_enabled());
+        assert!(with_masked_state(|s, _| s.reschedule_pending.get()));
+        drop(preempt);
+        assert!(!execution_guard_held());
+        assert!(!with_masked_state(|s, _| s.reschedule_pending.get()));
+    }
+}

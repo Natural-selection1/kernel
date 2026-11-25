@@ -420,6 +420,12 @@ impl SemaphoreImplementation for BkSemaphore {
                 return false;
             }
             let irq_level = arch::disable_local_irq_save();
+            if blueos::sync::execution_guard_held() {
+                // SAFETY: undo only our own immediately preceding save.
+                unsafe { arch::enable_local_irq_restore(irq_level) };
+                return false;
+            }
+            // SAFETY: no BlueOS guard is active. Temporarily release the foreign mask.
             unsafe { arch::enable_local_irq() };
             // SAFETY: `waiting` pointer is immutable after new() — it is only
             // read here and in give().  `waiting` was already captured under the

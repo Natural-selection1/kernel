@@ -14,9 +14,12 @@
 
 use crate::{
     arch,
-    sync::rwspinlock::{RwSpinLock, RwSpinLockGuard},
+    sync::{
+        local_context,
+        rwspinlock::{RwSpinLock, RwSpinLockGuard},
+    },
     thread::ThreadNode,
-    types::{Arc, ArcList, AtomicUint, IntrusiveAdapter, Uint},
+    types::{Arc, ArcList, AtomicUint, IntrusiveAdapter, NotThreadSafe, Uint},
 };
 pub use blueos_infra::storage::Storage;
 use core::{
@@ -26,43 +29,24 @@ use core::{
     sync::atomic::{compiler_fence, AtomicUsize, Ordering},
 };
 
+/// One CPU-local, counted mask of kernel interrupts. A borrow proves the mask
+/// stays active. The last owner restores the state saved by the first.
 #[derive(Debug)]
 #[must_use]
-pub struct DisableInterruptGuard {
-    old: usize,
-}
+pub struct DisableInterruptGuard(NotThreadSafe);
 
 impl DisableInterruptGuard {
     #[inline]
     pub fn new() -> Self {
-        Self {
-            old: arch::disable_local_irq_save(),
-        }
+        local_context::enter_irq();
+        Self(NotThreadSafe)
     }
 }
 
 impl Drop for DisableInterruptGuard {
     #[inline]
     fn drop(&mut self) {
-        unsafe { arch::enable_local_irq_restore(self.old) };
-    }
-}
-
-#[must_use]
-pub struct PlainDisableInterruptGuard;
-
-impl PlainDisableInterruptGuard {
-    #[inline]
-    pub fn new() -> Self {
-        arch::disable_local_irq();
-        Self
-    }
-}
-
-impl Drop for PlainDisableInterruptGuard {
-    #[inline]
-    fn drop(&mut self) {
-        unsafe { arch::enable_local_irq() };
+        local_context::exit_irq();
     }
 }
 

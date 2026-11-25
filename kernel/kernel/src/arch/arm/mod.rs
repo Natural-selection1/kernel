@@ -20,6 +20,7 @@ use crate::{
     boot::_start,
     scheduler,
     support::{sideeffect, Region, RegionalObjectBuilder},
+    sync::local_context,
     syscalls::{dispatch_syscall, Context as ScContext},
 };
 pub(crate) use hardfault::handle_hardfault;
@@ -456,8 +457,11 @@ pub extern "C" fn bk_debug_syscall(ctx: &Context) -> usize {
 }
 
 extern "C" fn handle_syscall(ctx: &Context) -> usize {
+    local_context::assert_can_switch();
     if ctx.r7 == NR_DEBUG_SYSCALL {
-        return bk_debug_syscall(ctx);
+        let sp = bk_debug_syscall(ctx);
+        local_context::assert_irqs_can_enable();
+        return sp;
     }
     if ctx.r7 == NR_SWITCH {
         return handle_svc_switch(ctx);
@@ -581,11 +585,11 @@ pub unsafe extern "C" fn enable_local_irq() {
     }
 }
 
-#[inline]
+#[inline(always)]
 pub extern "C" fn disable_local_irq() {
     unsafe {
         core::arch::asm!(
-            "msr basepri, {}",
+            "msr basepri_max, {}",
             "isb",
             in(reg) DISABLE_LOCAL_IRQ_BASEPRI,
             options(nostack),
@@ -602,7 +606,7 @@ pub extern "C" fn disable_local_irq_save() -> usize {
             concat!(
                 "
                 mrs {old}, basepri
-                msr basepri, {val}
+                msr basepri_max, {val}
                 isb
                 ",
             ),

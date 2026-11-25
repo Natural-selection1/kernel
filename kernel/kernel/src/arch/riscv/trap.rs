@@ -24,6 +24,7 @@ use crate::{
     scheduler,
     scheduler::ContextSwitchHookHolder,
     support::sideeffect,
+    sync::local_context,
     syscalls::{dispatch_syscall, Context as ScContext},
     thread,
     thread::Thread,
@@ -151,6 +152,7 @@ impl SyscallGuard {
 impl Drop for SyscallGuard {
     fn drop(&mut self) {
         disable_local_irq();
+        local_context::assert_can_switch();
         enter_irq();
         compiler_fence(Ordering::SeqCst);
         unsafe {
@@ -184,6 +186,7 @@ fn handle_ecall_switch(from: &Context, ra: usize) -> usize {
 #[inline(never)]
 extern "C" fn handle_ecall(ctx: &mut Context, cont: usize) -> usize {
     let sp = ctx as *const _ as usize;
+    local_context::assert_can_switch();
     ctx.mepc += 4;
     if ctx.a7 == NR_SWITCH {
         return handle_ecall_switch(ctx, cont);
@@ -205,7 +208,8 @@ extern "C" fn handle_ecall(ctx: &mut Context, cont: usize) -> usize {
 // another way to switch context on RV.
 fn might_switch_context(from: &Context, ra: usize) -> usize {
     let old_sp = from as *const _ as usize;
-    if !claim_switch_context() {
+    local_context::assert_irqs_can_enable();
+    if !claim_switch_context() || local_context::defer_if_held() {
         return old_sp;
     }
     let old = scheduler::current_thread_ref();

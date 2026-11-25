@@ -17,6 +17,7 @@ use crate::{
     arch::aarch64::{disable_local_irq, enable_local_irq},
     scheduler::{self, ContextSwitchHookHolder},
     support::sideeffect,
+    sync::local_context,
     syscalls::{dispatch_syscall, Context as ScContext},
 };
 use aarch64_cpu::registers::ESR_EL1;
@@ -158,6 +159,7 @@ extern "C" fn handle_svc(context: &mut Context) -> usize {
         show_exception(ec, context);
         return old_sp;
     }
+    local_context::assert_can_switch();
     if context.x8 == NR_SWITCH {
         return prepare_for_context_switch(context);
     }
@@ -171,6 +173,7 @@ extern "C" fn handle_svc(context: &mut Context) -> usize {
     unsafe { enable_local_irq() };
     context.x0 = dispatch_syscall(&sc);
     disable_local_irq();
+    local_context::assert_can_switch();
     compiler_fence(Ordering::SeqCst);
     old_sp
 }
@@ -188,6 +191,7 @@ extern "C" fn trap_irq(context: &mut Context) -> usize {
     let irq = irq::get_interrupt();
     irq::trigger_irq(irq);
     irq::end_interrupt(irq);
+    local_context::assert_irqs_can_enable();
     sp
 }
 
@@ -198,6 +202,7 @@ extern "C" fn trap_fiq(context: &mut Context) -> usize {
         irq::trigger_irq(fiq);
     }
     irq::end_interrupt(fiq);
+    local_context::assert_irqs_can_enable();
     sp
 }
 

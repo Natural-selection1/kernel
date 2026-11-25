@@ -18,7 +18,7 @@ use crate::{
     arch::{self, Context},
     signal,
     support::DisableInterruptGuard,
-    sync::RwSpinLockGuard,
+    sync::{local_context, RwSpinLockGuard},
     thread,
     thread::{Entry, GlobalQueueVisitor, Thread, ThreadNode},
     time,
@@ -267,6 +267,9 @@ fn cleanup_retired_thread(old: &mut ThreadNode) {
 
 // It's usually used in cortex-m's pendsv handler.
 pub(crate) extern "C" fn relinquish_me_and_return_next_sp(old_sp: usize) -> usize {
+    if local_context::defer_if_held() {
+        return old_sp;
+    }
     debug_assert_eq!(old_sp % core::mem::align_of::<Context>(), 0);
     debug_assert!(!arch::local_irq_enabled());
     debug_assert!(!crate::irq::is_in_irq());
@@ -289,6 +292,7 @@ pub(crate) extern "C" fn relinquish_me_and_return_next_sp(old_sp: usize) -> usiz
 }
 
 pub fn retire_me() -> ! {
+    local_context::assert_can_switch();
     let retiring = current_thread_ref();
     #[cfg(procfs)]
     {
@@ -322,6 +326,7 @@ fn inner_yield(next: ThreadNode) {
 }
 
 pub fn yield_me() {
+    local_context::assert_can_switch();
     // We don't allow thread yielding with irq disabled.
     // The scheduler assumes every thread should be resumed with local
     // irq enabled.
@@ -334,6 +339,7 @@ pub fn yield_me() {
 }
 
 pub fn relinquish_me() {
+    local_context::assert_can_switch();
     debug_assert!(arch::local_irq_enabled());
     let old = current_thread_ref();
     let Some(next) = next_preferred_thread(old.priority(), PreferMode::SameOrHigher) else {
@@ -364,6 +370,7 @@ pub fn suspend_me_until<T>(deadline: Tick, wq: Option<RwSpinLockGuard<'_, T>>) -
         current_thread_id()
     );
     let old = current_thread_ref();
+    local_context::assert_can_suspend(wq.as_ref().is_some_and(|w| w.owns_irq_mask()));
     let current_idle = idle::current_idle_thread_ref();
     debug_assert_ne!(Thread::id(old), Thread::id(current_idle));
     let next = next_ready_thread().unwrap_or_else(|| unsafe { Arc::clone_from(current_idle) });
@@ -409,7 +416,7 @@ pub fn yield_me_now_or_later() {
     if unlikely(!is_schedule_ready()) {
         return;
     }
-    if current_thread_ref().preempt_count() != 0 {
+    if local_context::defer_if_held() || current_thread_ref().preempt_count() != 0 {
         return;
     }
     // Skip the pendsv round-trip only when no same-or-higher-priority thread is
@@ -467,6 +474,7 @@ pub fn wait_and_then_start_schedule() {
 // Entry of system idle threads.
 pub extern "C" fn schedule() -> ! {
     READY_CORES.fetch_add(1, Ordering::Relaxed);
+    local_context::assert_can_switch();
     unsafe { arch::enable_local_irq() };
     debug_assert!(arch::local_irq_enabled());
     loop {
