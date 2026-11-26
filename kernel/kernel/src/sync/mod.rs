@@ -23,12 +23,14 @@ pub mod mutex;
 pub mod posix_mqueue;
 pub mod rwspinlock;
 pub mod semaphore;
+pub mod spinlock;
 pub use mqueue::MessageQueue;
 pub use mutex::Mutex;
 pub use rwspinlock::{
     ISpinLock, RwSpinLock, RwSpinLockGuard, RwSpinLockReadGuard, RwSpinLockWriteGuard,
 };
 pub use semaphore::Semaphore;
+pub use spinlock::{SpinLock, SpinLockGuard, SpinLockIrq, SpinLockIrqGuard};
 pub mod barrier;
 pub use barrier::ConstBarrier;
 #[cfg(event_flags)]
